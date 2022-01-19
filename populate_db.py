@@ -6,7 +6,7 @@ import logzero
 from logzero import logger
 
 from member_card.db import get_firestore_client
-from member_card.squarespace import Squarespace, AnnualMembership
+from member_card.squarespace import Squarespace
 
 if __name__ == "__main__":
     import argparse

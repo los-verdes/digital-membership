@@ -47,6 +47,6 @@ jobs:
       - name: Apply - terraform
         run: just tf-auto-apply
         env:
-          TF_VAR_github_repo: ${{ github.repository }}
-          TF_VAR_cloudflare_api_token: ${{ secrets.cloudflare_api_token }}
-          TF_VAR_site_publisher_gh_app_key: ${{ secrets.site_publisher_gh_app_key }}
+          TF_VAR_squarespace_api_key: ${{ secrets.cloudflare_api_token }}
+          TF_VAR_oauth_client_id: ${{ secrets.oauth_client_id }}
+          TF_VAR_oauth_client_secret: ${{ secrets.oauth_client_secret }}

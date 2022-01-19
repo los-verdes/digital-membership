@@ -29,3 +29,15 @@ variable "gcp_region" {
 variable "github_repo" {
   type = string
 }
+
+variable "squarespace_api_key" {
+  sensitive = true
+}
+
+variable "oauth_client_id" {
+  sensitive = true
+}
+
+variable "oauth_client_secret" {
+  sensitive = true
+}

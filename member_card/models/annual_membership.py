@@ -1,9 +1,6 @@
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-from dateutil.parser import parse
-from logzero import logger
-
 
 class AnnualMembership(object):
     subscription_product_names = [
@@ -14,19 +11,35 @@ class AnnualMembership(object):
     ]
     one_year_ago = datetime.now(tz=ZoneInfo("UTC")) - timedelta(days=366)
 
-    def __init__(self, order):
-        self._order = order
-        # self.created_on = parse(self._order["createdOn"])
-        # self.modified_on = parse(self._order["createdOn"])
-        if "email" in order:
-            self.email = order["email"]
-        else:
-            self.email = getattr(self, "customer_email")
-        # self.fulfillment_status = getattr(self, "fulfillment_status")
+    def __init__(
+        self,
+        id,
+        name,
+        email,
+        order_number,
+        line_items,
+        created_on,
+        modified_on,
+        fulfilled_on,
+        fulfillment_status,
+        test_mode,
+        **kwargs,
+    ):
+        self.id = id
+        self.name = name
+        self.email = email
+        self.order_number = order_number
+        self.line_items = line_items
+        self.created_on = created_on
+        self.modified_on = modified_on
+        self.fulfilled_on = fulfilled_on
+        self.fulfillment_status = fulfillment_status
+        self.test_mode = test_mode
+        self.line_items = line_items
 
     @staticmethod
     def from_dict(source):
-        return AnnualMembership(source)
+        return AnnualMembership(**source)
 
     def to_dict(self):
         return dict(
@@ -36,14 +49,12 @@ class AnnualMembership(object):
             order_number=self.order_number,
             created_on=self.created_on,
             modified_on=self.modified_on,
-            fulfilled_on=self.get("fulfilled_on"),
+            fulfilled_on=self.fulfilled_on,
             fulfillment_status=self.fulfillment_status,
             is_active=self.is_active,
             is_canceled=self.is_canceled,
-            sku=self.sku,
-            variant_id=self.variant_id,
-            product_id=self.product_id,
-            test_mode=self.testmode,
+            line_items=self.line_items,
+            test_mode=self.test_mode,
         )
 
     def __repr__(self):
@@ -59,44 +70,33 @@ class AnnualMembership(object):
                 is_canceled={self.is_canceled}\
             )"
 
-    def get(self, key, default=None):
-        getattr(self, key, default)
+    # def __getattr__(self, key):
+    #     if key in self._order:
+    #         value = self._order[key]
+    #         if key.endswith("On"):
+    #             value = parse(value)
+    #         logger.debug(f"found {key=} with {value=}")
+    #         return value
+    #     # convert key from snake to camel case
+    #     components = key.split("_")
+    #     # via: https://stackoverflow.com/a/19053800
+    #     # We capitalize the first letter of each component except the first one
+    #     # with the 'title' method and join them together.
+    #     camel_key = components[0] + "".join(x.title() for x in components[1:])
+    #     if camel_key in self._order:
+    #         value = self._order[camel_key]
+    #         if key.endswith("_on"):
+    #             value = parse(value)
+    #         logger.debug(f"found {camel_key=} with {value=}")
+    #         return value
 
-    def __getattr__(self, key):
-        if key in self._order:
-            value = self._order[key]
-            if key.endswith("On"):
-                value = parse(value)
-            logger.debug(f"found {key=} with {value=}")
-            return value
-        # convert key from snake to camel case
-        components = key.split("_")
-        # via: https://stackoverflow.com/a/19053800
-        # We capitalize the first letter of each component except the first one
-        # with the 'title' method and join them together.
-        camel_key = components[0] + "".join(x.title() for x in components[1:])
-        if camel_key in self._order:
-            value = self._order[camel_key]
-            if key.endswith("_on"):
-                value = parse(value)
-            logger.debug(f"found {camel_key=} with {value=}")
-            return value
-
-        raise AttributeError(f"no {key=} in <AnnualSubscription _order... >")
-
-    @property
-    def id(self):
-        return self._order["id"]
-
-    @property
-    def name(self):
-        return f"{self._order['billingAddress']['firstName']} {self._order['billingAddress']['lastName']}"
+    #     raise AttributeError(f"no {key=} in <AnnualSubscription _order... >")
 
     @property
     def subscription_line_items(self):
         return [
             i
-            for i in self._order["lineItems"]
+            for i in self.line_items
             if i["productName"] in self.subscription_product_names
         ]
 

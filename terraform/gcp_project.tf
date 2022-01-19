@@ -21,6 +21,11 @@ resource "google_project_service" "digital_membership" {
 
     # For our "memberships" "database":
     "firestore.googleapis.com",
+
+    "secretmanager.googleapis.com", # direct usage
+
+    "containerregistry.googleapis.com", # hosting cloudrun images
+    "run.googleapis.com",
   ])
   service                    = each.value
   disable_dependent_services = true

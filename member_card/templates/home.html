@@ -1,0 +1,110 @@
+{% import 'members_card.html' as macro %}
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>lv-events-etc </title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.green-light_green.min.css" />
+  {% assets "style" %}
+  <!-- # {{ ASSET_URL }} -->
+  <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}">
+  {% endassets %}
+  <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+  <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+</head>
+
+<body>
+
+  <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+    <header class="mdl-layout__header">
+      <div class="mdl-layout__header-row">
+        <!-- Title -->
+        <!-- <span class="mdl-layout-title mdl-layout--large-screen-only">Events</span> -->
+        <!-- Add spacer, to align navigation to the right -->
+        <div class="mdl-layout-spacer"></div>
+        <!-- Navigation. We hide it in small screens. -->
+        <nav class="mdl-navigation">
+          {% set association = associated.get("google-oauth2") %}
+          {% if association %}
+          <!-- <form id="google-oauth2-disconnect" class="disconnect-form col-md-2" action="/disconnect/google-oauth2/1/"
+            method="post">
+            <input type="hidden" name="csrfmiddlewaretoken" value="">
+            <a class="mdl-navigation__link" name="google oauth2" href="#">
+              <i class="fa fa-google"></i>
+              Disconnect Google OAuth2
+            </a>
+          </form> -->
+          {% if user.is_authenticated %}
+          <a class="mdl-navigation__link" href="/logout/" id="logout">
+            <span title="Log out"><i class="material-icons">logout</i></span>
+          </a>
+          {% endif %}
+          {% elif not user.is_authenticated %}
+          <!-- <i class="material-icons">event</i>
+          &nbsp;
+          Login with Google OAuth2
+        </a>
+        <div class="google-btn"> -->
+          <a class="google-btn" id="google-oauth2-button" name="google oauth2" href="/login/google-oauth2/">
+            <div class="google-icon-wrapper">
+              <img class="google-icon"
+                src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" />
+            </div>
+            <p class="btn-text"><b>Sign in with google</b></p>
+          </a>
+          {% else %}
+          <a class="mdl-navigation__link" href="/logout/" id="logout">
+            <span title="Log out"><i class="material-icons">logout</i></span>
+          </a>
+          {% endif %}
+        </nav>
+      </div>
+    </header>
+    <!-- <div class="mdl-layout__drawer">
+      <span class="mdl-layout-title">Events</span>
+      <nav class="mdl-navigation">
+        <a class="mdl-navigation__link" href="#" target="_blank"><b>calendar ID</b>
+          {{ "cats" | truncate(30) }}
+        </a>
+        <span class="mdl-navigation__link">
+          <b>last data refresh</b>
+          <br>
+          wheneves!
+        </span>
+      </nav>
+    </div> -->
+    <main class="mdl-layout__content">
+      <div class="page-content">
+        <div class="mdl-grid">
+
+          <div class="mdl-layout-spacer"></div>
+
+          {% if user.is_authenticated %}
+          {{ macro.card(current_user, membership, member_since_dt) }}
+          {% endif %}
+
+          <div class="mdl-layout-spacer"></div>
+
+        </div>
+    </main>
+    <!-- <footer class="mdl-mega-footer">
+      {% block footer %}{% endblock %}
+    </footer> -->
+  </div>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function () {
+      $('.disconnect-form').on('click', 'a.mdl-navigation__link', function (event) {
+        event.preventDefault();
+        $(event.target).closest('form').submit();
+      });
+    });
+  </script>
+</body>
+
+</html>

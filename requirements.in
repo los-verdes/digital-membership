@@ -1,8 +1,14 @@
+Flask-Assets
 flask
+flask-login
 google-auth
 google-cloud-firestore
 google-cloud-secret-manager
 gunicorn
+libsass
 logzero
+peewee<=3.0 # version constraint blergh => https://github.com/python-social-auth/social-storage-peewee/issues/2
 python-dateutil
 requests
+social-auth-app-flask
+social-auth-app-flask-peewee

@@ -2,9 +2,10 @@ import logging
 from typing import TYPE_CHECKING, List
 
 import requests
+from dateutil.parser import parse
 from logzero import logger
 
-from annual_membership import AnnualMembership
+from member_card.models.annual_membership import AnnualMembership
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -185,7 +186,23 @@ class Squarespace(object):
                 logger.debug(
                     f"{order['id']=} (#{order['orderNumber']}) includes {membership_sku=} in {order_product_names=}"
                 )
-                subscriptions.append(AnnualMembership(order))
+                fulfilled_on = None
+                if fulfilled_on := order.get("fulfilledOn"):
+                    fulfilled_on = parse(fulfilled_on)
+                subscriptions.append(
+                    AnnualMembership(
+                        id=order["id"],
+                        name=f"{order['billingAddress']['firstName']} {order['billingAddress']['lastName']}",
+                        email=order["customerEmail"],
+                        order_number=order["orderNumber"],
+                        line_items=order["lineItems"],
+                        created_on=parse(order["createdOn"]),
+                        modified_on=parse(order["modifiedOn"]),
+                        fulfilled_on=fulfilled_on,
+                        fulfillment_status=order["fulfillmentStatus"],
+                        test_mode=order["testmode"],
+                    )
+                )
                 continue
             logger.debug(
                 f"#{order['orderNumber']} has no {membership_sku=} in {order_product_names=}"

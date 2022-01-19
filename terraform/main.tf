@@ -18,7 +18,7 @@ provider "google" {
 }
 
 resource "google_app_engine_application" "digital_membership" {
-  project     = google_project.digital_membership.project_id
-  location_id = regexall("[-a-z]+", var.gcp_region)[0]
+  project       = google_project.digital_membership.project_id
+  location_id   = regexall("[-a-z]+", var.gcp_region)[0]
   database_type = "CLOUD_FIRESTORE"
 }
