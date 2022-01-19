@@ -15,8 +15,12 @@ resource "google_project_service" "digital_membership" {
     "iamcredentials.googleapis.com", # IAM Credentials API
     "sts.googleapis.com",
 
-    # Error: Error when reading or editing Project Service lv-digital-membership/iam.googleapis.com:
+    # Seemingly required for service-account-based applies of this config to avoid this here error:
+    # ... Error when reading or editing Project Service lv-digital-membership/iam.googleapis.com: ...
     "serviceusage.googleapis.com",
+
+    # For our "memberships" "database":
+    "firestore.googleapis.com",
   ])
   service                    = each.value
   disable_dependent_services = true

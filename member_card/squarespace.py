@@ -1,7 +1,10 @@
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 import requests
+from logzero import logger
+
+from annual_membership import AnnualMembership
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -145,3 +148,50 @@ class Squarespace(object):
             count += 1
             for order in self.next_page():
                 yield order
+
+    def load_membership_orders_datetime_window(
+        self,
+        membership_sku,
+        modified_before=None,
+        modified_after=None,
+        fulfillment_status=None,
+    ) -> List[AnnualMembership]:
+        order_params = dict(
+            modifiedAfter=modified_after,
+            modifiedBefore=modified_before,
+            fulfillmentStatus=fulfillment_status,
+        )
+
+        return self.load_all_membership_orders(
+            membership_sku, order_params=order_params
+        )
+
+    def load_all_membership_orders(
+        self, membership_sku, order_params
+    ) -> List[AnnualMembership]:
+        # remove "None"s
+        order_params = {k: v for k, v in order_params.items() if v is not None}
+
+        all_orders = []
+        subscriptions = []
+
+        logger.debug(f"Grabbing all orders with {order_params=}")
+
+        for order in self.all_orders(**order_params):
+            all_orders.append(order)
+
+            order_product_names = [i["productName"] for i in order["lineItems"]]
+            if any(i["sku"] == membership_sku for i in order["lineItems"]):
+                logger.debug(
+                    f"{order['id']=} (#{order['orderNumber']}) includes {membership_sku=} in {order_product_names=}"
+                )
+                subscriptions.append(AnnualMembership(order))
+                continue
+            logger.debug(
+                f"#{order['orderNumber']} has no {membership_sku=} in {order_product_names=}"
+            )
+
+        logger.debug(
+            f"{len(all_orders)=} loaded with {len(subscriptions)=} and whatnot"
+        )
+        return subscriptions
