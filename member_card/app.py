@@ -4,6 +4,7 @@ import os
 from flask import Flask, g, redirect, render_template
 from flask_assets import Bundle, Environment
 from flask_login import LoginManager, current_user, login_required, logout_user
+from logzero import logger, setup_logger
 from peewee import SqliteDatabase
 from social_flask.routes import social_auth
 from social_flask.template_filters import backends
@@ -14,12 +15,13 @@ from webassets.filter import get_filter
 from member_card.models.user import User, database_proxy
 from member_card.utils import common_context
 
+setup_logger(name=__name__)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # App
 app = Flask(__name__)
-app.config.from_object("member_card.settings")
+# app.config.from_object("member_card.settings")
 libsass = get_filter(
     "libsass",
     as_output=True,
@@ -34,10 +36,15 @@ bundles = {  # define nested Bundle
     )
 }
 assets.register(bundles)
+
+settings_path = os.getenv('DIGITAL_MEMBERSHIP_SETTINGS_PATH', "member_card.settings.Settings")
 try:
-    app.config.from_object("member_card.local_settings")
-except ImportError:
-    pass
+    logger.debug(f"app.config before loading settings from object {settings_path}: {app.config=}")
+    app.config.from_object(settings_path)
+    logger.debug(f"app.config after loading settings from object {settings_path}: {app.config=}")
+except ImportError as err:
+    logger.exception(f"Unable to load settings from {settings_path}: {err=}")
+    raise err
 
 # DB
 database = SqliteDatabase(app.config["DATABASE_URI"])
@@ -126,6 +133,13 @@ def main():
     )
 
 
+@app.route("/privacy-policy")
+def privacy_policy():
+    return render_template(
+        "privacy_policy.html",
+    )
+
+
 # @login_required
 # @app.route("/done/")
 # def done():
@@ -141,15 +155,17 @@ def logout():
 
 
 def create_app():
-    from member_card.models.user import User
     from social_flask_peewee.models import FlaskStorage
+
+    from member_card.models.user import User
+
     models = [
         User,
         FlaskStorage.user,
         FlaskStorage.nonce,
         FlaskStorage.association,
         FlaskStorage.code,
-        FlaskStorage.partial
+        FlaskStorage.partial,
     ]
     for model in models:
         model.create_table(True)

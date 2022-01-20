@@ -1,4 +1,4 @@
-{% macro card(user, membership, member_since_dt) %}
+{% macro membership_card(user, membership, member_since_dt) %}
 <div class="members-card-wide mdl-card mdl-shadow--2dp">
   <div class="mdl-card__title">
     <h2 class="mdl-card__title-text">Los Verdes<br>Member Since {{member_since_dt.strftime("%b %Y")}}</h2>
@@ -27,4 +27,14 @@
     </button>
   </div>
 </div>
+{% endmacro %}
+
+{% macro sign_in_button() %}
+<a class="google-btn" id="google-oauth2-button" name="google oauth2" href="/login/google-oauth2/">
+  <div class="google-icon-wrapper">
+    <img class="google-icon"
+      src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" />
+  </div>
+  <p class="btn-text"><b>Sign in with Google</b></p>
+</a>
 {% endmacro %}

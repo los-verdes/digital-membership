@@ -1,4 +1,4 @@
-{% import 'members_card.html' as macro %}
+{% import 'macros.html' as macros %}
 <!doctype html>
 <html lang="en">
 
@@ -6,9 +6,10 @@
   <!-- Required meta tags -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>lv-events-etc </title>
+  <title>Los Verdes - Digital Membership Card</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
   <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.green-light_green.min.css" />
+  <!-- <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='material.min.css') }}"> -->
   {% assets "style" %}
   <!-- # {{ ASSET_URL }} -->
   <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}">
@@ -20,63 +21,51 @@
 <body>
 
   <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
-    <header class="mdl-layout__header">
+    <header class="mdl-layout__header lv-header">
       <div class="mdl-layout__header-row">
         <!-- Title -->
-        <!-- <span class="mdl-layout-title mdl-layout--large-screen-only">Events</span> -->
+        <span class="mdl-layout-title mdl-layout--large-screen-only">Los Verdes Membership Card</span>
         <!-- Add spacer, to align navigation to the right -->
         <div class="mdl-layout-spacer"></div>
         <!-- Navigation. We hide it in small screens. -->
         <nav class="mdl-navigation">
-          {% set association = associated.get("google-oauth2") %}
-          {% if association %}
-          <!-- <form id="google-oauth2-disconnect" class="disconnect-form col-md-2" action="/disconnect/google-oauth2/1/"
-            method="post">
-            <input type="hidden" name="csrfmiddlewaretoken" value="">
-            <a class="mdl-navigation__link" name="google oauth2" href="#">
-              <i class="fa fa-google"></i>
-              Disconnect Google OAuth2
-            </a>
-          </form> -->
           {% if user.is_authenticated %}
           <a class="mdl-navigation__link" href="/logout/" id="logout">
             <span title="Log out"><i class="material-icons">logout</i></span>
           </a>
-          {% endif %}
-          {% elif not user.is_authenticated %}
+          {% else %}
           <!-- <i class="material-icons">event</i>
           &nbsp;
           Login with Google OAuth2
         </a>
         <div class="google-btn"> -->
-          <a class="google-btn" id="google-oauth2-button" name="google oauth2" href="/login/google-oauth2/">
-            <div class="google-icon-wrapper">
-              <img class="google-icon"
-                src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" />
-            </div>
-            <p class="btn-text"><b>Sign in with google</b></p>
-          </a>
-          {% else %}
-          <a class="mdl-navigation__link" href="/logout/" id="logout">
-            <span title="Log out"><i class="material-icons">logout</i></span>
-          </a>
+          {{ macros.sign_in_button() }}
           {% endif %}
         </nav>
       </div>
     </header>
-    <!-- <div class="mdl-layout__drawer">
-      <span class="mdl-layout-title">Events</span>
+    <div class="mdl-layout__drawer">
+      <span class="mdl-layout-title">Digital Membership</span>
       <nav class="mdl-navigation">
-        <a class="mdl-navigation__link" href="#" target="_blank"><b>calendar ID</b>
-          {{ "cats" | truncate(30) }}
-        </a>
+
+        {% set association = associated.get("google-oauth2") %}
+        {% if association %}
+        <form id="google-oauth2-disconnect" class="disconnect-form col-md-2" action="/disconnect/google-oauth2/1/"
+          method="post">
+          <input type="hidden" name="csrfmiddlewaretoken" value="">
+          <a class="mdl-navigation__link" name="google oauth2" href="#">
+            <i class="fa fa-google"></i>
+            Disconnect Google OAuth2
+          </a>
+        </form>
+        {% endif %}
         <span class="mdl-navigation__link">
           <b>last data refresh</b>
           <br>
           wheneves!
         </span>
       </nav>
-    </div> -->
+    </div>
     <main class="mdl-layout__content">
       <div class="page-content">
         <div class="mdl-grid">
@@ -84,7 +73,51 @@
           <div class="mdl-layout-spacer"></div>
 
           {% if user.is_authenticated %}
-          {{ macro.card(current_user, membership, member_since_dt) }}
+          {{ macros.membership_card(current_user, membership, member_since_dt) }}
+          {% else %}
+          <div class="signin-card mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title mdl-card--expand">
+              <h4>
+               Los Verdes Digital Membership Card
+              </h4>
+            </div>
+            <div class="mdl-card__actions mdl-card--border">
+              <div class="mdl-layout-spacer"></div>
+              <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+                Sign in to display your card
+                <i class="material-icons">login</i>
+              </a>
+            </div>
+          </div>
+          <div class="mdl-layout-spacer"></div>
+          <!-- <div class="signin-card mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title mdl-card--expand">
+              <h4>
+                Sign in to view your Los Verdes membership card
+              </h4>
+            </div>
+            <div class="mdl-card__actions mdl-card--border">
+              {{ macros.sign_in_button() }}
+            </div>
+          </div>
+          <div class="mdl-layout-spacer"></div>
+          <br>
+          <div class="signin-card mdl-card mdl-shadow--2dp">
+            <div class="mdl-card__title mdl-card--expand">
+              <h4>
+                Sign in to view your Los Verdes membership card
+              </h4>
+            </div>
+            <div class="mdl-card__actions mdl-card--border">
+              <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+                <img class="material-icons" src="{{ url_for('static', filename='google_g_logo.svg') }}" />
+                Sign in with Google
+              </a>
+              <div class="mdl-layout-spacer"></div>
+              <!-- <i class="material-icons">login</i> -->
+            </div>
+          </div> -->
+
           {% endif %}
 
           <div class="mdl-layout-spacer"></div>

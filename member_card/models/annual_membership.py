@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
@@ -17,12 +18,12 @@ class AnnualMembership(object):
         name,
         email,
         order_number,
-        line_items,
         created_on,
         modified_on,
         fulfilled_on,
         fulfillment_status,
         test_mode,
+        line_items,
         **kwargs,
     ):
         self.id = id
@@ -39,6 +40,7 @@ class AnnualMembership(object):
 
     @staticmethod
     def from_dict(source):
+        source['line_items'] = json.loads(source['line_items'])
         return AnnualMembership(**source)
 
     def to_dict(self):
@@ -53,7 +55,7 @@ class AnnualMembership(object):
             fulfillment_status=self.fulfillment_status,
             is_active=self.is_active,
             is_canceled=self.is_canceled,
-            line_items=self.line_items,
+            line_items=json.dumps(self.line_items),
             test_mode=self.test_mode,
         )
 

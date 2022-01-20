@@ -21,7 +21,8 @@ app "digital-membership" {
       port = 8080
 
       static_environment = {
-        GCP_SECRET_VERSION = "projects/567739286055/secrets/digital-membership/versions/latest"
+        DIGITAL_MEMBERSHIP_GCP_SECRET_NAME = "projects/567739286055/secrets/digital-membership/versions/latest"
+        DIGITAL_MEMBERSHIP_SETTINGS_PATH = "member_card.settings.production.ProductionSettings"
       }
 
       capacity {
