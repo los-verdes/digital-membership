@@ -52,6 +52,8 @@ googleapis-common-protos[grpc]==1.54.0
     #   google-api-core
     #   grpc-google-iam-v1
     #   grpcio-status
+greenlet==1.1.2
+    # via sqlalchemy
 grpc-google-iam-v1==0.12.3
     # via google-cloud-secret-manager
 grpcio==1.43.0
@@ -86,10 +88,6 @@ oauthlib==3.1.1
     #   social-auth-core
 packaging==21.3
     # via google-cloud-firestore
-peewee==2.10.2
-    # via
-    #   -r requirements.in
-    #   social-auth-storage-peewee
 proto-plus==1.19.8
     # via
     #   google-cloud-firestore
@@ -100,6 +98,8 @@ protobuf==3.19.3
     #   googleapis-common-protos
     #   grpcio-status
     #   proto-plus
+psycopg2==2.9.3
+    # via -r requirements.in
 pyasn1==0.4.8
     # via
     #   pyasn1-modules
@@ -135,19 +135,25 @@ six==1.16.0
     #   libsass
     #   python-dateutil
     #   social-auth-app-flask
-    #   social-auth-storage-peewee
+    #   social-auth-app-flask-sqlalchemy
+    #   social-auth-storage-sqlalchemy
 social-auth-app-flask==1.0.0
     # via
     #   -r requirements.in
-    #   social-auth-app-flask-peewee
-social-auth-app-flask-peewee==1.0.0
+    #   social-auth-app-flask-sqlalchemy
+social-auth-app-flask-sqlalchemy==1.0.1
     # via -r requirements.in
 social-auth-core==4.2.0
     # via
     #   social-auth-app-flask
-    #   social-auth-storage-peewee
-social-auth-storage-peewee==1.1.0
-    # via social-auth-app-flask-peewee
+    #   social-auth-app-flask-sqlalchemy
+    #   social-auth-storage-sqlalchemy
+social-auth-storage-sqlalchemy==1.1.0
+    # via social-auth-app-flask-sqlalchemy
+sqlalchemy==1.4.31
+    # via
+    #   social-auth-app-flask-sqlalchemy
+    #   social-auth-storage-sqlalchemy
 typing-extensions==4.0.1
     # via
     #   libcst

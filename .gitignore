@@ -1,3 +1,4 @@
 .webassets-cache/
 *.sqlite3
 **/static/style.css
+postgres-data/

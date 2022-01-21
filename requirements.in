@@ -7,8 +7,8 @@ google-cloud-secret-manager
 gunicorn
 libsass
 logzero
-peewee<=3.0 # version constraint blergh => https://github.com/python-social-auth/social-storage-peewee/issues/2
+psycopg2
 python-dateutil
 requests
 social-auth-app-flask
-social-auth-app-flask-peewee
+social-auth-app-flask-sqlalchemy

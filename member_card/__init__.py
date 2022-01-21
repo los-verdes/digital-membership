@@ -5,14 +5,15 @@ from flask import Flask, g, redirect, render_template
 from flask_assets import Bundle, Environment
 from flask_login import LoginManager, current_user, login_required, logout_user
 from logzero import logger, setup_logger
-from peewee import SqliteDatabase
 from social_flask.routes import social_auth
 from social_flask.template_filters import backends
 from social_flask.utils import load_strategy
-from social_flask_peewee.models import init_social
+from social_flask_sqlalchemy.models import init_social
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
 from webassets.filter import get_filter
 
-from member_card.models.user import User, database_proxy
+from member_card.settings import get_settings_obj_for_env
 from member_card.utils import common_context
 
 setup_logger(name=__name__)
@@ -36,27 +37,46 @@ bundles = {  # define nested Bundle
     )
 }
 assets.register(bundles)
+# settings_paths_by_env = {
+#     "prod": "member_card.settings.Settings"
+# }
+# settings_path = os.getenv(
+#     "DIGITAL_MEMBERSHIP_SETTINGS_PATH", "member_card.settings.Settings"
+# )
+# default_settings_class = "Settings"
+# settings_class = settings_paths_by_env.get(settings_env, default_settings_class)
+# settings_path = f"member_card.settings.{settings_class}"
 
-settings_path = os.getenv('DIGITAL_MEMBERSHIP_SETTINGS_PATH', "member_card.settings.Settings")
-try:
-    logger.debug(f"app.config before loading settings from object {settings_path}: {app.config=}")
-    app.config.from_object(settings_path)
-    logger.debug(f"app.config after loading settings from object {settings_path}: {app.config=}")
-except ImportError as err:
-    logger.exception(f"Unable to load settings from {settings_path}: {err=}")
-    raise err
+logger.debug(f"{app.config['ENV']=}")
+settings_env = app.config["ENV"].lower().strip()
 
+settings_obj = get_settings_obj_for_env(settings_env)
+logger.debug(
+    f"app.config before loading settings from object {settings_obj}: {app.config=}"
+)
+app.config.from_object(settings_obj)
+logger.debug(
+    f"app.config after loading settings from object {settings_obj}: {app.config=}"
+)
+
+# breakpoint()
 # DB
-database = SqliteDatabase(app.config["DATABASE_URI"])
-database_proxy.initialize(database)
+
+engine = create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
+Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+db_session = scoped_session(Session)
 
 app.register_blueprint(social_auth)
-init_social(app, database)
+init_social(app, db_session)
 
-login_manager = LoginManager()
-# noqa
-login_manager.login_view = "main"  # noqa
-login_manager.login_message = ""
+
+class MembershipLoginManager(LoginManager):
+    def __init__(self, app=None, add_context_processor=True):
+        super().__init__(app, add_context_processor)
+        self.login_view = "main"  # members_card.__name__
+
+
+login_manager = MembershipLoginManager()
 login_manager.init_app(app)
 
 
@@ -66,13 +86,14 @@ assert models
 from social_flask import routes
 
 assert routes
+from member_card.models.user import User
 
 
 @login_manager.user_loader
 def load_user(userid):
     try:
-        return User.get(User.id == userid)
-    except User.DoesNotExist:
+        return User.query.get(int(userid))
+    except (TypeError, ValueError):
         pass
 
 
@@ -80,6 +101,16 @@ def load_user(userid):
 def global_user():
     # evaluate proxy value
     g.user = current_user._get_current_object()
+
+
+@app.teardown_appcontext
+def commit_on_success(error=None):
+    if error is None:
+        db_session.commit()
+    else:
+        db_session.rollback()
+
+    db_session.remove()
 
 
 @app.context_processor
@@ -154,19 +185,27 @@ def logout():
     return redirect("/")
 
 
-def create_app():
-    from social_flask_peewee.models import FlaskStorage
 
-    from member_card.models.user import User
+@app.cli.command("syncdb")
+def ensure_db_schema():
+    from member_card.models import user
+    from social_flask_sqlalchemy import models
 
-    models = [
-        User,
-        FlaskStorage.user,
-        FlaskStorage.nonce,
-        FlaskStorage.association,
-        FlaskStorage.code,
-        FlaskStorage.partial,
-    ]
-    for model in models:
-        model.create_table(True)
-    return app
+    logger.debug(f"Creating all users with {engine=}")
+    user.Base.metadata.create_all(engine)
+    logger.debug(f"Creating all models with {engine=}")
+    models.PSABase.metadata.create_all(engine)
+# def create_app():
+#     from member_card.models.user import User
+
+#     models = [
+#         User,
+#         FlaskStorage.user,
+#         FlaskStorage.nonce,
+#         FlaskStorage.association,
+#         FlaskStorage.code,
+#         FlaskStorage.partial,
+#     ]
+#     for model in models:
+#         model.create_table(True)
+#     return app

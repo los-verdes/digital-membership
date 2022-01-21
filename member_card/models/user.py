@@ -1,30 +1,23 @@
-from datetime import datetime
-
-from peewee import Model, Proxy, CharField, BooleanField, DateTimeField
+from sqlalchemy import Column, String, Integer, Boolean
+from sqlalchemy.ext.declarative import declarative_base
 
 from flask_login import UserMixin
 
-
-database_proxy = Proxy()
-
-
-# model definitions -- the standard "pattern" is to define a base model class
-# that specifies which database to use.  then, any subclasses will automatically
-# use the correct storage.
-class BaseModel(Model):
-    class Meta:
-        database = database_proxy
+from member_card import db_session
 
 
-# the user model specifies its fields (or columns) declaratively, like django
-class User(BaseModel, UserMixin):
-    username = CharField(unique=True)
-    first_name = CharField(null=True)
-    last_name = CharField(null=True)
-    fullname = CharField(null=True)
-    email = CharField(null=True)
-    active = BooleanField(default=True)
-    join_date = DateTimeField(default=datetime.now)
+Base = declarative_base()
+Base.query = db_session.query_property()
 
-    class Meta:
-        order_by = ("username",)
+
+class User(Base, UserMixin):
+    __tablename__ = 'users'
+    id = Column(Integer, primary_key=True)
+    username = Column(String(200))
+    password = Column(String(200), default='')
+    name = Column(String(100))
+    email = Column(String(200))
+    active = Column(Boolean, default=True)
+
+    def is_active(self):
+        return self.active

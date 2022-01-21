@@ -8,5 +8,6 @@ RUN pip install \
     --requirement requirements.txt
 
 COPY ./member_card/ ./member_card
+COPY ./*.py ./
 
-ENTRYPOINT ["gunicorn", "-b", "0.0.0.0:8080", "member_card.app:create_app()", "--log-file", "-"]
+ENTRYPOINT ["gunicorn", "-b", "0.0.0.0:8080", "wsgi.app", "--log-file", "-"]

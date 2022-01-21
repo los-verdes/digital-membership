@@ -39,7 +39,7 @@
           Login with Google OAuth2
         </a>
         <div class="google-btn"> -->
-          {{ macros.sign_in_button() }}
+          <!-- {{ macros.sign_in_button() }} -->
           {% endif %}
         </nav>
       </div>
@@ -58,6 +58,9 @@
             Disconnect Google OAuth2
           </a>
         </form>
+        {% else %}
+
+        {{ macros.sign_in_button() }}
         {% endif %}
         <span class="mdl-navigation__link">
           <b>last data refresh</b>
@@ -83,10 +86,14 @@
             </div>
             <div class="mdl-card__actions mdl-card--border">
               <div class="mdl-layout-spacer"></div>
-              <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+              Sign in to display your card
+              <i class="material-icons">chevron_right</i>
+              <!-- <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
                 Sign in to display your card
                 <i class="material-icons">login</i>
-              </a>
+              </a> -->
+
+              {{ macros.sign_in_button() }}
             </div>
           </div>
           <div class="mdl-layout-spacer"></div>
@@ -114,7 +121,7 @@
                 Sign in with Google
               </a>
               <div class="mdl-layout-spacer"></div>
-              <!-- <i class="material-icons">login</i> -->
+              <i class="material-icons">login</i> -->
             </div>
           </div> -->
 

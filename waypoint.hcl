@@ -7,7 +7,7 @@ app "digital-membership" {
 
     registry {
       use "docker" {
-        image = "gcr.io/lv-digital-membership/website"
+        image = "gcr.io/lv-digital-membership/member-card"
         tag   = gitrefpretty()
       }
     }
@@ -22,7 +22,7 @@ app "digital-membership" {
 
       static_environment = {
         DIGITAL_MEMBERSHIP_GCP_SECRET_NAME = "projects/567739286055/secrets/digital-membership/versions/latest"
-        DIGITAL_MEMBERSHIP_SETTINGS_PATH = "member_card.settings.production.ProductionSettings"
+        FLASK_ENV = "production"
       }
 
       capacity {

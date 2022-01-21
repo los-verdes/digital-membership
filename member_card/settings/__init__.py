@@ -22,8 +22,10 @@ class Settings(object):
     SOCIAL_AUTH_LOGIN_REDIRECT_URL = "/"
     SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
     SOCIAL_AUTH_USER_MODEL = "member_card.models.user.User"
-    SOCIAL_AUTH_STORAGE = "social_flask_peewee.models.FlaskStorage"
+    SOCIAL_AUTH_STORAGE = "social_flask_sqlalchemy.models.FlaskStorage"
     SOCIAL_AUTH_AUTHENTICATION_BACKENDS = ("social_core.backends.google.GoogleOAuth2",)
+
+    SQLALCHEMY_DATABASE_URI = "postgresql://member-card-user:member-card-password@127.0.0.1:5432/digital-membership"
 
     SOCIAL_AUTH_TRAILING_SLASH = True
 
@@ -41,3 +43,34 @@ class Settings(object):
         "social_core.pipeline.user.user_details",
         "social_core.pipeline.debug.debug",
     )
+
+
+def get_settings_obj_for_env(env, default_settings_class=Settings):
+    class DockerComposeSettings(Settings):
+        SQLALCHEMY_DATABASE_URI = "postgresql://member-card-user:member-card-password@db:5432/digital-membership"
+
+    class ProductionSettings(Settings):
+        def __init__(self) -> None:
+            super().__init__()
+            # from: https://realpython.com/flask-google-login/
+            if secret_name := os.getenv("DIGITAL_MEMBERSHIP_GCP_SECRET_NAME"):
+                from member_card.secrets import retrieve_app_secrets
+
+                secrets = retrieve_app_secrets(secret_name)
+                self.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = secrets["oauth_client_id"]
+                self.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = secrets["oauth_client_secret"]
+                self.SECRET_KEY = secrets["flask_secret_key"]
+            else:
+                raise Exception(
+                    "Unable to load production settings, no secret version name found under  "
+                )
+
+        SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
+
+    settings_objs_by_env = {
+        # "default": Settings,
+        "compose": DockerComposeSettings,
+        "prod": ProductionSettings,
+    }
+
+    return settings_objs_by_env.get(env, default_settings_class)

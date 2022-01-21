@@ -14,3 +14,9 @@ tf-init:
 
 tf-auto-apply: tf-init
   just run-tf 'apply -auto-approve'
+
+flask +CMD:
+  flask {{ CMD }}
+
+serve:
+  ./run_app.py
