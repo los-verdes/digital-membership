@@ -4,6 +4,16 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
+aiohttp==3.8.1
+    # via cloud-sql-python-connector
+aiosignal==1.2.0
+    # via aiohttp
+asn1crypto==1.4.0
+    # via scramp
+async-timeout==4.0.2
+    # via aiohttp
+attrs==21.4.0
+    # via aiohttp
 cachetools==4.2.4
     # via google-auth
 certifi==2021.10.8
@@ -11,11 +21,18 @@ certifi==2021.10.8
 cffi==1.15.0
     # via cryptography
 charset-normalizer==2.0.10
-    # via requests
+    # via
+    #   aiohttp
+    #   requests
 click==8.0.3
     # via flask
+cloud-sql-python-connector[pg8000]==0.5.0
+    # via -r requirements.in
 cryptography==36.0.1
-    # via social-auth-core
+    # via
+    #   cloud-sql-python-connector
+    #   pyopenssl
+    #   social-auth-core
 defusedxml==0.7.1
     # via
     #   python3-openid
@@ -25,22 +42,36 @@ flask==2.0.2
     #   -r requirements.in
     #   flask-assets
     #   flask-login
+    #   flask-sqlalchemy
 flask-assets==2.0
     # via -r requirements.in
 flask-login==0.5.0
     # via
     #   -r requirements.in
     #   social-auth-app-flask
+flask-sqlalchemy==2.5.1
+    # via -r requirements.in
+frozenlist==1.3.0
+    # via
+    #   aiohttp
+    #   aiosignal
 google-api-core[grpc]==2.4.0
     # via
+    #   google-api-python-client
     #   google-cloud-core
     #   google-cloud-firestore
     #   google-cloud-secret-manager
+google-api-python-client==2.36.0
+    # via cloud-sql-python-connector
 google-auth==2.3.3
     # via
     #   -r requirements.in
     #   google-api-core
+    #   google-api-python-client
+    #   google-auth-httplib2
     #   google-cloud-core
+google-auth-httplib2==0.1.0
+    # via google-api-python-client
 google-cloud-core==2.2.1
     # via google-cloud-firestore
 google-cloud-firestore==2.3.4
@@ -66,8 +97,14 @@ grpcio-status==1.43.0
     # via google-api-core
 gunicorn==20.1.0
     # via -r requirements.in
+httplib2==0.20.2
+    # via
+    #   google-api-python-client
+    #   google-auth-httplib2
 idna==3.3
-    # via requests
+    # via
+    #   requests
+    #   yarl
 itsdangerous==2.0.1
     # via flask
 jinja2==3.0.3
@@ -80,6 +117,10 @@ logzero==1.7.0
     # via -r requirements.in
 markupsafe==2.0.1
     # via jinja2
+multidict==5.2.0
+    # via
+    #   aiohttp
+    #   yarl
 mypy-extensions==0.4.3
     # via typing-inspect
 oauthlib==3.1.1
@@ -88,6 +129,8 @@ oauthlib==3.1.1
     #   social-auth-core
 packaging==21.3
     # via google-cloud-firestore
+pg8000==1.23.0
+    # via cloud-sql-python-connector
 proto-plus==1.19.8
     # via
     #   google-cloud-firestore
@@ -110,8 +153,12 @@ pycparser==2.21
     # via cffi
 pyjwt==2.3.0
     # via social-auth-core
+pyopenssl==21.0.0
+    # via cloud-sql-python-connector
 pyparsing==3.0.6
-    # via packaging
+    # via
+    #   httplib2
+    #   packaging
 python-dateutil==2.8.2
     # via -r requirements.in
 python3-openid==3.2.0
@@ -121,6 +168,7 @@ pyyaml==6.0
 requests==2.27.1
     # via
     #   -r requirements.in
+    #   cloud-sql-python-connector
     #   google-api-core
     #   requests-oauthlib
     #   social-auth-core
@@ -128,11 +176,15 @@ requests-oauthlib==1.3.0
     # via social-auth-core
 rsa==4.8
     # via google-auth
+scramp==1.4.1
+    # via pg8000
 six==1.16.0
     # via
     #   google-auth
+    #   google-auth-httplib2
     #   grpcio
     #   libsass
+    #   pyopenssl
     #   python-dateutil
     #   social-auth-app-flask
     #   social-auth-app-flask-sqlalchemy
@@ -150,8 +202,9 @@ social-auth-core==4.2.0
     #   social-auth-storage-sqlalchemy
 social-auth-storage-sqlalchemy==1.1.0
     # via social-auth-app-flask-sqlalchemy
-sqlalchemy==1.4.31
+sqlalchemy==1.4.25
     # via
+    #   flask-sqlalchemy
     #   social-auth-app-flask-sqlalchemy
     #   social-auth-storage-sqlalchemy
 typing-extensions==4.0.1
@@ -160,12 +213,16 @@ typing-extensions==4.0.1
     #   typing-inspect
 typing-inspect==0.7.1
     # via libcst
+uritemplate==4.1.1
+    # via google-api-python-client
 urllib3==1.26.8
     # via requests
 webassets==2.0
     # via flask-assets
 werkzeug==2.0.2
     # via flask
+yarl==1.7.2
+    # via aiohttp
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools

@@ -4,8 +4,7 @@ import logging
 import logzero
 from logzero import logger
 
-from member_card.db import get_firestore_client
-from member_card.squarespace import AnnualMembership
+from member_card.models import AnnualMembership
 
 if __name__ == "__main__":
     import argparse
@@ -33,11 +32,15 @@ if __name__ == "__main__":
         logzero.loglevel(logging.INFO)
 
     email = args.email
-
-    db = get_firestore_client()
-    memberships_ref = db.collection("memberships")
-    memberships = memberships_ref.where('email', '==', email)
-    for membership in memberships.stream():
-        logger.info(f'{membership.id} => {membership.to_dict()}')
-        m = AnnualMembership.from_dict(membership.to_dict())
-        logger.info(f'{email} => {m=}')
+    memberships = (
+        AnnualMembership.query.filter_by(customer_email=email)
+        .order_by(AnnualMembership.created_on.desc())
+        .all()
+    )
+    member_name = None
+    member_since_dt = None
+    if memberships:
+        member_since_dt = memberships[-1].created_on
+        member_name = memberships[-1].full_name
+    logger.debug(f"{member_name=} => {member_since_dt=}")
+    logger.debug(f"{memberships=}")

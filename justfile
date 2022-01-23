@@ -19,4 +19,7 @@ flask +CMD:
   flask {{ CMD }}
 
 serve:
-  ./run_app.py
+  # export DB_SOCKET_DIR={{ justfile_directory() + "./cloudsql"}}
+  # ./run_app.py
+  # sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain tmp-certs/cert.pem
+  flask run --cert=tmp-certs/cert.pem --key=tmp-certs/key.pem

@@ -3,7 +3,10 @@ project = "digital-membership"
 app "digital-membership" {
 
   build {
-    use "docker" {}
+    use "docker" {
+
+    disable_entrypoint = true
+    }
 
     registry {
       use "docker" {
@@ -23,7 +26,11 @@ app "digital-membership" {
       static_environment = {
         DIGITAL_MEMBERSHIP_GCP_SECRET_NAME = "projects/567739286055/secrets/digital-membership/versions/latest"
         FLASK_ENV = "production"
+
+        WAYPOINT_CEB_DISABLE = "true"
       }
+
+      cloudsql_instances = ["lv-digital-membership:us-central1:lv-digital-membership"]
 
       capacity {
         memory                     = 256

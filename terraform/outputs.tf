@@ -17,3 +17,25 @@ output "secret_name" {
 output "website_sa_email" {
   value = google_service_account.digital_membership.email
 }
+
+
+locals {
+  postgres_connection_url = join(
+    "",
+    [
+      "postgres://",
+      google_sql_user.users.name,
+      ":",
+      random_password.sql_password.result,
+      "@",
+      google_sql_database_instance.digital_membership.public_ip_address,
+      "/",
+      google_sql_database.database.name,
+    ]
+  )
+}
+
+output "postgres_connection_url" {
+  value     = local.postgres_connection_url
+  sensitive = true
+}

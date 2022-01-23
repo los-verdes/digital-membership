@@ -1,4 +1,6 @@
 Flask-Assets
+Flask-SQLAlchemy
+cloud-sql-python-connector[pg8000]
 flask
 flask-login
 google-auth

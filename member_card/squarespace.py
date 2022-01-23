@@ -1,11 +1,7 @@
 import logging
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 import requests
-from dateutil.parser import parse
-from logzero import logger
-
-from member_card.models.annual_membership import AnnualMembership
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -132,7 +128,7 @@ class Squarespace(object):
             if "nextPageCursor" in result["pagination"]
             else None
         )
-
+        # breakpoint()
         return result["result"]
 
     def next_page(self) -> "Iterable":
@@ -149,66 +145,3 @@ class Squarespace(object):
             count += 1
             for order in self.next_page():
                 yield order
-
-    def load_membership_orders_datetime_window(
-        self,
-        membership_sku,
-        modified_before=None,
-        modified_after=None,
-        fulfillment_status=None,
-    ) -> List[AnnualMembership]:
-        order_params = dict(
-            modifiedAfter=modified_after,
-            modifiedBefore=modified_before,
-            fulfillmentStatus=fulfillment_status,
-        )
-
-        return self.load_all_membership_orders(
-            membership_sku, order_params=order_params
-        )
-
-    def load_all_membership_orders(
-        self, membership_sku, order_params
-    ) -> List[AnnualMembership]:
-        # remove "None"s
-        order_params = {k: v for k, v in order_params.items() if v is not None}
-
-        all_orders = []
-        subscriptions = []
-
-        logger.debug(f"Grabbing all orders with {order_params=}")
-
-        for order in self.all_orders(**order_params):
-            all_orders.append(order)
-
-            order_product_names = [i["productName"] for i in order["lineItems"]]
-            if any(i["sku"] == membership_sku for i in order["lineItems"]):
-                logger.debug(
-                    f"{order['id']=} (#{order['orderNumber']}) includes {membership_sku=} in {order_product_names=}"
-                )
-                fulfilled_on = None
-                if fulfilled_on := order.get("fulfilledOn"):
-                    fulfilled_on = parse(fulfilled_on)
-                subscriptions.append(
-                    AnnualMembership(
-                        id=order["id"],
-                        name=f"{order['billingAddress']['firstName']} {order['billingAddress']['lastName']}",
-                        email=order["customerEmail"],
-                        order_number=order["orderNumber"],
-                        line_items=order["lineItems"],
-                        created_on=parse(order["createdOn"]),
-                        modified_on=parse(order["modifiedOn"]),
-                        fulfilled_on=fulfilled_on,
-                        fulfillment_status=order["fulfillmentStatus"],
-                        test_mode=order["testmode"],
-                    )
-                )
-                continue
-            logger.debug(
-                f"#{order['orderNumber']} has no {membership_sku=} in {order_product_names=}"
-            )
-
-        logger.debug(
-            f"{len(all_orders)=} loaded with {len(subscriptions)=} and whatnot"
-        )
-        return subscriptions

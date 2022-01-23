@@ -3,6 +3,12 @@ resource "random_password" "flask_secret_key" {
   special = false
 }
 
+resource "random_password" "sql_password" {
+  length  = 64
+  special = false
+}
+
+
 resource "google_secret_manager_secret" "digital_membership" {
   secret_id = "digital-membership"
 
@@ -14,7 +20,11 @@ resource "google_secret_manager_secret" "digital_membership" {
 resource "google_secret_manager_secret_version" "digital_membership" {
   secret = google_secret_manager_secret.digital_membership.id
   secret_data = jsonencode({
-    flask_secret_key             = random_password.flask_secret_key.result
+    sql_database_name   = google_sql_database.database.name
+    sql_connection_name = google_sql_database_instance.digital_membership.connection_name
+    sql_username        = google_sql_user.users.name
+    sql_password        = random_password.sql_password.result
+    flask_secret_key    = random_password.flask_secret_key.result
     squarespace_api_key = var.squarespace_api_key
     oauth_client_id     = var.oauth_client_id
     oauth_client_secret = var.oauth_client_secret
@@ -47,6 +57,13 @@ resource "google_service_account" "digital_membership" {
 
 resource "google_project_iam_member" "digital_membership_datastore_viewer" {
   project = google_project.digital_membership.id
-  role    = "roles/datastore.viewer"
+  role    = "roles/cloudsql.client"
   member  = "serviceAccount:${google_service_account.digital_membership.email}"
 }
+
+
+# resource "google_project_iam_member" "digital_membership_datastore_viewer" {
+#   project = google_project.digital_membership.id
+#   role    = "roles/datastore.viewer"
+#   member  = "serviceAccount:${google_service_account.digital_membership.email}"
+# }

@@ -1,5 +1,6 @@
 import os
 from os.path import dirname, abspath, join
+from logzero import logger
 
 
 class Settings(object):
@@ -25,6 +26,11 @@ class Settings(object):
     SOCIAL_AUTH_STORAGE = "social_flask_sqlalchemy.models.FlaskStorage"
     SOCIAL_AUTH_AUTHENTICATION_BACKENDS = ("social_core.backends.google.GoogleOAuth2",)
 
+    POSTGRES_CONNECTION_NAME = "lv-digital-membership:us-central1:lv-digital-membership"
+    POSTGRES_USER = "website"
+    POSTGRES_PASS = None
+    POSTGRES_DB = "lv-digital-membership"
+
     SQLALCHEMY_DATABASE_URI = "postgresql://member-card-user:member-card-password@127.0.0.1:5432/digital-membership"
 
     SOCIAL_AUTH_TRAILING_SLASH = True
@@ -45,32 +51,97 @@ class Settings(object):
     )
 
 
-def get_settings_obj_for_env(env, default_settings_class=Settings):
+class ProductionSettings(Settings):
+    secrets = None
+
+    def __init__(self) -> None:
+        super().__init__()
+        # from: https://realpython.com/flask-google-login/
+        if secret_name := os.getenv("DIGITAL_MEMBERSHIP_GCP_SECRET_NAME"):
+            from member_card.secrets import retrieve_app_secrets
+
+            if ProductionSettings.secrets is None:
+                ProductionSettings.secrets = retrieve_app_secrets(secret_name)
+            self.secrets = ProductionSettings.secrets
+            self.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = self.secrets["oauth_client_id"]
+            self.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = self.secrets["oauth_client_secret"]
+            self.SECRET_KEY = self.secrets["flask_secret_key"]
+            self.POSTGRES_USER = self.secrets["sql_username"]
+            logger.warning("setting prod sql_password...")
+            # breakpoint()
+            self.POSTGRES_PASS = self.secrets["sql_password"]
+
+            db_socket_dir = os.environ.get("DB_SOCKET_DIR", "/cloudsql")
+            # db_socket_dir = os.environ.get("DB_SOCKET_DIR", "/tmp/cloudsql")
+            logger.debug(f"{db_socket_dir=}")
+            # self.SQLALCHEMY_DATABASE_URI = f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASS}@127.0.0.1:5432/lv-digital-membership"
+            # self.SQLALCHEMY_DATABASE_URI =
+            # f"postgresql+pg8000://{self.POSTGRES_USER}:{self.POSTGRES_PASS}@lv-digital-membership
+            # ?
+            # unix_sock={db_socket_dir}/lv-digital-membership:us-central1:lv-digital-membership/.s.PGSQL.5432"
+            from sqlalchemy import engine
+
+            self.SQLALCHEMY_DATABASE_URI = getattr(engine, "url").URL.create(
+                drivername="postgresql+pg8000",
+                username=self.POSTGRES_USER,  # e.g. "my-database-user"
+                password=self.POSTGRES_PASS,  # e.g. "my-database-password"
+                database=self.secrets["sql_database_name"],  # e.g. "my-database-name"
+                query={
+                    "unix_sock": "{}/{}/.s.PGSQL.5432".format(
+                        db_socket_dir,  # e.g. "/cloudsql"
+                        self.secrets[
+                            "sql_connection_name"
+                        ],  # i.e "<PROJECT-NAME>:<INSTANCE-REGION>:<INSTANCE-NAME>"
+                    )
+                },
+            )
+
+        else:
+            raise Exception(
+                "Unable to load production settings, no secret version name found under  "
+            )
+
+    SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
+
+
+class RemoteSqlSettings(ProductionSettings):
+    def __init__(self) -> None:
+        super().__init__()
+        # from: https://realpython.com/flask-google-login/
+        if secret_name := os.getenv("DIGITAL_MEMBERSHIP_GCP_SECRET_NAME"):
+            from member_card.secrets import retrieve_app_secrets
+
+            if ProductionSettings.secrets is None:
+                ProductionSettings.secrets = retrieve_app_secrets(secret_name)
+            self.secrets = ProductionSettings.secrets
+            self.POSTGRES_USER = self.secrets["sql_username"]
+            logger.warning("setting prod sql_password...")
+            # breakpoint()
+            self.POSTGRES_PASS = self.secrets["sql_password"]
+
+            db_socket_dir = os.environ.get("DB_SOCKET_DIR", "/cloudsql")
+            # db_socket_dir = os.environ.get("DB_SOCKET_DIR", "/tmp/cloudsql")
+            logger.debug(f"{db_socket_dir=}")
+            self.SQLALCHEMY_DATABASE_URI = f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASS}@127.0.0.1:5432/lv-digital-membership"
+
+
+def get_settings_obj_for_env(env=None, default_settings_class=Settings):
+    if env is None:
+        env = os.getenv("FLASK_ENV", "unknown").lower().strip()
+
     class DockerComposeSettings(Settings):
-        SQLALCHEMY_DATABASE_URI = "postgresql://member-card-user:member-card-password@db:5432/digital-membership"
+        pass
+        # SQLALCHEMY_DATABASE_URI = "postgresql://member-card-user:member-card-password@db:5432/digital-membership"
+        SQLALCHEMY_DATABASE_URI = "postgresql://member-card-user:member-card-password@127.0.0.1:5432/digital-membership"
 
-    class ProductionSettings(Settings):
-        def __init__(self) -> None:
-            super().__init__()
-            # from: https://realpython.com/flask-google-login/
-            if secret_name := os.getenv("DIGITAL_MEMBERSHIP_GCP_SECRET_NAME"):
-                from member_card.secrets import retrieve_app_secrets
+    if env == "production":
 
-                secrets = retrieve_app_secrets(secret_name)
-                self.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = secrets["oauth_client_id"]
-                self.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = secrets["oauth_client_secret"]
-                self.SECRET_KEY = secrets["flask_secret_key"]
-            else:
-                raise Exception(
-                    "Unable to load production settings, no secret version name found under  "
-                )
-
-        SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
+        return ProductionSettings()
 
     settings_objs_by_env = {
         # "default": Settings,
         "compose": DockerComposeSettings,
-        "prod": ProductionSettings,
+        # "production": ProductionSettings,
     }
 
     return settings_objs_by_env.get(env, default_settings_class)

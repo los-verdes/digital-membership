@@ -3,22 +3,23 @@ import os
 
 from flask import Flask, g, redirect, render_template
 from flask_assets import Bundle, Environment
-from flask_login import LoginManager, current_user, login_required, logout_user
+from flask_login import LoginManager
+from flask_login import current_user as current_login_user
+from flask_login import login_required, logout_user
+from flask_sqlalchemy import SQLAlchemy
 from logzero import logger, setup_logger
 from social_flask.routes import social_auth
 from social_flask.template_filters import backends
 from social_flask.utils import load_strategy
 from social_flask_sqlalchemy.models import init_social
-from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
 from webassets.filter import get_filter
 
+from member_card.models import User
 from member_card.settings import get_settings_obj_for_env
-from member_card.utils import common_context
-
-setup_logger(name=__name__)
+from member_card.utils import common_context, get_db_session  # , init_connection_engine
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+setup_logger(name=__name__)
 
 # App
 app = Flask(__name__)
@@ -51,20 +52,22 @@ logger.debug(f"{app.config['ENV']=}")
 settings_env = app.config["ENV"].lower().strip()
 
 settings_obj = get_settings_obj_for_env(settings_env)
-logger.debug(
-    f"app.config before loading settings from object {settings_obj}: {app.config=}"
-)
+# logger.debug(
+#     f"app.config before loading settings from object {settings_obj}: {app.config=}"
+# )
 app.config.from_object(settings_obj)
-logger.debug(
-    f"app.config after loading settings from object {settings_obj}: {app.config=}"
-)
-
+# logger.debug(
+#     f"app.config after loading settings from object {settings_obj}: {app.config=}"
+# )
+logger.debug(app.config["SQLALCHEMY_DATABASE_URI"])
 # breakpoint()
 # DB
 
-engine = create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
-Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-db_session = scoped_session(Session)
+# engine = create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
+# # engine = init_connection_engine()
+# Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# db_session = scoped_session(Session)
+db_session = get_db_session(settings_obj)
 
 app.register_blueprint(social_auth)
 init_social(app, db_session)
@@ -78,15 +81,16 @@ class MembershipLoginManager(LoginManager):
 
 login_manager = MembershipLoginManager()
 login_manager.init_app(app)
+db = SQLAlchemy(app)
+# db.init_app(app)
+# breakpoint()
+# from social_flask import models
 
+# assert models
+# from social_flask import routes
 
-from social_flask import models
-
-assert models
-from social_flask import routes
-
-assert routes
-from member_card.models.user import User
+# assert routes
+# from member_card.models.user import User
 
 
 @login_manager.user_loader
@@ -100,7 +104,7 @@ def load_user(userid):
 @app.before_request
 def global_user():
     # evaluate proxy value
-    g.user = current_user._get_current_object()
+    g.user = current_login_user._get_current_object()
 
 
 @app.teardown_appcontext
@@ -139,28 +143,36 @@ app.context_processor(backends)
 def main():
     from logzero import logger
 
-    from member_card.db import get_firestore_client
-    from member_card.squarespace import AnnualMembership
+    from member_card.models import AnnualMembership
 
-    db = get_firestore_client()
-    membership = None
-    member_since_dt = None
+    current_user = g.user
+    membership_table_keys = list(AnnualMembership().to_dict().keys())
     if current_user.is_authenticated:
-        memberships_ref = db.collection("memberships")
-        memberships = memberships_ref.where("email", "==", current_user.email)
-        membership_objs = []
-        member_since_dt = None
-        for membership in memberships.stream():
-            logger.info(f"{membership.id} => {membership.to_dict()}")
-            m = AnnualMembership.from_dict(membership.to_dict())
-            logger.info(f"{current_user.email} => {m=}")
-            membership_objs.append(m)
-        membership_objs = sorted(membership_objs, key=lambda m: m.created_on)
-        membership = membership_objs[0]
-        member_since_dt = membership_objs[-1].created_on
-
+        logger.debug(f"filter: customer_email={current_user.email=}")
+        if customer_email := current_user.email:
+            memberships = (
+                AnnualMembership.query.filter_by(customer_email=customer_email)
+                .order_by(AnnualMembership.created_on.desc())
+                .all()
+            )
+            member_name = None
+            member_since_dt = None
+            if memberships:
+                member_since_dt = memberships[-1].created_on
+                member_name = memberships[-1].full_name
+            return render_template(
+                "home.html",
+                member_name=member_name,
+                membership_table_keys=membership_table_keys,
+                memberships=memberships,
+                member_since_dt=member_since_dt,
+            )
     return render_template(
-        "home.html", membership=membership, member_since_dt=member_since_dt
+        "home.html",
+        # membership_table_keys=membership_table_keys,
+        # memberships=list(),
+        # member_name=
+        # member_since_dt=None,
     )
 
 
@@ -185,16 +197,32 @@ def logout():
     return redirect("/")
 
 
-
 @app.cli.command("syncdb")
 def ensure_db_schema():
-    from member_card.models import user
-    from social_flask_sqlalchemy import models
+    # from social_flask_sqlalchemy import models
 
-    logger.debug(f"Creating all users with {engine=}")
-    user.Base.metadata.create_all(engine)
-    logger.debug(f"Creating all models with {engine=}")
-    models.PSABase.metadata.create_all(engine)
+    # from member_card.models import user
+
+    logger.debug("syncdb: calling `db.create_all()`")
+    # metadata = MetaData()
+    # metadata.create_all()
+    # db.create_all()
+    from social_flask_sqlalchemy import models as social_flask_models
+
+    from member_card import models
+    from utils import create_engine
+
+    engine = create_engine(settings_obj)
+    models.User.metadata.create_all(engine)
+    models.TableMetadata.metadata.create_all(engine)
+    models.AnnualMembership.metadata.create_all(engine)
+    social_flask_models.PSABase.metadata.create_all(engine)
+    # logger.debug(f"Creating all users with {engine=}")
+    # user.Base.metadata.create_all(engine)
+    # logger.debug(f"Creating all models with {engine=}")
+    # models.PSABase.metadata.create_all(engine)
+
+
 # def create_app():
 #     from member_card.models.user import User
 

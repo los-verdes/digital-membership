@@ -1,17 +1,38 @@
-{% macro membership_card(user, membership, member_since_dt) %}
+{% macro membership_card(user, memberships, member_since_dt) %}
 <div class="members-card-wide mdl-card mdl-shadow--2dp">
   <div class="mdl-card__title">
-    <h2 class="mdl-card__title-text">Los Verdes<br>Member Since {{member_since_dt.strftime("%b %Y")}}</h2>
+    <!-- put LV hands here? -->
+    <h2 class="mdl-card__title-text">{{ member_name }}<br>Los Verdes<br>Member Since: {{member_since_dt.strftime("%b %Y")}}<br><small class="vhlm">Verde Hasta La Muerte</small></h2>
   </div>
   <div class="mdl-card__supporting-text">
     User:
-    {{ user.fullname }}
+    {{ user.username }}
+    {{ user.name }}
     {{ user.email }}
     {{ user.active }}
     {{ user.join_date }}
     <hr>
-    Membership:
-    {{ membership.to_dict() }}
+    <b>Membership Stuff</b>
+    {% for membership in memberships %}
+    <details >
+      <summary class="mdl-button mdl-js-button mdl-button--raised" id="membership-details-{{ membership.id }}">#{{ membership.order_number }} ({{ membership.created_on.strftime("%x") }}): {{ membership.product_name }}</summary>
+
+      <ul class="mdl-list">
+        {% for key, value in membership.to_dict().items() %}
+        <li class="mdl-list__item mdl-list__item--two-line">
+          <span class="mdl-list__item-primary-content">
+            <!-- <i class="material-icons mdl-list__item-icon">event</i> -->
+            <span>{{ value }}</span>
+            <span class="mdl-list__item-sub-title"><strong>{{ key | replace("_", " ") | title }}</strong></span>
+          </span>
+
+        </li>
+        {% endfor %}
+      </ul>
+      <!-- {{ membership.to_dict() }} -->
+    </details>
+    <hr>
+    {% endfor %}
   </div>
   <div class="mdl-card__actions mdl-card--border">
     <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
@@ -32,8 +53,7 @@
 {% macro sign_in_button() %}
 <a class="google-btn" id="google-oauth2-button" name="google oauth2" href="/login/google-oauth2/">
   <div class="google-icon-wrapper">
-    <img class="google-icon"
-      src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" />
+    <img class="google-icon" src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" />
   </div>
   <p class="btn-text"><b>Sign in with Google</b></p>
 </a>
