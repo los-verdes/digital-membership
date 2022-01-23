@@ -13,10 +13,14 @@ $button-active-blue: #1669f2;
 }
 
 .members-card-wide > .mdl-card__title {
-  color: rgb(0, 0, 0);
+  color: white;
   // height: 200px;
   background: url("sangramos_pattern_small_clip.png") center / cover;
   // display: block;
+  margin-top: 2em;
+  margin-bottom: 2em;
+  border: 3mm outset rgba($bright-verde, 0.6);
+  border-radius: 20px;
   .mdl-grid {
     width: 100%;
     // padding-top: 25px;
@@ -25,15 +29,21 @@ $button-active-blue: #1669f2;
 }
 
 .lv-crest {
-  // background: no-repeat 0% 0%/50% url("lv_onverde.png");
-  // max-width: 75%;
-  // max-height: 25%;
-  // max-height: 25%;
-  padding-left: 15px;
-  padding-top: 10px;
-  width: 50px;
-  min-width: 35%;
-  max-width: 100%;
+  // display: flex;
+  background-image: url("lv_onverde.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  // justify-content: center;
+  // align-items: center;
+  // overflow: hidden;
+  // > img {
+
+  //  object-fit: cover;
+  //   flex-shrink: 0;
+  //   max-width: 50px;
+  //   min-height: 50px;
+  //   max-height: 100px;
+  // }
 }
 
 .members-card-wide > .mdl-card__menu {
@@ -58,8 +68,9 @@ $button-active-blue: #1669f2;
 
 .vhlm {
   font-family: "Almendra Display", cursive;
-  color: black;
+  // color: black;
   font-size: x-large;
+  font-weight: 900;
   // font-weight: bolder;
 }
 

@@ -89,15 +89,18 @@ def main():
             )
             member_name = None
             member_since_dt = None
+            member_expiry_dt = None
             if memberships:
                 member_since_dt = memberships[-1].created_on
                 member_name = memberships[-1].full_name
+                member_expiry_dt = memberships[-1].expiry_date
             return render_template(
                 "home.html",
                 member_name=member_name,
                 membership_table_keys=membership_table_keys,
                 memberships=memberships,
                 member_since_dt=member_since_dt,
+                member_expiry_dt=member_expiry_dt,
             )
     return render_template(
         "home.html",

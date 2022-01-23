@@ -103,6 +103,10 @@ class AnnualMembership(Model):
         return self.fulfillment_status == "CANCELED"
 
     @property
+    def expiry_date(self):
+        return self.created_on + timedelta(days=365)
+
+    @property
     def is_active(self):
         if self.is_canceled:
             return False

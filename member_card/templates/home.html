@@ -79,7 +79,7 @@
           <!-- <div class="mdl-layout-spacer"></div> -->
 
           {% if user.is_authenticated %}
-          {{ macros.membership_card(current_user, memberships, member_since_dt) }}
+          {{ macros.membership_card(current_user, memberships, member_since_dt, member_expiry_dt) }}
           {% else %}
           <div class="signin-card mdl-card mdl-shadow--2dp">
             <div class="mdl-card__title mdl-card--expand">
