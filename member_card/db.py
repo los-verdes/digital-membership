@@ -5,10 +5,14 @@ import google.auth
 from google.auth import impersonated_credentials
 from google.cloud import firestore
 from logzero import logger
+from flask_sqlalchemy import SQLAlchemy
 
 DEFAULT_SCOPES = [
     "https://www.googleapis.com/auth/cloud-platform	",
 ]
+
+db = SQLAlchemy()
+Model = getattr(db, "Model")
 
 
 def load_credentials(scopes=DEFAULT_SCOPES):

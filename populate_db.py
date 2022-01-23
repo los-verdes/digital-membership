@@ -8,9 +8,10 @@ from logzero import logger
 
 from member_card.models import AnnualMembership, TableMetadata
 from member_card.squarespace import Squarespace
+from member_card import db_session
 
 # from member_card import db
-from member_card.utils import get_db_session
+# from member_card.utils import get_db_session
 
 # from member_card.db import get_firestore_client
 
@@ -117,7 +118,7 @@ if __name__ == "__main__":
     from zoneinfo import ZoneInfo
 
     start_time = datetime.now(tz=ZoneInfo("UTC"))
-    db_session = get_db_session()
+    # db_session = get_db_session()
     instance = (
         db_session.query(TableMetadata)
         .filter_by(

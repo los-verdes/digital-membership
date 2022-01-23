@@ -1,17 +1,75 @@
+import uuid
+
+from flask_assets import Bundle, Environment
+from flask_login import LoginManager
+from logzero import logger
 from social_core.backends.google import GooglePlusAuth
 from social_core.backends.utils import load_backends
-
-from member_card.settings import get_settings_obj_for_env
-
+from social_flask.routes import social_auth
+from social_flask_sqlalchemy.models import init_social
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
+from webassets.filter import get_filter
 
-
-import uuid
+from member_card.settings import get_settings_obj_for_env
 
 # import pg8000
 # import sqlalchemy
 # from google.cloud.sql.connector import connector
+
+
+def init_login_manager(app):
+    class MembershipLoginManager(LoginManager):
+        def __init__(self, app=None, add_context_processor=True):
+            super().__init__(app, add_context_processor)
+            self.login_view = "main"  # members_card.__name__
+
+    login_manager = MembershipLoginManager()
+    login_manager.init_app(app)
+    return login_manager
+
+
+def init_social_auth(app):
+    db_session = get_db_session(app.config["SQLALCHEMY_DATABASE_URI"])
+
+    app.register_blueprint(social_auth)
+    init_social(app, db_session)
+    return db_session
+
+
+def load_settings(app):
+
+    logger.debug(f"{app.config['ENV']=}")
+    settings_env = app.config["ENV"].lower().strip()
+
+    settings_obj = get_settings_obj_for_env(settings_env)
+    # logger.debug(
+    #     f"app.config before loading settings from object {settings_obj}: {app.config=}"
+    # )
+    app.config.from_object(settings_obj)
+    # logger.debug(
+    #     f"app.config after loading settings from object {settings_obj}: {app.config=}"
+    # )
+    logger.debug(app.config["SQLALCHEMY_DATABASE_URI"])
+    # breakpoint()
+    # DB
+
+
+def register_asset_bundles(app):
+    libsass = get_filter(
+        "libsass",
+        as_output=True,
+        style="compressed",
+    )
+    assets = Environment(app)  # create an Environment instance
+    bundles = {  # define nested Bundle
+        "style": Bundle(
+            "scss/*.scss",
+            filters=(libsass),
+            output="style.css",
+        )
+    }
+    assets.register(bundles)
 
 
 def is_authenticated(user):
@@ -80,15 +138,13 @@ table_name = f"books_{uuid.uuid4().hex}"
 #     return engine
 
 
-def get_db_engine(settings_obj):
-    engine = create_engine(settings_obj.SQLALCHEMY_DATABASE_URI)
+def get_db_engine(database_uri):
+    engine = create_engine(database_uri)
     return engine
 
 
-def get_db_session(settings_obj=None):
-    if settings_obj is None:
-        settings_obj = get_settings_obj_for_env()
-    engine = get_db_engine(settings_obj)
+def get_db_session(database_uri):
+    engine = get_db_engine(database_uri)
     # engine = init_connection_engine()
     Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     db_session = scoped_session(Session)

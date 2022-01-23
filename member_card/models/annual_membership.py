@@ -2,19 +2,11 @@ import re
 from collections import OrderedDict
 from datetime import datetime, timedelta
 
-from member_card.utils import get_db_session
+from member_card.db import Model
 from sqlalchemy import Boolean, Column, DateTime, Integer, String
-from sqlalchemy.ext.declarative import declarative_base
-
-# from zoneinfo import ZoneInfo
-
-Base = declarative_base()
-Base.query = get_db_session().query_property()
-
-# class AnnualMembership(object):
 
 
-class AnnualMembership(Base):
+class AnnualMembership(Model):
     __tablename__ = "annual_membership"
     id = Column(Integer, primary_key=True, autoincrement=True)
     order_id = Column(String(32), unique=True)
@@ -101,28 +93,6 @@ class AnnualMembership(Base):
                 is_canceled={self.is_canceled}\
             )",
         )
-
-    # # def __getattr__(self, key):
-    # #     if key in self._order:
-    # #         value = self._order[key]
-    # #         if key.endswith("On"):
-    # #             value = parse(value)
-    # #         logger.debug(f"found {key=} with {value=}")
-    # #         return value
-    # #     # convert key from snake to camel case
-    # #     components = key.split("_")
-    # #     # via: https://stackoverflow.com/a/19053800
-    # #     # We capitalize the first letter of each component except the first one
-    # #     # with the 'title' method and join them together.
-    # #     camel_key = components[0] + "".join(x.title() for x in components[1:])
-    # #     if camel_key in self._order:
-    # #         value = self._order[camel_key]
-    # #         if key.endswith("_on"):
-    # #             value = parse(value)
-    # #         logger.debug(f"found {camel_key=} with {value=}")
-    # #         return value
-
-    # #     raise AttributeError(f"no {key=} in <AnnualSubscription _order... >")
 
     @property
     def full_name(self):

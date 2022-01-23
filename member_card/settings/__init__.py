@@ -32,6 +32,7 @@ class Settings(object):
     POSTGRES_DB = "lv-digital-membership"
 
     SQLALCHEMY_DATABASE_URI = "postgresql://member-card-user:member-card-password@127.0.0.1:5432/digital-membership"
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     SOCIAL_AUTH_TRAILING_SLASH = True
 
