@@ -2,24 +2,48 @@ $bright-verde: #00b140;
 
 $white: #fff;
 $google-blue: #4285f4;
-$button-active-blue: #1669F2;
+$button-active-blue: #1669f2;
 
 .members-card-wide.mdl-card {
   width: 512px;
 }
 
-.members-card-wide>.mdl-card__title {
-  color: #fff;
-  height: 176px;
-  background: url('sangramos_pattern_small_clip.png') center / cover;
+.members-card-wide > .mdl-card__title {
+  color: rgb(0, 0, 0);
+  height: 200px;
+  background: url("sangramos_pattern_small_clip.png") center / cover;
+  // display: block;
+  .mdl-grid {
+    width: 100%;
+    // padding-top: 25px;
+    // padding-bottom: 25px;
+  }
 }
 
-.members-card-wide>.mdl-card__menu {
+.lv-crest {
+  background: no-repeat 0% 0%/50% url("lv_onverde.png");
+  height: 75px;
+}
+
+.members-card-wide > .mdl-card__menu {
   color: #fff;
+}
+
+.live-laugh-love {
+  font-family: "Bungee";
+  color: white;
+  font-size: x-large;
+  -webkit-text-stroke-width: 2px;
+  -webkit-text-stroke-color: rgba($bright-verde, 0.7);
+  // color: $bright-verde;
+  // background-color: rgba(0, 0, 0, 0.25);
 }
 
 .vhlm {
-  font-family: 'Almendra Display', cursive;
+  font-family: "Almendra Display", cursive;
+  color: black;
+  font-size: x-large;
+  // font-weight: bolder;
 }
 
 .signin-card.mdl-card {
@@ -39,7 +63,7 @@ $button-active-blue: #1669F2;
 }
 .signin-card > .mdl-card__actions {
   display: flex;
-  box-sizing:border-box;
+  box-sizing: border-box;
   align-items: center;
 }
 .signin-card > .mdl-card__actions > .mdl-button {
@@ -55,13 +79,12 @@ $button-active-blue: #1669F2;
   color: #fff;
 }
 
-
 .google-btn {
   width: 184px;
   height: 42px;
   background-color: $google-blue;
   border-radius: 2px;
-  box-shadow: 0 3px 4px 0 rgba(0,0,0,.25);
+  box-shadow: 0 3px 4px 0 rgba(0, 0, 0, 0.25);
   .google-icon-wrapper {
     position: absolute;
     margin-top: 1px;

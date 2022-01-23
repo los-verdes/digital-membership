@@ -13,5 +13,16 @@ class User(Model, UserMixin):
     last_name = Column(String(100))
     active = Column(Boolean, default=True)
 
+    def to_dict(self):
+        return dict(
+            id=self.id,
+            username=self.username,
+            email=self.email,
+            fullname=self.fullname,
+            first_name=self.first_name,
+            last_name=self.last_name,
+            active=self.active,
+        )
+
     def is_active(self):
         return self.active
