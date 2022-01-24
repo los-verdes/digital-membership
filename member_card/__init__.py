@@ -1,18 +1,20 @@
 #!/usr/bin/env python
 import os
-
-from flask import Flask, g, redirect, render_template
+import click
+from flask import Flask, g, redirect, render_template, send_file, url_for
 from flask_login import current_user as current_login_user
 from flask_login import login_required, logout_user
 from logzero import logger, setup_logger
 from social_flask.template_filters import backends
 from social_flask.utils import load_strategy
-
+import tempfile
 from member_card.db import db
 from member_card.models import User
 from member_card import utils
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "member_card")
+)
 setup_logger(name=__name__)
 
 # App
@@ -72,7 +74,7 @@ app.context_processor(backends)
 
 @login_required
 @app.route("/")
-def main():
+def home():
     from logzero import logger
 
     from member_card.models import AnnualMembership
@@ -105,6 +107,27 @@ def main():
     return render_template(
         "home.html",
     )
+
+
+@login_required
+@app.route("/passes/apple-pay")
+def passes_apple_pay():
+    current_user = g.user
+    if current_user.is_authenticated:
+        import io
+        handle, filepath = tempfile.mkstemp()
+        pass_file = create_apple_pass(current_user.email, filepath)
+        # pass_file.seek(0)
+        # mem = io.BytesIO()
+        # mem.write(pass_file.getvalue().encode())
+        # # seeking was necessary. Python 3.5.2, Flask 0.12.2
+        # mem.seek(0)
+        # pass_file.close()
+        attachment_filename = f"lv_apple_pass-{current_user.last_name.lower()}.pkpass"
+        return send_file(
+            filepath, attachment_filename=attachment_filename, as_attachment=True
+        )
+    return redirect(url_for('home'))
 
 
 @app.route("/privacy-policy")
@@ -150,17 +173,116 @@ def ensure_db_schema():
     social_flask_models.PSABase.metadata.create_all(engine)
 
 
-# def create_app():
-#     from member_card.models.user import User
+@app.cli.command("query-db")
+@click.argument("email")
+def query_db(email):
+    from member_card.models import AnnualMembership
 
-#     models = [
-#         User,
-#         FlaskStorage.user,
-#         FlaskStorage.nonce,
-#         FlaskStorage.association,
-#         FlaskStorage.code,
-#         FlaskStorage.partial,
-#     ]
-#     for model in models:
-#         model.create_table(True)
-#     return app
+    memberships = (
+        AnnualMembership.query.filter_by(customer_email=email)
+        .order_by(AnnualMembership.created_on.desc())
+        .all()
+    )
+    member_name = None
+    member_since_dt = None
+    if memberships:
+        member_since_dt = memberships[-1].created_on
+        member_name = memberships[-1].full_name
+    logger.debug(f"{member_name=} => {member_since_dt=}")
+    logger.debug(f"{memberships=}")
+
+
+@app.cli.command("create-apple-pass")
+@click.argument("email")
+@click.argument("zip_file")
+def create_apple_pass_cli(email, zip_file=None):
+    create_apple_pass(email=email, zip_file=zip_file)
+
+
+def create_apple_pass(email, zip_file=None):
+    from member_card.models import AnnualMembership
+    from passbook.models import Pass, Barcode, Generic, BarcodeFormat
+
+    memberships = (
+        AnnualMembership.query.filter_by(customer_email=email)
+        .order_by(AnnualMembership.created_on.desc())
+        .all()
+    )
+    if not memberships:
+        raise Exception(f"No matching memberships found for {email=}")
+    member_since_dt = memberships[-1].created_on
+    member_name = memberships[-1].full_name
+    member_expiry_dt = memberships[0].expiry_date
+    cardInfo = Generic()
+    cardInfo.addPrimaryField("name", member_name, "Name")
+    cardInfo.addSecondaryField(
+        "member_since", member_since_dt.strftime("%b %Y"), "Member Since"
+    )
+    # cardInfo.addSecondaryField(
+    #     "member_expiry", member_expiry_dt.strftime("%b %d, %Y"), "Good through"
+    # )
+    # cardInfo.addPrimaryField("member_expiry", member_expiry_dt.strftime("%b %Y"), "Good through")
+
+    # cardInfo.addHeaderField(key="test_header", value="Testing the header", label="Test Header")
+    # cardInfo.addHeaderField(key="test_aux", value="Testing the aux", label="Test Aux")
+    logger.debug(f"{str(member_expiry_dt.strftime('%b %d, %Y'))=}")
+    cardInfo.addBackField(
+        "member_expiry_back",
+        member_expiry_dt.strftime("%b %d, %Y"),
+        "Good through",
+    )
+    # cardInfo.addBackField("hmm", "Hi there", "Hullo")
+    # cardInfo.addBackField(key="test_back", value="Testing the back", label="Test Back")
+
+    organizationName = app.config["APPLE_DEVELOPER_TEAM_ID"]
+    passTypeIdentifier = app.config["APPLE_DEVELOPER_PASS_TYPE_ID"]
+    teamIdentifier = app.config["APPLE_DEVELOPER_TEAM_ID"]
+
+    passfile = Pass(
+        cardInfo,
+        passTypeIdentifier=passTypeIdentifier,
+        organizationName=organizationName,
+        teamIdentifier=teamIdentifier,
+    )
+    logo_text = "Membership Card"
+    serial_number = "1234567"
+    qr_code = Barcode(format=BarcodeFormat.QR, message="Barcode message")
+    passfile_attrs = dict(
+        serialNumber=serial_number,
+        backgroundColor="rgb(0, 177, 64)",
+        foregroundColor="rgb(0, 0, 0)",
+        logoText=logo_text,
+        barcode=qr_code,
+    )
+    for attr_name, attr_value in passfile_attrs.items():
+        setattr(
+            passfile,
+            attr_name,
+            attr_value,
+        )
+
+    # Including the icon and logo is necessary for the passbook to be valid.
+    static_dir = os.path.join(BASE_DIR, "static")
+    passfile_files = {
+        "icon.png": "LV_Tee_Crest_onVerde_rgb_filled_icon.png",
+        "icon@2x.png": "LV_Tee_Crest_onVerde_rgb_filled_icon@2x.png",
+        "logo.png": "LosVerdes_Logo_RGB_72_Horizontal_BlackOnTransparent_CityYear_logo.png",
+        "logo@2x.png": "LosVerdes_Logo_RGB_300_Horizontal_BlackOnTransparent_CityYear_logo@2x.png",
+    }
+    for passfile_filename, local_filename in passfile_files.items():
+        file_path = os.path.join(static_dir, local_filename)
+        passfile.addFile(passfile_filename, open(file_path, "rb"))
+
+    # Create and output the Passbook file (.pkpass)
+    password = bytes(app.config["APPLE_DEVELOPER_KEY_PASSWORD"], "ascii")
+    secrets_dir = os.path.abspath(os.path.join(BASE_DIR, "..", "secrets"))
+    key_path = os.path.join(secrets_dir, "private.key")
+    logger.debug(f"{key_path=}")
+    # breakpoint()
+    return passfile.create(
+        certificate=os.path.join(secrets_dir, "certificate.pem"),
+        key=key_path,
+        wwdr_certificate=os.path.join(secrets_dir, "wwdr.pem"),
+        password=password,
+        zip_file=zip_file,  # os.path.join(secrets_dir, "test.pkpass"),
+    )

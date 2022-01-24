@@ -34,12 +34,13 @@
       </span>
     </div>
   </div>
-  <div class="mdl-card__actions mdl-card--border">
-    <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+  <div class="mdl-card__actions mdl-card--border mdl-typography--text-right">
+    <button class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" disabled>
       <i class="material-icons">download</i> Google Pay
-    </a>
-    <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
-      <i class="material-icons">download</i> Apple Pay
+    </button>
+    <a class="mdl-button mdl-js-button mdl-js-ripple-effect" href="passes/apple-pay"
+      target="_blank">
+      <img src="{{ url_for('static', filename='Add_to_Apple_Wallet_rgb_US-UK.svg') }}">
     </a>
   </div>
   <div class="mdl-card__menu">

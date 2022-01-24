@@ -30,17 +30,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.quiet:
         logzero.loglevel(logging.INFO)
-
-    email = args.email
-    memberships = (
-        AnnualMembership.query.filter_by(customer_email=email)
-        .order_by(AnnualMembership.created_on.desc())
-        .all()
-    )
-    member_name = None
-    member_since_dt = None
-    if memberships:
-        member_since_dt = memberships[-1].created_on
-        member_name = memberships[-1].full_name
-    logger.debug(f"{member_name=} => {member_since_dt=}")
-    logger.debug(f"{memberships=}")

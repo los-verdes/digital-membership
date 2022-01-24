@@ -4,6 +4,10 @@ from logzero import logger
 
 
 class Settings(object):
+    APPLE_DEVELOPER_ORG_NAME = "Jeffrey Hogan"  # TODO: if LV is a legit 501c this can maybe become a less personal org...
+    APPLE_DEVELOPER_PASS_TYPE_ID = "pass.es.losverd.card"
+    APPLE_DEVELOPER_TEAM_ID = "KJHZP635V9"
+    APPLE_DEVELOPER_KEY_PASSWORD = os.environ.get("APPLE_DEVELOPER_KEY_PASSWORD", None)
     SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get("GOOGLE_CLIENT_ID", None)
     SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", None)
     SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = os.getenv("GOOGLE_OAUTH2_SCOPE", [])

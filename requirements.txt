@@ -115,6 +115,10 @@ libsass==0.21.0
     # via -r requirements.in
 logzero==1.7.0
     # via -r requirements.in
+m2crypto==0.38.0
+    # via
+    #   -r requirements.in
+    #   passbook
 markupsafe==2.0.1
     # via jinja2
 multidict==5.2.0
@@ -129,6 +133,8 @@ oauthlib==3.1.1
     #   social-auth-core
 packaging==21.3
     # via google-cloud-firestore
+passbook==1.0.2
+    # via -r requirements.in
 pg8000==1.23.0
     # via cloud-sql-python-connector
 proto-plus==1.19.8
