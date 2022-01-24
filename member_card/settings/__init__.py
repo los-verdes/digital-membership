@@ -20,7 +20,7 @@ class Settings(object):
     )
 
     # from: https://github.com/python-social-auth/social-examples
-    SECRET_KEY = os.environ.get("SECRET_KEY") or os.urandom(24)
+    SECRET_KEY = os.environ.get("SECRET_KEY", "not-very-secret-at-all")
     SESSION_COOKIE_NAME = "psa_session"
     DEBUG = True
     DATABASE_URI = "%s/db.sqlite3" % dirname(abspath(join(__file__, "..")))
@@ -51,6 +51,7 @@ class Settings(object):
         "social_core.pipeline.social_auth.social_user",
         "social_core.pipeline.user.get_username",
         "social_core.pipeline.mail.mail_validation",
+        "social_core.pipeline.social_auth.associate_by_email",
         "social_core.pipeline.user.create_user",
         "social_core.pipeline.social_auth.associate_user",
         "social_core.pipeline.debug.debug",

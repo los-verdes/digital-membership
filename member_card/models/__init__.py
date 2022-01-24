@@ -1,15 +1,13 @@
-# from social_flask_peewee import models
-# from flask_sqlalchemy import SQLAlchemy
-from member_card.models.user import User
-from member_card.models.table_metadata import TableMetadata
+# from member_card.db import Model  # Base, Table
 from member_card.models.annual_membership import AnnualMembership
+from member_card.models.table_metadata import TableMetadata
+from member_card.models.apple_pass import ApplePass
+from member_card.models.user import User
 from social_flask_sqlalchemy import models
 
-assert AnnualMembership
-assert User
-assert TableMetadata
-assert models
-# db = SQLAlchemy()
-
-# def get_db():
-#   return db
+__all__ = (
+    "AnnualMembership",
+    "User",
+    "TableMetadata",
+    "models",
+)

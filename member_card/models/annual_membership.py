@@ -2,13 +2,57 @@ import re
 from collections import OrderedDict
 from datetime import datetime, timedelta
 
-from member_card.db import Model
-from sqlalchemy import Boolean, Column, DateTime, Integer, String
+from member_card.db import Model, db
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Integer,
+    String,
+    Table,
+)
+from sqlalchemy.orm import relationship
+
+# apple_pass_to_membership_assoc_table = Table(
+#     "association",
+#     Model,
+#     Column("apple_wallet_pass_id", ForeignKey("apple_wallet_pass.id")),
+#     Column("annual_membership_id", ForeignKey("annual_membership.id")),
+# )
+apple_pass_to_membership_assoc_table = db.Table(
+    "apple_passes_to_memberships",
+    db.Column(
+        "apple_pass_id",
+        db.Integer,
+        db.ForeignKey("apple_pass.id"),
+        primary_key=True,
+    ),
+    db.Column(
+        "annual_membership_id",
+        db.Integer,
+        db.ForeignKey("annual_membership.id"),
+        primary_key=True,
+    ),
+)
 
 
 class AnnualMembership(Model):
     __tablename__ = "annual_membership"
+
+    one_year_ago = datetime.now() - timedelta(days=366)
+
     id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    user = relationship("User", back_populates="annual_memberships")
+    apple_passes = relationship(
+        "ApplePass",
+        secondary=apple_pass_to_membership_assoc_table,
+        lazy="subquery",
+        backref=db.backref("annual_memberships", lazy=True),
+    )
+
     order_id = Column(String(32), unique=True)
     order_number = Column(String, unique=True)
     channel = Column(String(32))
@@ -26,55 +70,27 @@ class AnnualMembership(Model):
     variant_id = Column(String(36))
     product_id = Column(String(32))
     product_name = Column(String(200))
-    fulfillment_status = Column(String)
-    #     Enum(
-    #         "PENDING",
-    #         "FULFILLED",
-    #         "CANCELED",
-    #         name="fulfillment_status_enum",
-    #         create_type=False,
-    #     )
-    # )
     test_mode = Column(Boolean, default=False)
-
-    #         id=self.id,
-    #         name=self.name,
-    #         email=self.email,
-    #         order_number=self.order_number,
-    #         created_on=self.created_on,
-    #         modified_on=self.modified_on,
-    #         fulfilled_on=self.fulfilled_on,
-    #         fulfillment_status=self.fulfillment_status,
-    #         is_active=self.is_active,
-    #         is_canceled=self.is_canceled,
-    #         line_items=json.dumps(self.line_items),
-    #         test_mode=self.test_mode,
-
-    # one_year_ago = datetime.now(tz=ZoneInfo("UTC")) - timedelta(days=366)
-    one_year_ago = datetime.now() - timedelta(days=366)
-    # @classmethod
-    # def from_squarespace_order(order)
-
-    # @staticmethod
-    # def from_dict(source):
-    #     source['line_items'] = json.loads(source['line_items'])
-    #     return AnnualMembership(**source)
+    fulfillment_status = Column(
+        Enum(
+            "PENDING",
+            "FULFILLED",
+            "CANCELED",
+            name="fulfillment_status_enum",
+            create_type=False,
+        )
+    )
 
     def to_dict(self):
         return OrderedDict(
-            # id=self.id,
-            # name=self.name,
             order_number=self.order_number,
             created_on=self.created_on,
             email=self.customer_email,
             product_name=self.product_name,
-            # modified_on=self.modified_on,
             fulfilled_on=self.fulfilled_on,
             fulfillment_status=self.fulfillment_status,
             is_active=self.is_active,
-            # is_canceled=self.is_canceled,
-            # line_items=json.dumps(self.line_items),
-            # test_mode=self.test_mode,
+            valid_until=self.expiry_date,
         )
 
     def __repr__(self):
@@ -104,6 +120,8 @@ class AnnualMembership(Model):
 
     @property
     def expiry_date(self):
+        if not self.created_on:
+            return None
         return self.created_on + timedelta(days=365)
 
     @property

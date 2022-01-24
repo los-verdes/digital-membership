@@ -4,3 +4,4 @@
 postgres-data/
 .srl
 tmp-certs/
+member_card/static/style.css

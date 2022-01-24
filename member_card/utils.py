@@ -5,8 +5,6 @@ from flask_login import LoginManager
 from logzero import logger
 from social_core.backends.google import GooglePlusAuth
 from social_core.backends.utils import load_backends
-from social_flask.routes import social_auth
-from social_flask_sqlalchemy.models import init_social
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from webassets.filter import get_filter
@@ -18,23 +16,10 @@ from member_card.settings import get_settings_obj_for_env
 # from google.cloud.sql.connector import connector
 
 
-def init_login_manager(app):
-    class MembershipLoginManager(LoginManager):
-        def __init__(self, app=None, add_context_processor=True):
-            super().__init__(app, add_context_processor)
-            self.login_view = "main"  # members_card.__name__
-
-    login_manager = MembershipLoginManager()
-    login_manager.init_app(app)
-    return login_manager
-
-
-def init_social_auth(app):
-    db_session = get_db_session(app.config["SQLALCHEMY_DATABASE_URI"])
-
-    app.register_blueprint(social_auth)
-    init_social(app, db_session)
-    return db_session
+class MembershipLoginManager(LoginManager):
+    def __init__(self, app=None, add_context_processor=True):
+        super().__init__(app, add_context_processor)
+        self.login_view = "main"  # members_card.__name__
 
 
 def load_settings(app):

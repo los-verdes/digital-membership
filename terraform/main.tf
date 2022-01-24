@@ -62,9 +62,9 @@ resource "google_sql_database" "database" {
 }
 
 
-output "postgres_connection" {
-  value = google_sql_database_instance.digital_membership
-}
+# output "postgres_connection" {
+#   value = google_sql_database_instance.digital_membership
+# }
 output "postgres_connection_name" {
   value = google_sql_database_instance.digital_membership.connection_name
 }
