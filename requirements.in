@@ -10,9 +10,9 @@ google-cloud-secret-manager
 gunicorn
 libsass
 logzero
-passbook
 psycopg2
 python-dateutil
 requests
 social-auth-app-flask
 social-auth-app-flask-sqlalchemy
+wallet-py3k

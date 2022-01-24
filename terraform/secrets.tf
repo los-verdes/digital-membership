@@ -20,6 +20,9 @@ resource "google_secret_manager_secret" "digital_membership" {
 resource "google_secret_manager_secret_version" "digital_membership" {
   secret = google_secret_manager_secret.digital_membership.id
   secret_data = jsonencode({
+    apple_pass_certificate = var.apple_pass_certificate
+    apple_pass_private_key = var.apple_pass_private_key
+    apple_pass_private_key_password = var.apple_pass_private_key_password
     sql_database_name   = google_sql_database.database.name
     sql_connection_name = google_sql_database_instance.digital_membership.connection_name
     sql_username        = google_sql_user.users.name

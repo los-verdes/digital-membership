@@ -114,16 +114,9 @@ def home():
 def passes_apple_pay():
     current_user = g.user
     if current_user.is_authenticated:
-        import io
-        handle, filepath = tempfile.mkstemp()
-        pass_file = create_apple_pass(current_user.email, filepath)
-        # pass_file.seek(0)
-        # mem = io.BytesIO()
-        # mem.write(pass_file.getvalue().encode())
-        # # seeking was necessary. Python 3.5.2, Flask 0.12.2
-        # mem.seek(0)
-        # pass_file.close()
         attachment_filename = f"lv_apple_pass-{current_user.last_name.lower()}.pkpass"
+        _, filepath = tempfile.mkstemp()
+        create_apple_pass(current_user.email, filepath)
         return send_file(
             filepath, attachment_filename=attachment_filename, as_attachment=True
         )
@@ -194,14 +187,14 @@ def query_db(email):
 
 @app.cli.command("create-apple-pass")
 @click.argument("email")
-@click.argument("zip_file")
-def create_apple_pass_cli(email, zip_file=None):
-    create_apple_pass(email=email, zip_file=zip_file)
+@click.option("-z", "--zip-file-path")
+def create_apple_pass_cli(email, zip_file_path=None):
+    create_apple_pass(email=email, zip_file=zip_file_path)
 
 
 def create_apple_pass(email, zip_file=None):
     from member_card.models import AnnualMembership
-    from passbook.models import Pass, Barcode, Generic, BarcodeFormat
+    from wallet.models import Pass, Barcode, Generic, BarcodeFormat
 
     memberships = (
         AnnualMembership.query.filter_by(customer_email=email)
@@ -214,7 +207,7 @@ def create_apple_pass(email, zip_file=None):
     member_name = memberships[-1].full_name
     member_expiry_dt = memberships[0].expiry_date
     cardInfo = Generic()
-    cardInfo.addPrimaryField("name", member_name, "Name")
+    cardInfo.addPrimaryField("name", member_name, "Member Name")
     cardInfo.addSecondaryField(
         "member_since", member_since_dt.strftime("%b %Y"), "Member Since"
     )
@@ -274,15 +267,25 @@ def create_apple_pass(email, zip_file=None):
         passfile.addFile(passfile_filename, open(file_path, "rb"))
 
     # Create and output the Passbook file (.pkpass)
-    password = bytes(app.config["APPLE_DEVELOPER_KEY_PASSWORD"], "ascii")
-    secrets_dir = os.path.abspath(os.path.join(BASE_DIR, "..", "secrets"))
-    key_path = os.path.join(secrets_dir, "private.key")
-    logger.debug(f"{key_path=}")
-    # breakpoint()
-    return passfile.create(
-        certificate=os.path.join(secrets_dir, "certificate.pem"),
-        key=key_path,
-        wwdr_certificate=os.path.join(secrets_dir, "wwdr.pem"),
+
+    cert_fp = tempfile.NamedTemporaryFile(mode="w", suffix=".pem")
+    cert_fp.write("\n".join(app.config["APPLE_DEVELOPER_CERTIFICATE"].split("\\n")))
+    cert_fp.seek(0)
+    key_fp = tempfile.NamedTemporaryFile(mode="w", suffix=".key")
+    key_fp.write("\n".join(app.config["APPLE_DEVELOPER_PRIVATE_KEY"].split("\\n")))
+    key_fp.seek(0)
+    password = app.config["APPLE_DEVELOPER_PRIVATE_KEY_PASSWORD"]
+    cert_filepath = cert_fp.name
+    key_filepath = key_fp.name
+    logger.debug(f"{cert_filepath=}")
+    logger.debug(f"{key_filepath=}")
+    new_passfile = passfile.create(
+        certificate=cert_filepath,
+        key=key_filepath,
+        wwdr_certificate=os.path.join(BASE_DIR, "wwdr.pem"),
         password=password,
         zip_file=zip_file,  # os.path.join(secrets_dir, "test.pkpass"),
     )
+    cert_fp.close()
+    key_fp.close()
+    return new_passfile

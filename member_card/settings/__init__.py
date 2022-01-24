@@ -7,7 +7,11 @@ class Settings(object):
     APPLE_DEVELOPER_ORG_NAME = "Jeffrey Hogan"  # TODO: if LV is a legit 501c this can maybe become a less personal org...
     APPLE_DEVELOPER_PASS_TYPE_ID = "pass.es.losverd.card"
     APPLE_DEVELOPER_TEAM_ID = "KJHZP635V9"
-    APPLE_DEVELOPER_KEY_PASSWORD = os.environ.get("APPLE_DEVELOPER_KEY_PASSWORD", None)
+    APPLE_DEVELOPER_CERTIFICATE = os.environ.get("APPLE_DEVELOPER_CERTIFICATE", None)
+    APPLE_DEVELOPER_PRIVATE_KEY = os.environ.get("APPLE_DEVELOPER_PRIVATE_KEY", None)
+    APPLE_DEVELOPER_PRIVATE_KEY_PASSWORD = os.environ.get(
+        "APPLE_DEVELOPER_PRIVATE_KEY_PASSWORD", None
+    )
     SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get("GOOGLE_CLIENT_ID", None)
     SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", None)
     SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = os.getenv("GOOGLE_OAUTH2_SCOPE", [])
@@ -79,6 +83,12 @@ class ProductionSettings(Settings):
             db_socket_dir = os.environ.get("DB_SOCKET_DIR", "/cloudsql")
             # db_socket_dir = os.environ.get("DB_SOCKET_DIR", "/tmp/cloudsql")
             logger.debug(f"{db_socket_dir=}")
+
+            self.APPLE_DEVELOPER_CERTIFICATE = self.secrets["apple_pass_certificate"]
+            self.APPLE_DEVELOPER_PRIVATE_KEY = self.secrets["apple_pass_private_key"]
+            self.APPLE_DEVELOPER_PRIVATE_KEY_PASSWORD = self.secrets[
+                "apple_pass_private_key_password"
+            ]
             # self.SQLALCHEMY_DATABASE_URI = f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASS}@127.0.0.1:5432/lv-digital-membership"
             # self.SQLALCHEMY_DATABASE_URI =
             # f"postgresql+pg8000://{self.POSTGRES_USER}:{self.POSTGRES_PASS}@lv-digital-membership

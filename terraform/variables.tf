@@ -1,3 +1,16 @@
+
+
+variable "apple_pass_certificate" {
+  sensitive = true
+}
+
+variable "apple_pass_private_key" {
+  sensitive = true
+}
+
+variable "apple_pass_private_key_password" {
+  sensitive = true
+}
 # variable "gcp_billing_account_name" {}
 
 variable "gcp_billing_account_id" {
