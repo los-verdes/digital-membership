@@ -2,7 +2,6 @@ from datetime import timedelta
 
 from flask_login import UserMixin
 from member_card.db import Model
-from member_card.models import AnnualMembership
 from sqlalchemy import Boolean, Column, Integer, String
 from sqlalchemy.orm import relationship
 
@@ -37,13 +36,25 @@ class User(Model, UserMixin):
         return bool(self.annual_memberships)
 
     @property
-    def member_since(self):
+    def oldest_membership(self):
         if not self.annual_memberships:
             return None
-        return sorted(self.annual_memberships, key=lambda x: x.created_on)[-1].created_on
+        return sorted(self.annual_memberships, key=lambda x: x.created_on)[0]
+
+    @property
+    def newest_membership(self):
+        if not self.annual_memberships:
+            return None
+        return sorted(self.annual_memberships, key=lambda x: x.created_on)[-1]
+
+    @property
+    def member_since(self):
+        if not self.oldest_membership:
+            return None
+        return self.oldest_membership.created_on
 
     @property
     def membership_expiry(self):
-        if not self.has_memberships:
+        if not self.newest_membership:
             return None
-        return sorted(self.annual_memberships, key=lambda x: x.created_on)[0].created_on
+        return self.newest_membership.created_on + timedelta(days=365)

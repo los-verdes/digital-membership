@@ -2,7 +2,7 @@ import re
 from collections import OrderedDict
 from datetime import datetime, timedelta
 
-from member_card.db import Model, db
+from member_card.db import Model
 from sqlalchemy import (
     Boolean,
     Column,
@@ -13,26 +13,21 @@ from sqlalchemy import (
     String,
     Table,
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 
-# apple_pass_to_membership_assoc_table = Table(
-#     "association",
-#     Model,
-#     Column("apple_wallet_pass_id", ForeignKey("apple_wallet_pass.id")),
-#     Column("annual_membership_id", ForeignKey("annual_membership.id")),
-# )
-apple_pass_to_membership_assoc_table = db.Table(
+apple_pass_to_membership_assoc_table = Table(
     "apple_passes_to_memberships",
-    db.Column(
+    Model.metadata,
+    Column(
         "apple_pass_id",
-        db.Integer,
-        db.ForeignKey("apple_pass.id"),
+        Integer,
+        ForeignKey("apple_pass.id"),
         primary_key=True,
     ),
-    db.Column(
+    Column(
         "annual_membership_id",
-        db.Integer,
-        db.ForeignKey("annual_membership.id"),
+        Integer,
+        ForeignKey("annual_membership.id"),
         primary_key=True,
     ),
 )
@@ -50,7 +45,7 @@ class AnnualMembership(Model):
         "ApplePass",
         secondary=apple_pass_to_membership_assoc_table,
         lazy="subquery",
-        backref=db.backref("annual_memberships", lazy=True),
+        backref=backref("annual_memberships", lazy=True),
     )
 
     order_id = Column(String(32), unique=True)

@@ -13,8 +13,12 @@ from social_flask.utils import load_strategy
 from member_card.db import squarespace_orders_etl
 from member_card.models import User
 from member_card.squarespace import Squarespace
-from member_card.utils import (MembershipLoginManager, common_context,
-                               load_settings, register_asset_bundles)
+from member_card.utils import (
+    MembershipLoginManager,
+    common_context,
+    load_settings,
+    register_asset_bundles,
+)
 
 BASE_DIR = os.path.dirname(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "member_card")
@@ -32,6 +36,7 @@ def create_app():
     login_manager.init_app(app)
 
     from member_card.db import db
+
     db.init_app(app)
 
     from social_flask.routes import social_auth
@@ -63,6 +68,7 @@ def global_user():
 @app.teardown_appcontext
 def commit_on_success(error=None):
     from member_card.db import db
+
     if error is None:
         db.session.commit()
     else:
@@ -95,8 +101,6 @@ app.context_processor(backends)
 @login_required
 @app.route("/")
 def home():
-    from logzero import logger
-
     from member_card.models import AnnualMembership
 
     user = g.user
@@ -164,6 +168,7 @@ def ensure_db_schema():
 
     from member_card import models
     from member_card.db import db
+
     engine = db.engine
     # engine = create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
     models.User.metadata.create_all(engine)

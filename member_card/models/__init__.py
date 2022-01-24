@@ -7,6 +7,7 @@ from social_flask_sqlalchemy import models
 
 __all__ = (
     "AnnualMembership",
+    "ApplePass",
     "User",
     "TableMetadata",
     "models",
