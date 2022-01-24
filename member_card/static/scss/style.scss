@@ -17,10 +17,14 @@ $button-active-blue: #1669f2;
   // height: 200px;
   background: url("sangramos_pattern_small_clip.png") center / cover;
   // display: block;
-  margin-top: 2em;
-  margin-bottom: 2em;
+  // margin-top: 2em;
+  // margin-bottom: 2em;
+  // margin-left: 15px;
+  margin: 15px;
   border: 3mm outset rgba($bright-verde, 0.6);
   border-radius: 20px;
+  height: 30vh;
+  min-height: 300px;
   .mdl-grid {
     width: 100%;
     // padding-top: 25px;
@@ -46,14 +50,22 @@ $button-active-blue: #1669f2;
   // }
 }
 
+.mdl-button--fab.mdl-button--colored {
+  background-color: $bright-verde;
+}
+
 .members-card-wide > .mdl-card__menu {
-  color: #fff;
+  margin: 15px;
+  // color: linear-gradient(125deg, black, $bright-verde);
+  color: white;
+
+  // background-image:
 }
 
 .live-laugh-love-large {
   font-family: "Bungee";
   color: white;
-  font-size: x-large;
+  font-size: 1em;
 }
 
 .live-laugh-love {
@@ -75,10 +87,13 @@ $button-active-blue: #1669f2;
 }
 
 .signin-card.mdl-card {
-  width: 512px;
+  // width: 512px;
+  width: 100%;
+
   height: 256px;
   // background: $bright-verde;
-  background-image: linear-gradient(125deg, black, $bright-verde);
+
+  background: url("sangramos_pattern_small_clip.png") center / cover;
 }
 .signin-card > .mdl-card__actions {
   border-color: rgb(0, 0, 0);

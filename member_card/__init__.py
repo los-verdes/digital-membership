@@ -93,7 +93,7 @@ def main():
             if memberships:
                 member_since_dt = memberships[-1].created_on
                 member_name = memberships[-1].full_name
-                member_expiry_dt = memberships[-1].expiry_date
+                member_expiry_dt = memberships[0].expiry_date
             return render_template(
                 "home.html",
                 member_name=member_name,

@@ -1,63 +1,54 @@
 {% macro membership_card(user, memberships, member_since_dt, member_expiry_dt) %}
 
-<div class="mdl-cell mdl-cell--3-col mdl-cell--hide-tablet mdl-cell--hide-phone"></div>
-<div class="mdl-cell mdl-cell--6-col mdl-cell--12-col-tablet mdl-cell--12-col-phone">
-  <div class="members-card-wide mdl-card mdl-shadow--2dp">
-    <div class="mdl-card__title mdl-grid">
-      <!-- put LV hands here? -->
-      <!-- <h3> -->
-
-      <div class="mdl-cell mdl-cell--4-col lv-crest">
-        <!-- <img class="" src="{{url_for('static', filename='lv_onverde.png')}}"> -->
-      </div>
-      <div class="mdl-cell mdl-cell--8-col mdl-typography--text-right ">
-        <h3 class="live-laugh-love">
-          Los Verdes
+<div class="members-card-wide mdl-card mdl-shadow--2dp">
+  <div id="boundary" class="mdl-card__title mdl-grid">
+    <div class="mdl-cell mdl-cell--4-col mdl-cell--2-col-tablet mdl-cell--hide-phone lv-crest">
+    </div>
+    <div class="mdl-cell mdl-cell--8-col mdl-cell--6-col-tablet mdl-cell--4-col-phone mdl-typography--text-right ">
+      <h3 class="live-laugh-love">
+        <span class="mdl-layout--large-screen-only">Los Verdes
           <br>
           Membership Card
-        </h3>
-      </div>
-
-      <!-- <div class="mdl-cell mdl-cell--12-col"></div> -->
-      <div class="mdl-cell mdl-cell--8-col mdl-cell--bottom live-laugh-love-large">
-        {{ user.fullname }}
-        <br>
-        <small>
-          Member Since <wbr> {{member_since_dt.strftime("%b %Y")}}
-        </small>
-      </div>
-      <div class="mdl-cell mdl-cell--4-col mdl-cell--bottom mdl-typography--text-right">
-
-        <span class="mdl-list__item-primary-content vhlm">
-          <span class="mdl-list__item-sub-title">Good through</span>
-          <span>{{ member_expiry_dt.strftime('%b %d') }}</span>
         </span>
-      </div>
-      <!-- <div class="mdl-cell mdl-cell--8-col live-laugh-love">
-      </div>
-      <div class="mdl-cell mdl-cell--4-col mdl-typography--text-right vhlm"></div> -->
-
-      <!-- <div class="live-laugh-love">{{ user.fullname }}</div>
-    <div>Los Verdes Member</div>
-    <div>Since {{member_since_dt.strftime("%b %Y")}}</div>
-    <div class="vhlm">Verde Hasta La Muerte</div> -->
-
-      <!-- </h3> -->
+        <span class="mdl-layout--small-screen-only">Membership Card</span>
+      </h3>
     </div>
-    <div class="mdl-card__actions mdl-card--border">
-      <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
-        <i class="material-icons">download</i> Google Pay
-      </a>
-      <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
-        <i class="material-icons">download</i> Apple Pay
-      </a>
+    <div
+      class="mdl-cell mdl-cell--8-col mdl-cell--6-col-tablet mdl-cell--4-col-phone mdl-cell--bottom live-laugh-love-large">
+      {{ user.fullname }}
+      <br>
+      <small>
+        Member Since <wbr> {{member_since_dt.strftime("%b %Y")}}
+        <span class="mdl-layout--small-screen-only">
+          <br>
+          <small>Good through {{ member_expiry_dt.strftime('%b %d, %Y') }}</small>
+        </span>
+      </small>
     </div>
-    <div class="mdl-card__menu">
-      <!-- <button class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect">
-      <i class="material-icons">share</i>
-    </button> -->
+    <div
+      class="mdl-cell mdl-cell--4-col mdl-cell--2-col-tablet mdl-cell--hide-phone mdl-cell--bottom mdl-typography--text-right">
+
+      <span class="mdl-list__item-primary-content mdl-layout--large-screen-only vhlm">
+        <span class="mdl-list__item-sub-title">Good through</span>
+        <span>{{ member_expiry_dt.strftime('%b %d, %Y') }}</span>
+      </span>
     </div>
   </div>
+  <div class="mdl-card__actions mdl-card--border">
+    <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+      <i class="material-icons">download</i> Google Pay
+    </a>
+    <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+      <i class="material-icons">download</i> Apple Pay
+    </a>
+  </div>
+  <div class="mdl-card__menu">
+    <button id="download" data-html2canvas-ignore="true" title="Save as image (.png)"
+      class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect mdl-button--fab mdl-button--colored">
+      <i class="material-icons">screenshot</i>
+    </button>
+  </div>
+</div>
 </div>
 <div class="mdl-cell mdl-cell--3-col mdl-cell--hide-tablet mdl-cell--hide-phone"></div>
 
@@ -119,6 +110,25 @@
   </div>
 </div>
 <div class="mdl-cell mdl-cell--3-col mdl-cell--hide-tablet mdl-cell--hide-phone"></div>
+{% endmacro %}
+
+{% macro sign_in_card() %}
+<div class="signin-card mdl-card mdl-shadow--2dp mdl-cell--middle">
+  <div class="mdl-card__title mdl-card--expand live-laugh-love-large mdl-typography--text-right">
+    <h4>
+      Los Verdes Digital Membership Card
+    </h4>
+  </div>
+
+  <div class="mdl-card__supporting-text vhlm">
+    Sign in to display your card
+  </div>
+  <div class="mdl-card__actions mdl-card--border live-laugh-love">
+    <div class="mdl-layout-spacer"></div>
+    <br>
+    {{ sign_in_button() }}
+  </div>
+</div>
 {% endmacro %}
 
 {% macro sign_in_button() %}

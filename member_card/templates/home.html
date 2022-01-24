@@ -75,60 +75,18 @@
     <main class="mdl-layout__content">
       <div class="page-content">
         <div class="mdl-grid">
-
-          <!-- <div class="mdl-layout-spacer"></div> -->
-
-          {% if user.is_authenticated %}
-          {{ macros.membership_card(current_user, memberships, member_since_dt, member_expiry_dt) }}
-          {% else %}
-          <div class="signin-card mdl-card mdl-shadow--2dp">
-            <div class="mdl-card__title mdl-card--expand">
-              <h4>
-                Los Verdes Digital Membership Card
-              </h4>
-            </div>
-            <div class="mdl-card__actions mdl-card--border">
-              <div class="mdl-layout-spacer"></div>
-              Sign in to display your card
-              <i class="material-icons">chevron_right</i>
-              <!-- <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
-                Sign in to display your card
-                <i class="material-icons">login</i>
-              </a> -->
-
-              {{ macros.sign_in_button() }}
-            </div>
+          <div class="mdl-cell mdl-cell--3-col mdl-cell--hide-tablet mdl-cell--hide-phone"></div>
+          <div class="mdl-cell mdl-cell--6-col mdl-cell--12-col-tablet mdl-cell--12-col-phone">
+            {% if user.is_authenticated %}
+            {{ macros.membership_card(current_user, memberships, member_since_dt, member_expiry_dt) }}
+            {% else %}
+            {{ macros.sign_in_card() }}
+            {% endif %}
           </div>
-          <!-- <div class="mdl-layout-spacer"></div> -->
-          <!-- <div class="signin-card mdl-card mdl-shadow--2dp">
-            <div class="mdl-card__title mdl-card--expand">
-              <h4>
-                Sign in to view your Los Verdes membership card
-              </h4>
-            </div>
-            <div class="mdl-card__actions mdl-card--border">
-              {{ macros.sign_in_button() }}
-            </div>
-          </div>
-          <div class="mdl-layout-spacer"></div>
-          <br>
-          <div class="signin-card mdl-card mdl-shadow--2dp">
-            <div class="mdl-card__title mdl-card--expand">
-              <h4>
-                Sign in to view your Los Verdes membership card
-              </h4>
-            </div>
-            <div class="mdl-card__actions mdl-card--border">
-              <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
-                <img class="material-icons" src="{{ url_for('static', filename='google_g_logo.svg') }}" />
-                Sign in with Google
-              </a>
-              <div class="mdl-layout-spacer"></div>
-              <i class="material-icons">login</i> -->
+          <div class="mdl-cell mdl-cell--3-col mdl-cell--hide-tablet mdl-cell--hide-phone"></div>
         </div>
-      </div> -->
+      </div>
 
-      {% endif %}
 
       <div class="mdl-layout-spacer"></div>
 
@@ -139,6 +97,7 @@
     </footer> -->
   </div>
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script src="{{ url_for('static', filename='html2canvas.min.js')}}"></script>
 
   <script type="text/javascript">
     $(document).ready(function () {
@@ -147,6 +106,33 @@
         $(event.target).closest('form').submit();
       });
     });
+
+    document.getElementById("download").addEventListener("click", function () {
+      html2canvas(document.querySelector('#boundary')).then(function (canvas) {
+        saveAs(canvas.toDataURL(), 'lv-members-card.png');
+      });
+    });
+
+
+    function saveAs(uri, filename) {
+      var link = document.createElement('a');
+      if (typeof link.download === 'string') {
+        link.href = uri;
+        link.download = filename;
+
+        //Firefox requires the link to be in the body
+        document.body.appendChild(link);
+
+        //simulate click
+        link.click();
+
+        //remove the link when done
+        document.body.removeChild(link);
+
+      } else {
+        window.open(uri);
+      }
+    }
   </script>
 </body>
 
