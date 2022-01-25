@@ -4,125 +4,104 @@ $white: #fff;
 $google-blue: #4285f4;
 $button-active-blue: #1669f2;
 
-.members-card-wide.mdl-card {
-  width: 100%;
-  // max-width: 350px;
-}
-.membership-details-card.mdl-card {
+.mdl-card {
   width: 100%;
 }
-
-.members-card-wide > .mdl-card__title {
-  color: white;
-  // height: 200px;
-  background: url("sangramos_pattern_small_clip.png") center / cover;
-  // display: block;
-  // margin-top: 2em;
-  // margin-bottom: 2em;
-  // margin-left: 15px;
-  margin: 15px;
-  border: 3mm outset rgba($bright-verde, 0.6);
-  border-radius: 20px;
-  height: 30vh;
-  min-height: 300px;
-  .mdl-grid {
-    width: 100%;
-    // padding-top: 25px;
-    // padding-bottom: 25px;
-  }
-}
-
-// .add-to-apple-wallet {
-//   background-image: url("lv_onverde.png");
-//   background-size: contain;
-//   background-repeat: no-repeat;
-
-// }
 
 .lv-crest {
-  // display: flex;
   background-image: url("lv_onverde.png");
   background-size: contain;
   background-repeat: no-repeat;
-  // justify-content: center;
-  // align-items: center;
-  // overflow: hidden;
-  // > img {
+}
 
-  //  object-fit: cover;
-  //   flex-shrink: 0;
-  //   max-width: 50px;
-  //   min-height: 50px;
-  //   max-height: 100px;
-  // }
+div.membership-card {
+  // For maintaining desired aspect ratio
+  position: relative;
+  min-width: 300px;
+  width: 50vh;
+
+  background: url("sangramos_pattern_small_clip.png") center / cover;
+  border: 3mm outset rgba($bright-verde, 0.6);
+  border-radius: 20px;
+}
+
+div.membership-card > .membership-card-inner {
+  padding-bottom: 64.06%; /* 3.370:2.125 aspect ratio */
+
+  color: white;
+}
+
+.membership-card-inner > .mdl-grid {
+  // height: 100%;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.members-card-wide > .mdl-card__title {
+  justify-content: center;
+
+  h3 {
+    // font-size: 3vh;
+    font-size: calc(12px + 2vh);
+    line-height: 4vh;
+    margin: 0px;
+  }
 }
 
 .mdl-button--fab.mdl-button--colored {
   background-color: $bright-verde;
 }
 
-.members-card-wide > .mdl-card__menu {
-  margin: 15px;
-  // color: linear-gradient(125deg, black, $bright-verde);
-  color: white;
-
-  // background-image:
-}
-
 .live-laugh-love-large {
   font-family: "Bungee";
   color: white;
-  font-size: 1em;
-}
-
-// .houschka {
-//   font-family: houschka-rounded, sans-serif;
-//   font-style: normal;
-//   font-weight: 900;
-//   font-size: 2em;
-// }
-
-.validation-overlay {
-  // font-family: "Almendra Display", cursive;
-  transform: rotate(325deg);
-  transform-origin: left, top;
-  -ms-transform: rotate(325deg);
-  -ms-transform-origin:right, top;
-  -webkit-transform: rotate(325deg);
-  -webkit-transform-origin:right, top;
-  position: absolute;
-  color: $bright-verde;
-  // color: black;
-  -webkit-text-stroke-width: 2px;
-  -webkit-text-stroke-color: rgba(black, 0.75);
-  // bottom: 120px;
-  // left: 20px;
+  font-size: calc(8px + 2.5vh);
 }
 
 .live-laugh-love {
   font-family: "Bungee";
   color: white;
-  // font-size: large;
-  // -webkit-text-stroke-width: 2px;
-  // -webkit-text-stroke-color: rgba($bright-verde, 0.7);
-  // color: $bright-verde;
-  // background-color: rgba(0, 0, 0, 0.25);
+  font-size: calc(8px + 1vh);
+
+  > small {
+    font-size: calc(6px + 0.75vh);
+  }
+}
+
+.houschka {
+  font-family: houschka-rounded, sans-serif;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.validation-overlay {
+  transform: rotate(325deg);
+  transform-origin: left, top;
+  -ms-transform: rotate(325deg);
+  -ms-transform-origin: right, top;
+  -webkit-transform: rotate(325deg);
+  -webkit-transform-origin: right, top;
+  position: absolute;
+  color: $bright-verde;
+  -webkit-text-stroke-width: 2px;
+  -webkit-text-stroke-color: rgba(black, 0.75);
 }
 
 .vhlm {
   font-family: "Almendra Display", cursive;
-  // color: black;
-  font-size: x-large;
-  font-weight: 900;
-  // font-weight: bolder;
+  color: black;
+  font-weight: 2000;
+  font-size: 3vh;
+  line-height: 3vh;
 }
 
 .signin-card.mdl-card {
-  // width: 512px;
   width: 100%;
 
   height: 256px;
-  // background: $bright-verde;
 
   background: url("sangramos_pattern_small_clip.png") center / cover;
 }

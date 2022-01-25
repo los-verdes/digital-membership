@@ -178,12 +178,19 @@ def privacy_policy():
 #     return render_template("home2.html")
 
 
-@login_required
-@app.route("/logout/")
-def logout():
+@app.route("/login/")
+def login():
     """Logout view"""
     logout_user()
     return redirect("/")
+
+
+@login_required
+@app.route("/logout/")
+def logout():
+    return render_template(
+        "home.html",
+    )
 
 
 @app.cli.command("ensure-db-schemas")

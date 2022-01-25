@@ -23,7 +23,7 @@ from member_card.settings import get_settings_obj_for_env
 class MembershipLoginManager(LoginManager):
     def __init__(self, app=None, add_context_processor=True):
         super().__init__(app, add_context_processor)
-        self.login_view = "main"  # members_card.__name__
+        self.login_view = "login"  # members_card.__name__
 
 
 def get_signing_key():
