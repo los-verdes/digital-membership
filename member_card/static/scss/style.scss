@@ -4,8 +4,15 @@ $white: #fff;
 $google-blue: #4285f4;
 $button-active-blue: #1669f2;
 
+.mdl-card > .mdl-card__title {
+  color: black;
+}
 .mdl-card {
   width: 100%;
+
+  a {
+    color: $bright-verde;
+  }
 }
 
 .lv-crest {
@@ -28,9 +35,12 @@ div.membership-card {
 div.membership-card > .membership-card-inner {
   padding-bottom: 64.06%; /* 3.370:2.125 aspect ratio */
 
-  color: white;
+  // color: white;
 }
 
+.members-card-wide.mdl-card {
+  background-color: transparent;
+}
 .membership-card-inner > .mdl-grid {
   // height: 100%;
   position: absolute;

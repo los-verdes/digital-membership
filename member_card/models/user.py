@@ -32,6 +32,12 @@ class User(Model, UserMixin):
     def is_active(self):
         return self.active
 
+    @property
+    def has_active_memberships(self):
+        if not self.annual_memberships:
+            return False
+        return any(m.is_active for m in self.annual_memberships)
+
     def has_memberships(self):
         return bool(self.annual_memberships)
 

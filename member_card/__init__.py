@@ -103,16 +103,29 @@ app.context_processor(backends)
 
 @app.route("/")
 @login_required
-def membership_card():
+def home():
     from member_card.models import AnnualMembership
 
-    return render_template(
-        "membership_card.html",
-        # member=g.user,
-        membership_card=g.user.latest_membership_card,
-        membership_orders=g.user.annual_memberships,
-        membership_table_keys=list(AnnualMembership().to_dict().keys()),
-    )
+    current_user = g.user
+    if not current_user.is_authenticated:
+        return redirect("/login")
+
+    if current_user.has_active_memberships:
+        return render_template(
+            "member_card_and_history.html",
+            # member=g.user,
+            membership_card=g.user.latest_membership_card,
+            membership_orders=g.user.annual_memberships,
+            membership_table_keys=list(AnnualMembership().to_dict().keys()),
+        )
+    else:
+        return render_template(
+            "no_membership_landing_page.html",
+            # member=g.user,
+            membership_card=g.user.latest_membership_card,
+            membership_orders=g.user.annual_memberships,
+            membership_table_keys=list(AnnualMembership().to_dict().keys()),
+        )
 
 
 @login_required
@@ -152,16 +165,15 @@ def verify_apple_pay_pass(serial_number):
         return "Unable to verify signature!", 401
     # current_user = g.user
     # if current_user.is_authenticated:
-    card_to_verify = (
+    verified_card = (
         db.session.query(MembershipCard).filter_by(serial_number=serial_number).one()
     )
-    logger.debug(f"{card_to_verify=}")
+    logger.debug(f"{verified_card=}")
 
     return render_template(
-        "home.html",
-        # member=g.user,
-        membership_card=card_to_verify,
-        membership_orders=card_to_verify.user.annual_memberships,
+        "apple_pass_validation.html",
+        validating_user=g.user,
+        verified_card=verified_card,
         membership_table_keys=list(AnnualMembership().to_dict().keys()),
     )
 

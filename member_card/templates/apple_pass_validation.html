@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% call macros.content_grid() %}
+
+{% set secondary_info_text = "Member Since " ~ verified_card.member_since.strftime('%b %Y') %}
+{% set aux_info_text = "Good through " ~ verified_card.member_until.strftime('%b %d, %Y') %}
+{{
+  macros.membership_card(
+    title="Los Verdes Membership Card",
+    primary_info_text=verified_card.user.fullname,
+    secondary_info_text=secondary_info_text,
+    aux_info_text=aux_info_text,
+    validation_msg="CARD VALIDATED! (by " ~ validating_user.first_name ~ ")",
+  )
+}}
+{% endcall %}
+{% endblock %}

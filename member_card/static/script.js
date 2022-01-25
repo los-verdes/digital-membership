@@ -1,17 +1,17 @@
-// $(document).ready(function () {
-//   $('.disconnect-form').on('click', 'a.mdl-navigation__link', function (event) {
-//     event.preventDefault();
-//     $(event.target).closest('form').submit();
-//   });
-// });
-
-document.getElementsByClassName("disconnect-form").addEventListener("click", function (event) {
-  event.preventDefault();
-  $(event.target).closest('form').submit();
+$(document).ready(function () {
+  $('.disconnect-form').on('click', 'a.mdl-navigation__link', function (event) {
+    event.preventDefault();
+    $(event.target).closest('form').submit();
+  });
 });
 
-document.getElementById("download").addEventListener("click", function () {
-  html2canvas(document.querySelector('#boundary')).then(function (canvas) {
+// document.getElementsByClassName("disconnect-form").addEventListener("click", function (event) {
+//   event.preventDefault();
+//   $(event.target).closest('form').submit();
+// });
+
+document.getElementById("save-as-screenshot-btn").addEventListener("click", function () {
+  html2canvas(document.querySelector('#save-as-screenshot-window')).then(function (canvas) {
     saveAs(canvas.toDataURL(), 'lv-members-card.png');
   });
 });
