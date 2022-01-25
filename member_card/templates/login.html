@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% call macros.content_grid() %}
+<div class="signin-card mdl-card mdl-shadow--2dp mdl-cell--middle">
+  <div class="mdl-card__title mdl-card--expand live-laugh-love-large mdl-typography--text-right">
+    <h4>
+      Los Verdes Digital Membership Card
+    </h4>
+  </div>
+
+  <div class="mdl-card__supporting-text vhlm">
+    Sign in to display your card
+  </div>
+  <div class="mdl-card__actions mdl-card--border live-laugh-love">
+    <div class="mdl-layout-spacer"></div>
+    <br>
+    {{ macros.sign_in_button() }}
+  </div>
+</div>
+{% endcall %}
+{% endblock %}

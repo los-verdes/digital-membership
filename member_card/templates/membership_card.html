@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% call macros.content_grid() %}
+<div class="members-card-wide mdl-card mdl-shadow--2dp">
+  <div id="boundary" class="mdl-card__title">
+
+    <div class="membership-card">
+      <div class="membership-card-inner">
+        <div class="mdl-grid">
+          <div class="mdl-cell mdl-cell--4-col mdl-cell--2-col-tablet mdl-cell--hide-phone lv-crest">
+          </div>
+          <div
+            class="mdl-cell mdl-cell--8-col mdl-cell--6-col-tablet mdl-cell--4-col-phone mdl-typography--text-right ">
+            <h3 class="live-laugh-love">
+              Los Verdes <wbr>Membership Card
+            </h3>
+            {% if current_user.id != membership_card.user_id %}
+            <h3 class="validation-overlay">
+              CARD VALIDATED!
+            </h3>
+            {% endif %}
+          </div>
+
+          <!-- Middle row: -->
+
+          <!-- <div class="mdl-cell mdl-cell--12-col mdl-cell--8-col-tablet mdl-cell--4-col-phone mdl-card--expand"></div> -->
+          <div
+            class="mdl-cell mdl-cell--12-col mdl-cell--8-col-tablet mdl-cell--4-col-phone mdl-cell--bottom mdl-typography--text-left">
+            <div class="live-laugh-love-large houschka">
+              {{ membership_card.user.fullname }}
+            </div>
+            <div class="live-laugh-love houschka">
+              Member Since <wbr> {{ membership_card.member_since.strftime("%b %Y")}}
+            </div>
+            <div class="live-laugh-love houschka">
+              <small>Good through {{ membership_card.member_until.strftime('%b %d, %Y') }}</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="mdl-card__actions mdl-card--border mdl-typography--text-right">
+    <button class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" disabled>
+      <i class="material-icons">download</i> Google Pay
+    </button>
+    <a class="mdl-button mdl-js-button mdl-js-ripple-effect" href="passes/apple-pay" target="_blank">
+      <img src="{{ url_for('static', filename='Add_to_Apple_Wallet_rgb_US-UK.svg') }}">
+    </a>
+    <button id="download" data-html2canvas-ignore="true" title="Save as image (.png)"
+      class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect mdl-button--fab mdl-button--colored">
+      <i class="material-icons">screenshot</i>
+    </button>
+  </div>
+  <!-- <div class="mdl-card__menu">
+    <button id="download" data-html2canvas-ignore="true" title="Save as image (.png)"
+      class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect mdl-button--fab mdl-button--colored">
+      <i class="material-icons">screenshot</i>
+    </button>
+  </div> -->
+</div>
+</div>
+<div class="mdl-cell mdl-cell--3-col mdl-cell--hide-tablet mdl-cell--hide-phone"></div>
+
+<div class="mdl-cell mdl-cell--3-col mdl-cell--hide-tablet mdl-cell--hide-phone"></div>
+<div class="mdl-cell mdl-cell--6-col mdl-cell--12-col-tablet mdl-cell--12-col-phone">
+  <div class="membership-details-card mdl-card mdl-shadow--2dp">
+    <div class="mdl-card__supporting-text">
+      <h4 class="vhlm">Membership History</h4>
+      <hr>
+
+      <ul class="mdl-list">
+
+        {% for membership_order in membership_orders %}
+        <li class="mdl-list__item">
+          <span class="mdl-list__item-primary-content">
+            <i class="material-icons mdl-list__item-icon">{% if membership_order.is_active %}verified{% else
+              %}check_circle_outline{% endif %}</i>
+            <details>
+              <summary class="mdl-button mdl-js-button mdl-button--raised"
+                id="membership-details-{{ membership_order.id }}">
+                Order #{{ membership_order.order_number }} - {{ membership_order.product_name }}
+                ({{ membership_order.created_on.strftime("%x") }})
+              </summary>
+              <ul class="mdl-list">
+                {% for key, value in membership_order.to_dict().items() %}
+                <li class="mdl-list__item mdl-list__item--two-line">
+                  <span class="mdl-list__item-primary-content">
+                    <span class="mdl-list__item-sub-title"><strong>{{ key | replace("_", " ") | title }}</strong></span>
+                    <span>{{ value }}</span>
+                  </span>
+                </li>
+                {% endfor %}
+              </ul>
+            </details>
+          </span>
+        </li>
+        {% endfor %}
+
+      </ul>
+
+      <h4 class="vhlm">Verde Hasta La Muerte</h4>
+      <hr>
+      <details>
+        <summary class="mdl-button mdl-js-button mdl-button--raised" id="user-details-{{ current_user.id }}">User
+          Details
+        </summary>
+
+        <ul class="mdl-list">
+          {% for key, value in current_user.to_dict().items() %}
+          <li class="mdl-list__item mdl-list__item--two-line">
+            <span class="mdl-list__item-primary-content">
+              <span class="mdl-list__item-sub-title"><strong>{{ key | replace("_", " ") | title }}</strong></span>
+              <span>{{ value }}</span>
+            </span>
+          </li>
+          {% endfor %}
+        </ul>
+      </details>
+
+    </div>
+  </div>
+</div>
+<div class="mdl-cell mdl-cell--3-col mdl-cell--hide-tablet mdl-cell--hide-phone"></div>
+{% endcall %}
+{% endblock %}

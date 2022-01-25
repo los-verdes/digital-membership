@@ -12,6 +12,25 @@ Model = getattr(db, "Model")
 # Table = getattr(db, "Table")
 
 
+def get_membership_table_last_sync():
+    from member_card import models
+
+    last_run_start_time = (
+        db.session.query(models.TableMetadata)
+        .filter_by(
+            table_name=models.AnnualMembership.__tablename__,
+            attribute_name="last_run_start_time",
+        )
+        .one()
+    )
+    membership_last_sync = datetime.fromtimestamp(
+        float(
+            last_run_start_time.attribute_value,
+        )
+    )
+    return membership_last_sync
+
+
 def get_or_update(session, model, filters, kwargs):
     filters = {f: kwargs[f] for f in filters if f in kwargs}
     kwargs = {k: v for k, v in kwargs.items() if v is not None}

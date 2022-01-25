@@ -18,4 +18,4 @@ RUN pip install \
 COPY ./member_card/ ./member_card
 COPY ./*.py ./
 
-ENTRYPOINT ["gunicorn", "-b", "0.0.0.0:8080", "wsgi:app", "--log-file", "-", "--log-level", "info"]
+ENTRYPOINT ["gunicorn", "-b", "0.0.0.0:8080", "wsgi:create_app()", "--log-file", "-", "--log-level", "info"]

@@ -1,6 +1,8 @@
 tf_subdir      := "./terraform"
 tfvars_file    := "lv-digital-membership.tfvars"
 
+export GCLOUD_PROJECT := "lv-digital-membership"
+
 set-tf-ver-output:
   echo "::set-output name=terraform_version::$(cat {{ tf_subdir }}/.terraform-version)"
 

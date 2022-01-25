@@ -87,24 +87,27 @@ def inject_user():
 
 @app.context_processor
 def load_common_context():
+    from member_card.db import get_membership_table_last_sync
+
     return common_context(
         app.config["SOCIAL_AUTH_AUTHENTICATION_BACKENDS"],
         load_strategy(),
         getattr(g, "user", None),
         app.config.get("SOCIAL_AUTH_GOOGLE_PLUS_KEY"),
+        membership_last_sync=get_membership_table_last_sync(),
     )
 
 
 app.context_processor(backends)
 
 
-@login_required
 @app.route("/")
-def home():
+@login_required
+def membership_card():
     from member_card.models import AnnualMembership
 
     return render_template(
-        "home.html",
+        "membership_card.html",
         # member=g.user,
         membership_card=g.user.latest_membership_card,
         membership_orders=g.user.annual_memberships,
@@ -181,16 +184,14 @@ def privacy_policy():
 @app.route("/login/")
 def login():
     """Logout view"""
-    logout_user()
-    return redirect("/")
+    return render_template("login.html")
 
 
 @login_required
 @app.route("/logout/")
 def logout():
-    return render_template(
-        "home.html",
-    )
+    logout_user()
+    return redirect("/")
 
 
 @app.cli.command("ensure-db-schemas")

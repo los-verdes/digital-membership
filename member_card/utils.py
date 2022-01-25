@@ -61,7 +61,7 @@ def load_settings(app):
     # logger.debug(
     #     f"app.config after loading settings from object {settings_obj}: {app.config=}"
     # )
-    logger.debug(app.config["SQLALCHEMY_DATABASE_URI"])
+    # logger.debug(app.config["SQLALCHEMY_DATABASE_URI"])
     # breakpoint()
     # DB
 

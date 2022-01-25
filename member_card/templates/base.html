@@ -1,15 +1,20 @@
 {% import 'macros.html' as macros %}
 <!doctype html>
+<!--
+  Los Verdes Digital Membership Page
+  Copyright 2022 Google Inc. All rights reserved.
+-->
 <html lang="en">
 
 <head>
   <!-- Required meta tags -->
   <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="Digital membership card portal for members of the Los Verdes supporters group.">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Los Verdes - Digital Membership Card</title>
+  <title>{% block title %}Los Verdes - Digital Membership Card{% endblock %}</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
   <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.green-light_green.min.css" />
-  <!-- <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='material.min.css') }}"> -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Almendra+Display&display=swap" rel="stylesheet">
@@ -17,32 +22,30 @@
   {% assets "style" %}
   <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}">
   {% endassets %}
-  <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
   <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
+  <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+  <script defer src="{{ url_for('static', filename='html2canvas.min.js')}}"></script>
+  <script defer src="{{ url_for('static', filename='script.js')}}"></script>
 </head>
 
 <body>
 
+  <!-- Start of "outer" div that holds our entire layout -->
+  <!-- Reference: https://getmdl.io/components/index.html#layout-section -->
   <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
     <header class="mdl-layout__header lv-header">
       <div class="mdl-layout__header-row">
         <!-- Title -->
-        <span class="mdl-layout-title mdl-layout--large-screen-only">Los Verdes Membership Card</span>
+        <span class="mdl-layout-title mdl-layout--large-screen-only">{{ title }}</span>
         <!-- Add spacer, to align navigation to the right -->
         <div class="mdl-layout-spacer"></div>
         <!-- Navigation. We hide it in small screens. -->
         <nav class="mdl-navigation">
-          {% if user.is_authenticated %}
+          {% if current_user.is_authenticated %}
           <a class="mdl-navigation__link" href="/logout/" id="logout">
             <span title="Log out"><i class="material-icons">logout</i></span>
           </a>
-          {% else %}
-          <!-- <i class="material-icons">event</i>
-          &nbsp;
-          Login with Google OAuth2
-        </a>
-        <div class="google-btn"> -->
-          <!-- {{ macros.sign_in_button() }} -->
           {% endif %}
         </nav>
       </div>
@@ -50,7 +53,6 @@
     <div class="mdl-layout__drawer">
       <span class="mdl-layout-title">Digital Membership</span>
       <nav class="mdl-navigation">
-
         {% set association = associated.get("google-oauth2") %}
         {% if association %}
         <form id="google-oauth2-disconnect" class="disconnect-form col-md-2" action="/disconnect/google-oauth2/1/"
@@ -62,78 +64,26 @@
           </a>
         </form>
         {% else %}
-
         {{ macros.sign_in_button() }}
         {% endif %}
         <span class="mdl-navigation__link">
           <b>last data refresh</b>
           <br>
-          wheneves!
+          {{ membership_last_sync.strftime('%c %Z') }}
         </span>
       </nav>
     </div>
+
     <main class="mdl-layout__content">
-      <div class="page-content">
-        <div class="mdl-grid">
-          <div class="mdl-cell mdl-cell--3-col mdl-cell--hide-tablet mdl-cell--hide-phone"></div>
-          <div class="mdl-cell mdl-cell--6-col mdl-cell--12-col-tablet mdl-cell--12-col-phone">
-            {% if user.is_authenticated %}
-            {{ macros.membership_card(current_user, membership_card, membership_orders) }}
-            {% else %}
-            {{ macros.sign_in_card() }}
-            {% endif %}
-          </div>
-          <div class="mdl-cell mdl-cell--3-col mdl-cell--hide-tablet mdl-cell--hide-phone"></div>
-        </div>
-      </div>
-
-
-      <div class="mdl-layout-spacer"></div>
+      <div class="page-content">{% block content required %}{% endblock %}</div>
+    </main>
 
   </div>
-  </main>
+  <!-- End of "outer" div that holds our entire layout -->
   <!-- <footer class="mdl-mega-footer">
       {% block footer %}{% endblock %}
     </footer> -->
   </div>
-  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-  <script src="{{ url_for('static', filename='html2canvas.min.js')}}"></script>
-
-  <script type="text/javascript">
-    $(document).ready(function () {
-      $('.disconnect-form').on('click', 'a.mdl-navigation__link', function (event) {
-        event.preventDefault();
-        $(event.target).closest('form').submit();
-      });
-    });
-
-    document.getElementById("download").addEventListener("click", function () {
-      html2canvas(document.querySelector('#boundary')).then(function (canvas) {
-        saveAs(canvas.toDataURL(), 'lv-members-card.png');
-      });
-    });
-
-
-    function saveAs(uri, filename) {
-      var link = document.createElement('a');
-      if (typeof link.download === 'string') {
-        link.href = uri;
-        link.download = filename;
-
-        //Firefox requires the link to be in the body
-        document.body.appendChild(link);
-
-        //simulate click
-        link.click();
-
-        //remove the link when done
-        document.body.removeChild(link);
-
-      } else {
-        window.open(uri);
-      }
-    }
-  </script>
 </body>
 
 </html>
