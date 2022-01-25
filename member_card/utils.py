@@ -1,5 +1,9 @@
+import hashlib
+import hmac
 import uuid
+from base64 import urlsafe_b64encode as b64e
 
+import flask
 from flask_assets import Bundle, Environment
 from flask_login import LoginManager
 from logzero import logger
@@ -20,6 +24,28 @@ class MembershipLoginManager(LoginManager):
     def __init__(self, app=None, add_context_processor=True):
         super().__init__(app, add_context_processor)
         self.login_view = "main"  # members_card.__name__
+
+
+def get_signing_key():
+    signing_key = flask.current_app.config["SECRET_KEY"] * 5
+    signing_key = signing_key.encode()
+    return signing_key
+
+
+def sign(data: str, algorithm=hashlib.sha256) -> str:
+    key = get_signing_key()
+    assert len(key) >= algorithm().digest_size, (
+        "Key must be at least as long as the digest size of the " "hashing algorithm"
+    )
+    logger.debug(f"sign() => {data=} {algorithm=}")
+    signed_digest = hmac.new(key, data.encode(), algorithm).digest()
+    b64_digest = b64e(signed_digest).decode()
+    return b64_digest
+
+
+def verify(signature: str, data: str, algorithm=hashlib.sha256) -> bool:
+    expected = sign(data, algorithm)
+    return hmac.compare_digest(expected, signature)
 
 
 def load_settings(app):

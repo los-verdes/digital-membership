@@ -19,7 +19,7 @@ def get_or_update(session, model, filters, kwargs):
     #     logger.warning(f"{k} : {type(v)}")
     instance = session.query(model).filter_by(**filters).first()
 
-    logger.debug(f"Getting or updatin {model.__name__} matching {filters=}")
+    logger.debug(f"Getting or updatin' {model.__name__} matching {filters=}")
     if instance:
         for k, v in kwargs.items():
             setattr(instance, k, v)

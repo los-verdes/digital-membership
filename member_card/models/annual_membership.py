@@ -15,13 +15,13 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship, backref
 
-apple_pass_to_membership_assoc_table = Table(
-    "apple_passes_to_memberships",
+membership_card_to_membership_assoc_table = Table(
+    "membership_cards_to_memberships",
     Model.metadata,
     Column(
-        "apple_pass_id",
+        "membership_card_id",
         Integer,
-        ForeignKey("apple_pass.id"),
+        ForeignKey("membership_cards.id"),
         primary_key=True,
     ),
     Column(
@@ -41,9 +41,9 @@ class AnnualMembership(Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     user = relationship("User", back_populates="annual_memberships")
-    apple_passes = relationship(
-        "ApplePass",
-        secondary=apple_pass_to_membership_assoc_table,
+    membership_cards = relationship(
+        "MembershipCard",
+        secondary=membership_card_to_membership_assoc_table,
         lazy="subquery",
         backref=backref("annual_memberships", lazy=True),
     )

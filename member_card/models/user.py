@@ -16,7 +16,7 @@ class User(Model, UserMixin):
     last_name = Column(String(100))
     active = Column(Boolean, default=True)
     annual_memberships = relationship("AnnualMembership", back_populates="user")
-    apple_passes = relationship("ApplePass", back_populates="user")
+    membership_cards = relationship("MembershipCard", back_populates="user")
 
     def to_dict(self):
         return dict(
@@ -34,6 +34,12 @@ class User(Model, UserMixin):
 
     def has_memberships(self):
         return bool(self.annual_memberships)
+
+    @property
+    def latest_membership_card(self):
+        if not self.membership_cards:
+            return None
+        return sorted(self.membership_cards, key=lambda x: x.time_created)[-1]
 
     @property
     def oldest_membership(self):

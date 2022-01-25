@@ -90,6 +90,7 @@ class ProductionSettings(Settings):
             self.APPLE_DEVELOPER_PRIVATE_KEY_PASSWORD = self.secrets[
                 "apple_pass_private_key_password"
             ]
+
             # self.SQLALCHEMY_DATABASE_URI = f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASS}@127.0.0.1:5432/lv-digital-membership"
             # self.SQLALCHEMY_DATABASE_URI =
             # f"postgresql+pg8000://{self.POSTGRES_USER}:{self.POSTGRES_PASS}@lv-digital-membership

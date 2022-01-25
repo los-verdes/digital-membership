@@ -1,14 +1,14 @@
+import uuid
 from os.path import abspath, dirname, join
 
 from logzero import logger
 from member_card.db import Model
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 from wallet.models import Barcode, BarcodeFormat, Generic, Pass
 
-# from sqlalchemy.ext.declarative import declarative_base
-
-# Base = declarative_base()
 BASE_DIR = abspath(join(dirname(abspath(__file__)), ".."))
 
 
@@ -32,15 +32,20 @@ def get_certificate_path(filename):
     return join(BASE_DIR, "certificates", filename)
 
 
-class ApplePass(Model):
-    __tablename__ = "apple_pass"
+class MembershipCard(Model):
+    __tablename__ = "membership_cards"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    background_color = "#00B140"
+    foreground_color = "#000000"
+
+    id = Column(Integer, primary_key=True, autoincrement=True, unique=True)
+    serial_number = Column(UUID, primary_key=True, default=uuid.uuid4)
     user_id = Column(Integer, ForeignKey("users.id"))
-    user = relationship("User", back_populates="apple_passes")
-    # annual_memberships = relationship(
-    #     "AnnualMembership", secondary=apple_pass_to_membership_assoc_table
-    # )
+    user = relationship("User", back_populates="membership_cards")
+
+    # Card metadata:
+    time_created = Column(DateTime(timezone=True), server_default=func.now())
+    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Apple Developer details:
     apple_pass_type_identifier = Column(String)
@@ -49,8 +54,9 @@ class ApplePass(Model):
 
     # Display related attributes:
     logo_text = Column(String, default="LV Membership")
-    background_color = Column(String(8), default="#00B140")
-    foreground_color = Column(String(8), default="#000000")
+
+    member_since = Column(DateTime)
+    member_until = Column(DateTime)
 
     passfile_files = {
         "icon.png": "LV_Tee_Crest_onVerde_rgb_filled_icon.png",
@@ -59,15 +65,10 @@ class ApplePass(Model):
         "logo@2x.png": "LosVerdes_Logo_RGB_300_Horizontal_BlackOnTransparent_CityYear_logo@2x.png",
     }
 
-    @property
-    def qr_code_message(self):
-        return "Barcode message"
-
-    @property
-    def pass_info(self):
+    def create_passfile(self, qr_code_message):
 
         pass_info = Generic()
-        pass_info.addPrimaryField("name", self.user, "Member Name")
+        pass_info.addPrimaryField("name", self.user.fullname, "Member Name")
         pass_info.addSecondaryField(
             "member_since", self.user.member_since.strftime("%b %Y"), "Member Since"
         )
@@ -76,35 +77,26 @@ class ApplePass(Model):
             self.user.membership_expiry.strftime("%b %d, %Y"),
             "Good through",
         )
-
-        # pass_info.addSecondaryField(
-        #     "member_expiry", member_expiry_dt.strftime("%b %d, %Y"), "Good through"
-        # )
-        # pass_info.addPrimaryField("member_expiry", member_expiry_dt.strftime("%b %Y"), "Good through")
-
-        # pass_info.addHeaderField(key="test_header", value="Testing the header", label="Test Header")
-        # pass_info.addHeaderField(key="test_aux", value="Testing the aux", label="Test Aux")
-        # pass_info.addBackField("hmm", "Hi there", "Hullo")
-        # pass_info.addBackField(key="test_back", value="Testing the back", label="Test Back")
-        return pass_info
-
-    @property
-    def passfile(self):
-        passfile = Pass(
-            passInformation=self.pass_info,
+        pass_kwargs = dict(
+            passInformation=pass_info,
             passTypeIdentifier=self.apple_pass_type_identifier,
             organizationName=self.apple_organization_name,
             teamIdentifier=self.apple_team_identifier,
         )
-        qr_code = Barcode(format=BarcodeFormat.QR, message=self.qr_code_message)
+        logger.debug(f"{pass_kwargs=}")
+        passfile = Pass(**pass_kwargs)
+
+        qr_code = Barcode(format=BarcodeFormat.QR, message=qr_code_message)
 
         passfile_attrs = dict(
-            serialNumber=self.id,
-            backgroundColor="rgb(0, 177, 64)",
-            foregroundColor="rgb(0, 0, 0)",
+            description="Los Verdes Membership Card",
+            serialNumber=self.serial_number,  # self.id,
+            backgroundColor=hex2rgb(self.background_color),
+            foregroundColor=hex2rgb(self.foreground_color),
             logoText=self.logo_text,
             barcode=qr_code,
         )
+        logger.debug(f"{passfile_attrs=}")
         for attr_name, attr_value in passfile_attrs.items():
             setattr(
                 passfile,
@@ -116,19 +108,25 @@ class ApplePass(Model):
             static_dir = join(BASE_DIR, "static")
             for passfile_filename, local_filename in self.passfile_files.items():
                 file_path = join(static_dir, local_filename)
+                logger.debug(f"adding {file_path} as pass file: {passfile_filename}")
                 passfile.addFile(passfile_filename, open(file_path, "rb"))
 
         return passfile
 
-    def create_pkpass(self, key_filepath, key_password, pkpass_out_path=None):
+    def create_pkpass(
+        self, key_filepath, key_password, qr_code_message, pkpass_out_path=None
+    ):
         serial_number = self.id
         cert_filepath = get_certificate_path("certificate.pem")
         wwdr_cert_filepath = get_certificate_path("wwdr.pem")
         logger.debug(f"{cert_filepath=}")
         logger.debug(
-            f"Creating passfile with {self.pass_type_identifier=} {serial_number=} (Signing details: {cert_filepath=} {key_filepath=} {wwdr_cert_filepath=}"
+            f"Creating passfile with {self.apple_pass_type_identifier=} {serial_number=} (Signing details: {cert_filepath=} {key_filepath=} {wwdr_cert_filepath=}"
         )
-        pkpass_string_buffer = self.passfile.create(
+        passfile = self.create_passfile(qr_code_message=qr_code_message)
+        # breakpoint()
+        logger.debug(f"{passfile.json_dict()=}")
+        pkpass_string_buffer = passfile.create(
             certificate=cert_filepath,
             key=key_filepath,
             wwdr_certificate=wwdr_cert_filepath,

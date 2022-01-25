@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 import os
-import tempfile
 
 import click
-from flask import Flask, g, redirect, render_template, send_file, url_for
+from flask import Flask, g, redirect, render_template, request, send_file, url_for
 from flask_login import current_user as current_login_user
 from flask_login import login_required, logout_user
 from logzero import logger, setup_logger
@@ -18,6 +17,7 @@ from member_card.utils import (
     common_context,
     load_settings,
     register_asset_bundles,
+    verify,
 )
 
 BASE_DIR = os.path.dirname(
@@ -103,34 +103,66 @@ app.context_processor(backends)
 def home():
     from member_card.models import AnnualMembership
 
-    user = g.user
-    membership_table_keys = list(AnnualMembership().to_dict().keys())
-    if user.is_authenticated and user.has_memberships:
-        return render_template(
-            "home.html",
-            member_name=user.fullname,
-            membership_table_keys=membership_table_keys,
-            memberships=user.annual_memberships,
-            member_since_dt=user.member_since,
-            member_expiry_dt=user.membership_expiry,
-        )
     return render_template(
         "home.html",
+        # member=g.user,
+        membership_card=g.user.latest_membership_card,
+        membership_orders=g.user.annual_memberships,
+        membership_table_keys=list(AnnualMembership().to_dict().keys()),
     )
 
 
 @login_required
 @app.route("/passes/apple-pay")
 def passes_apple_pay():
+
     current_user = g.user
     if current_user.is_authenticated:
+        from member_card.passes import get_apple_pass_for_user
+
         attachment_filename = f"lv_apple_pass-{current_user.last_name.lower()}.pkpass"
-        _, filepath = tempfile.mkstemp()
-        create_apple_pass(current_user.email, filepath)
+        pkpass_out_path = get_apple_pass_for_user(
+            user=current_user,
+            base_url=request.base_url,
+            # organization_name=app.config["APPLE_DEVELOPER_TEAM_ID"],
+            # pass_type_identifier=app.config["APPLE_DEVELOPER_PASS_TYPE_ID"],
+            # team_identifier=app.config["APPLE_DEVELOPER_TEAM_ID"],
+        )
         return send_file(
-            filepath, attachment_filename=attachment_filename, as_attachment=True
+            pkpass_out_path, attachment_filename=attachment_filename, as_attachment=True
         )
     return redirect(url_for("home"))
+
+
+@login_required
+@app.route("/passes/apple-pay/verify/<serial_number>")
+def verify_apple_pay_pass(serial_number):
+    from member_card.db import db
+    from member_card.models import MembershipCard, AnnualMembership
+
+    signature = request.args.get("signature")
+    if not signature:
+        return "Unable to verify signature!", 401
+
+    signature_verified = verify(signature=signature, data=serial_number)
+    if not signature_verified:
+        return "Unable to verify signature!", 401
+    # current_user = g.user
+    # if current_user.is_authenticated:
+    card_to_verify = (
+        db.session.query(MembershipCard).filter_by(serial_number=serial_number).one()
+    )
+    logger.debug(f"{card_to_verify=}")
+
+    return render_template(
+        "home.html",
+        # member=g.user,
+        membership_card=card_to_verify,
+        membership_orders=card_to_verify.user.annual_memberships,
+        membership_table_keys=list(AnnualMembership().to_dict().keys()),
+    )
+
+    # return redirect(url_for("home"))
 
 
 @app.route("/privacy-policy")
@@ -154,13 +186,13 @@ def logout():
     return redirect("/")
 
 
-@app.cli.command("syncdb")
-def ensure_db_schema():
+@app.cli.command("ensure-db-schemas")
+def ensure_db_schemas():
     # from social_flask_sqlalchemy import models
 
     # from member_card.models import user
 
-    logger.debug("syncdb: calling `db.create_all()`")
+    logger.debug("ensure-db-schemas: calling `db.create_all()`")
     # metadata = MetaData()
     # metadata.create_all()
     # db.create_all()
@@ -174,7 +206,7 @@ def ensure_db_schema():
     models.User.metadata.create_all(engine)
     models.TableMetadata.metadata.create_all(engine)
     models.AnnualMembership.metadata.create_all(engine)
-    models.ApplePass.metadata.create_all(engine)
+    models.MembershipCard.metadata.create_all(engine)
     social_flask_models.PSABase.metadata.create_all(engine)
 
 
@@ -222,35 +254,3 @@ def create_apple_pass_cli(email, zip_file_path=None):
 
 def create_apple_pass(email, zip_file=None):
     pass
-
-
-#     from member_card.models import AnnualMembershipt
-
-#     memberships = (
-#         AnnualMembership.query.filter_by(customer_email=email)
-#         .order_by(AnnualMembership.created_on.desc())
-#         .all()
-#     )
-#     if not memberships:
-#         raise Exception(f"No matching memberships found for {email=}")
-#     member_since_dt = memberships[-1].created_on
-#     member_name = memberships[-1].full_name
-#     member_expiry_dt = memberships[0].expiry_date
-#     logger.debug(f"{str(member_expiry_dt.strftime('%b %d, %Y'))=}")
-
-#     new_pass_kwargs = dict(
-#         apple_organization_name = app.config["APPLE_DEVELOPER_TEAM_ID"]
-#         apple_pass_type_identifier = app.config["APPLE_DEVELOPER_PASS_TYPE_ID"]
-#         apple_team_identifier = app.config["APPLE_DEVELOPER_TEAM_ID"]
-#     )
-
-#     # logo_text = "Membership Card"
-
-
-#     key_fp = tempfile.NamedTemporaryFile(mode="w", suffix=".key")
-#     key_fp.write("\n".join(app.config["APPLE_DEVELOPER_PRIVATE_KEY"].split("\\n")))
-#     key_fp.seek(0)
-#     password = app.config["APPLE_DEVELOPER_PRIVATE_KEY_PASSWORD"]
-
-
-#     key_fp.close()

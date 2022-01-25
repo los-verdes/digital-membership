@@ -75,6 +75,30 @@ $button-active-blue: #1669f2;
   font-size: 1em;
 }
 
+// .houschka {
+//   font-family: houschka-rounded, sans-serif;
+//   font-style: normal;
+//   font-weight: 900;
+//   font-size: 2em;
+// }
+
+.validation-overlay {
+  // font-family: "Almendra Display", cursive;
+  transform: rotate(325deg);
+  transform-origin: left, top;
+  -ms-transform: rotate(325deg);
+  -ms-transform-origin:right, top;
+  -webkit-transform: rotate(325deg);
+  -webkit-transform-origin:right, top;
+  position: absolute;
+  color: $bright-verde;
+  // color: black;
+  -webkit-text-stroke-width: 2px;
+  -webkit-text-stroke-color: rgba(black, 0.75);
+  // bottom: 120px;
+  // left: 20px;
+}
+
 .live-laugh-love {
   font-family: "Bungee";
   color: white;

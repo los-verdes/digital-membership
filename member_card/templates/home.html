@@ -78,7 +78,7 @@
           <div class="mdl-cell mdl-cell--3-col mdl-cell--hide-tablet mdl-cell--hide-phone"></div>
           <div class="mdl-cell mdl-cell--6-col mdl-cell--12-col-tablet mdl-cell--12-col-phone">
             {% if user.is_authenticated %}
-            {{ macros.membership_card(current_user, memberships, member_since_dt, member_expiry_dt) }}
+            {{ macros.membership_card(current_user, membership_card, membership_orders) }}
             {% else %}
             {{ macros.sign_in_card() }}
             {% endif %}
