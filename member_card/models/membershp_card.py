@@ -39,7 +39,7 @@ class MembershipCard(Model):
     foreground_color = "#000000"
 
     id = Column(Integer, primary_key=True, autoincrement=True, unique=True)
-    serial_number = Column(UUID, primary_key=True, default=uuid.uuid4)
+    serial_number = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(Integer, ForeignKey("users.id"))
     user = relationship(
         "User",
@@ -71,7 +71,7 @@ class MembershipCard(Model):
         "logo@2x.png": "LosVerdes_Logo_RGB_300_Horizontal_BlackOnTransparent_CityYear_logo@2x.png",
     }
 
-    def create_passfile(self, qr_code_message):
+    def create_passfile(self):
 
         pass_info = Generic()
         pass_info.addPrimaryField("name", self.user.fullname, "Member Name")
@@ -92,11 +92,11 @@ class MembershipCard(Model):
         logger.debug(f"{pass_kwargs=}")
         passfile = Pass(**pass_kwargs)
 
-        qr_code = Barcode(format=BarcodeFormat.QR, message=qr_code_message)
+        qr_code = Barcode(format=BarcodeFormat.QR, message=self.qr_code_message)
 
         passfile_attrs = dict(
             description="Los Verdes Membership Card",
-            serialNumber=self.serial_number,  # self.id,
+            serialNumber=str(self.serial_number.int),  # self.id,
             backgroundColor=hex2rgb(self.background_color),
             foregroundColor=hex2rgb(self.foreground_color),
             logoText=self.logo_text,
@@ -127,7 +127,7 @@ class MembershipCard(Model):
         logger.debug(
             f"Creating passfile with {self.apple_pass_type_identifier=} {serial_number=} (Signing details: {cert_filepath=} {key_filepath=} {wwdr_cert_filepath=}"
         )
-        passfile = self.create_passfile(qr_code_message=self.qr_code_message)
+        passfile = self.create_passfile()
         # breakpoint()
         logger.debug(f"{passfile.json_dict()=}")
         pkpass_string_buffer = passfile.create(

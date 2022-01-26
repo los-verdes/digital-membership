@@ -49,6 +49,7 @@ def get_or_create_membership_card(user, base_url):
 
     # TODO: do this more efficient like:
     if not membership_card.qr_code_message:
+        logger.debug("generating QR code for message")
         serial_number = str(membership_card.serial_number)
         qr_code_signature = sign(serial_number)
         qr_code_message = f"Content: {base_url}/verify/{serial_number}?signature={qr_code_signature}"
