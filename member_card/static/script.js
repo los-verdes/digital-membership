@@ -1,10 +1,15 @@
-$(document).ready(function () {
-  $('.disconnect-form').on('click', 'a.mdl-navigation__link', function (event) {
-    event.preventDefault();
-    $(event.target).closest('form').submit();
-  });
-});
+// python-social-auth related bits:
+// First grabbing any auth "disconnect" buttons we have hanging about
+// (at the time of this comment's writing, google-oauth2 is the only implicated auth method)
+var disconnectAuthButtons = document.getElementsByClassName("disconnect-auth-btn");
+var disconnectAuthFunc = function(event) {
+  event.preventDefault()
+  $(event.target).closest('form').submit();
+};
 
+Array.from(disconnectAuthButtons).forEach(function(element) {
+  element.addEventListener('click', disconnectAuthFunc);
+});
 var toggleQrCodeBtn = document.getElementById("toggle-qr-code-btn");
 if (toggleQrCodeBtn) {
   toggleQrCodeBtn.addEventListener("click", function () {

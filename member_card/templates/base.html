@@ -45,9 +45,29 @@
         <!-- Navigation. We hide it in small screens. -->
         <nav class="mdl-navigation">
           {% if current_user.is_authenticated %}
-          <a class="mdl-navigation__link" href="/logout/" id="logout">
-            <span title="Log out"><i class="material-icons">logout</i></span>
+          <a class="mdl-navigation__link" id="logout-menu">
+            <span title="Log out menu"><i class="material-icons">logout</i></span>
           </a>
+
+          <ul class="mdl-menu mdl-menu--top-right mdl-js-menu mdl-js-ripple-effect" data-mdl-for="logout-menu">
+            <li id="logout" class="mdl-menu__item">Logout {{ current_user.id }}</li>
+            {% set association = associated.get("google-oauth2") %}
+            {% if association %}
+            <li class="mdl-menu__item">
+              <form id="google-oauth2-disconnect" class="disconnect-form"
+                    action="{{ url('social:disconnect_individual', backend=association.provider, association_id=association.id) }}"
+                    method="post">
+                <input type="hidden" name="csrfmiddlewaretoken" value="">
+                <a class="mdl-navigation__link disconnect-auth-btn" name="google oauth2" href="#">
+                  <i class="material-icons">remove_circle_outline</i>
+                  Disconnect Google OAuth2
+                </a>
+              </form>
+            </li>
+            <!-- End if association -->
+            {% endif %}
+          </ul>
+          <!-- End if current_user.is_authenticated -->
           {% endif %}
         </nav>
       </div>
@@ -55,16 +75,13 @@
     <div class="mdl-layout__drawer">
       <span class="mdl-layout-title">Digital Membership</span>
       <nav class="mdl-navigation">
-        {% set association = associated.get("google-oauth2") %}
-        {% if association %}
-        <form id="google-oauth2-disconnect" class="disconnect-form col-md-2" action="/disconnect/google-oauth2/1/"
-          method="post">
-          <input type="hidden" name="csrfmiddlewaretoken" value="">
-          <a class="mdl-navigation__link" name="google oauth2" href="#">
-            <i class="fa fa-google"></i>
-            Disconnect Google OAuth2
-          </a>
-        </form>
+        {% if current_user.is_authenticated %}
+        <span class="mdl-navigation__link">
+          <span class="mdl-list__item-primary-content">
+            <span class="mdl-list__item-sub-title"><strong>Signed in as</strong></span>
+            <span>{{ current_user.email }} ({{ current_user.username }})</span>
+          </span>
+        </span>
         {% else %}
         {{ macros.sign_in_button() }}
         {% endif %}

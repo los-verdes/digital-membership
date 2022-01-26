@@ -160,3 +160,19 @@ def get_db_session(database_uri):
     Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     db_session = scoped_session(Session)
     return db_session
+
+
+# Reference: https://github.com/python-social-auth/social-examples/blob/02e42dd616f80510aaccb278374b686ee8dee2da/example-common/utils.py#L38
+def social_url_for(name, **kwargs):
+    if name == "social:begin":
+        url = "/login/{backend}/"
+    elif name == "social:complete":
+        url = "/complete/{backend}/"
+    elif name == "social:disconnect":
+        url = "/disconnect/{backend}/"
+    elif name == "social:disconnect_individual":
+        url = "/disconnect/{backend}/{association_id}/"
+    else:
+        url = name
+    logger.debug(f"social_url_for() => {name=}: {kwargs=}")
+    return url.format(**kwargs)

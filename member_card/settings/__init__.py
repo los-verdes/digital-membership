@@ -27,7 +27,7 @@ class Settings(object):
     DEBUG_TB_INTERCEPT_REDIRECTS = False
     SESSION_PROTECTION = "strong"
 
-    SOCIAL_AUTH_LOGIN_URL = "/"
+    SOCIAL_AUTH_LOGIN_URL = "/login"
     SOCIAL_AUTH_LOGIN_REDIRECT_URL = "/"
     SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
     SOCIAL_AUTH_USER_MODEL = "member_card.models.user.User"
@@ -66,6 +66,9 @@ class ProductionSettings(Settings):
 
     def __init__(self) -> None:
         super().__init__()
+        self.SOCIAL_AUTH_PIPELINE = tuple(
+            [p for p in self.SOCIAL_AUTH_PIPELINE if not p.endswith("debug")]
+        )
         # from: https://realpython.com/flask-google-login/
         if secret_name := os.getenv("DIGITAL_MEMBERSHIP_GCP_SECRET_NAME"):
             from member_card.secrets import retrieve_app_secrets

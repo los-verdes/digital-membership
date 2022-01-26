@@ -19,6 +19,7 @@ from member_card.utils import (
     load_settings,
     register_asset_bundles,
     verify,
+    social_url_for,
 )
 
 BASE_DIR = os.path.dirname(
@@ -60,6 +61,13 @@ def create_app():
 
     assert routes
 
+    # with app.app_context():
+    #     app.config.update(
+    #         dict(
+    #             SOCIAL_AUTH_LOGIN_URL=url_for("login"),
+    #             SOCIAL_AUTH_LOGIN_REDIRECT_URL=url_for("home"),
+    #         )
+    #     )
     return app
 
 
@@ -111,6 +119,7 @@ def load_common_context():
 
 
 app.context_processor(backends)
+app.jinja_env.globals["url"] = social_url_for
 
 
 @app.route("/")
@@ -207,14 +216,14 @@ def privacy_policy():
 #     return render_template("home2.html")
 
 
-@app.route("/login/")
+@app.route("/login")
 def login():
     """Logout view"""
     return render_template("login.html")
 
 
 @login_required
-@app.route("/logout/")
+@app.route("/logout")
 def logout():
     logout_user()
     return redirect("/")
