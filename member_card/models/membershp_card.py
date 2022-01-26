@@ -81,7 +81,7 @@ class MembershipCard(Model):
 
     @property
     def is_voided(self):
-        return self.member_until > datetime.now()
+        return self.member_until < datetime.now()
 
     @property
     def apple_pass_expiry_timestamp(self):
