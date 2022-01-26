@@ -14,6 +14,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from webassets.filter import get_filter
 
 from member_card.settings import get_settings_obj_for_env
+from social_core.pipeline.user import get_username as social_get_username
 
 # import pg8000
 # import sqlalchemy
@@ -24,6 +25,13 @@ class MembershipLoginManager(LoginManager):
     def __init__(self, app=None, add_context_processor=True):
         super().__init__(app, add_context_processor)
         self.login_view = "login"  # members_card.__name__
+
+
+def get_username(strategy, details, user=None, *args, **kwargs):
+    result = social_get_username(strategy, details, user=user, *args, **kwargs)
+    if not result["username"]:
+        result["username"] = getattr(user, "email")
+    return result
 
 
 def get_signing_key():

@@ -1,4 +1,5 @@
 {% import 'macros.html' as macros %}
+{% set title_str %}{% block title %}Los Verdes - Digital Membership Card{% endblock %}{% endset %}
 <!doctype html>
 <!--
   Los Verdes Digital Membership Page
@@ -12,7 +13,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="description" content="Digital membership card portal for members of the Los Verdes supporters group.">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Los Verdes - Digital Membership Card{% endblock %}</title>
+  <title>{{ title_str }}</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
   <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.green-light_green.min.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -33,63 +34,97 @@
 
 <body>
 
-  <!-- Start of "outer" div that holds our entire layout -->
-  <!-- Reference: https://getmdl.io/components/index.html#layout-section -->
-  <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
-    <header class="mdl-layout__header lv-header">
+  <div class="demo-layout mdl-layout mdl-js-layout mdl-layout--fixed-header">
+    <header class="demo-header mdl-layout__header">
       <div class="mdl-layout__header-row">
-        <!-- Title -->
-        <span class="mdl-layout-title mdl-layout--large-screen-only">{{ title }}</span>
-        <!-- Add spacer, to align navigation to the right -->
+        <span class="mdl-layout-title mdl-layout--large-screen-only">{{ title_str }}</span>
         <div class="mdl-layout-spacer"></div>
-        <!-- Navigation. We hide it in small screens. -->
-        <nav class="mdl-navigation">
-          {% if current_user.is_authenticated %}
-          <a class="mdl-navigation__link" id="logout-menu">
-            <span title="Log out menu"><i class="material-icons">logout</i></span>
+        <!-- <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable">
+          <label class="mdl-button mdl-js-button mdl-button--icon" for="search">
+            <i class="material-icons">search</i>
+          </label>
+          <div class="mdl-textfield__expandable-holder">
+            <input class="mdl-textfield__input" type="text" id="search">
+            <label class="mdl-textfield__label" for="search">Enter your query...</label>
+          </div>
+        </div> -->
+        <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon" id="hdrbtn">
+          <i class="material-icons">more_vert</i>
+        </button>
+        <ul class="mdl-menu mdl-js-menu mdl-js-ripple-effect mdl-menu--bottom-right" for="hdrbtn">
+          <a class="mdl-menu__item" href="{{ url_for('privacy_policy') }}">
+            Privacy Policy
+          </a>
+          <!-- <li class="mdl-menu__item">About</li>
+          <li class="mdl-menu__item">Contact</li> -->
+          <!-- <li class="mdl-menu__item">Legal information</li> -->
+          <a class="mdl-menu__item" href="https://losverdesatx.org" target="_blank">
+            <span class="material-icons">
+              open_in_new
+            </span>
+            LV Site
+            <!-- losverdesatx.org -->
           </a>
 
-          <ul class="mdl-menu mdl-menu--top-right mdl-js-menu mdl-js-ripple-effect" data-mdl-for="logout-menu">
-            <li id="logout" class="mdl-menu__item">Logout {{ current_user.id }}</li>
+          <a id="logout" class="mdl-menu__item" href="{{ url_for('logout') }}">
+            <i class="material-icons">logout</i>
+            Logout
+          </a>
+        </ul>
+      </div>
+    </header>
+    <div class="demo-drawer mdl-layout__drawer mdl-color--green">
+      <header class="lv-drawer-header">
+        <img class="lv-horizontal-logo mdl-cell--top"
+             src="{{ url_for('static', filename='LosVerdes_Logo_RGB_300_Horizontal_BlackOnTransparent_CityYear_logo@2x.png') }}">
+        {% if current_user.is_authenticated %}
+
+        <img src="{{ current_user.email | gravatar }}" class="demo-avatar">
+        <div class="demo-avatar-dropdown">
+          <span>{{ current_user.email }}</span>
+          <div class="mdl-layout-spacer"></div>
+          <button id="accbtn" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon">
+            <i class="material-icons" role="presentation">arrow_drop_down</i>
+            <span class="visuallyhidden">Accounts</span>
+          </button>
+          <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="accbtn">
+
+            <a id="logout" class="mdl-menu__item mdl-navigation__link " href="{{ url_for('logout') }}">
+              <i class="material-icons">logout</i>
+              Logout
+            </a>
+
             {% set association = associated.get("google-oauth2") %}
             {% if association %}
-            <li class="mdl-menu__item">
-              <form id="google-oauth2-disconnect" class="disconnect-form"
-                    action="{{ url('social:disconnect_individual', backend=association.provider, association_id=association.id) }}"
-                    method="post">
-                <input type="hidden" name="csrfmiddlewaretoken" value="">
-                <a class="mdl-navigation__link disconnect-auth-btn" name="google oauth2" href="#">
-                  <i class="material-icons">remove_circle_outline</i>
-                  Disconnect Google OAuth2
-                </a>
-              </form>
-            </li>
+            <form id="google-oauth2-disconnect" class="disconnect-form"
+                  action="{{ url('social:disconnect_individual', backend=association.provider, association_id=association.id) }}"
+                  method="post">
+              <input type="hidden" name="csrfmiddlewaretoken" value="">
+              <a class="mdl-menu__item mdl-navigation__link disconnect-auth-btn" name="google oauth2" href="#">
+                <i class="material-icons">remove_circle_outline</i>
+                Disconnect Google Account
+              </a>
+            </form>
             <!-- End if association -->
             {% endif %}
           </ul>
-          <!-- End if current_user.is_authenticated -->
-          {% endif %}
-        </nav>
-      </div>
-    </header>
-    <div class="mdl-layout__drawer">
-      <span class="mdl-layout-title">Digital Membership</span>
-      <nav class="mdl-navigation">
-        {% if current_user.is_authenticated %}
-        <span class="mdl-navigation__link">
-          <span class="mdl-list__item-primary-content">
-            <span class="mdl-list__item-sub-title"><strong>Signed in as</strong></span>
-            <span>{{ current_user.email }} ({{ current_user.username }})</span>
-          </span>
-        </span>
-        {% else %}
-        {{ macros.sign_in_button() }}
+        </div>
         {% endif %}
-        <span class="mdl-navigation__link">
-          <b>last data refresh</b>
-          <br>
-          {{ membership_last_sync.strftime('%c %Z') }}
-        </span>
+      </header>
+      <nav class="demo-navigation mdl-navigation mdl-color--grey-50">
+        {% if current_user.is_authenticated %}
+        <a class="mdl-navigation__link" href="{{ url_for('home') }}"><i class="mdl-color-text--green material-icons"
+             role="presentation">home</i>Home</a>
+        <div class="mdl-layout-spacer"></div>
+        <a class="mdl-navigation__link" href="#"><i class="mdl-color-text--green material-icons"
+             role="presentation">help_outline</i><span class="visuallyhidden">Help</span></a>
+
+        {% else %}
+        <li class="mdl-navigation__link" role="presentation">
+          {{ macros.sign_in_button() }}
+        </li>
+
+        {% endif %}
       </nav>
     </div>
 
@@ -97,11 +132,19 @@
       <div class="page-content">{% block content required %}{% endblock %}</div>
     </main>
 
-  </div>
-  <!-- End of "outer" div that holds our entire layout -->
-  <!-- <footer class="mdl-mega-footer">
-      {% block footer %}{% endblock %}
-    </footer> -->
+    <!-- {% block footer %}
+    <footer class="mdl-mini-footer">
+      <div class="mdl-mini-footer__left-section">
+        <div class="mdl-logo">Title</div>
+        <ul class="mdl-mini-footer__link-list">
+          <li><a href="#">Help</a></li>
+          <li><a href="#">Privacy & Terms</a></li>
+        </ul>
+      </div>
+    </footer>
+    {% endblock %} -->
+
+    <!-- End of "outer" div that holds our entire layout -->
   </div>
 </body>
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os
 from urllib.parse import urlparse
-
+from flask_gravatar import Gravatar
 import click
 from flask import Flask, g, redirect, render_template, request, send_file, url_for
 from flask_login import current_user as current_login_user
@@ -60,6 +60,18 @@ def create_app():
     from member_card import routes
 
     assert routes
+
+    gravatar = Gravatar(
+        app,
+        size=100,
+        rating="g",
+        default="retro",
+        force_default=False,
+        force_lower=False,
+        use_ssl=True,
+        base_url=None,
+    )
+    assert gravatar
 
     # with app.app_context():
     #     app.config.update(

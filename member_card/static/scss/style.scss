@@ -168,5 +168,9 @@ div.membership-card > .membership-card-inner {
 @import url(https://fonts.googleapis.com/css?family=Roboto:500);
 
 .lv-header.mdl-layout__header {
-  background-color: #00b140;
+  background-color: $bright-verde !important;
+}
+
+.mdl-color--green {
+  background-color: $bright-verde !important;
 }

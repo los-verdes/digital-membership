@@ -1,4 +1,5 @@
 Flask-Assets
+Flask-Gravatar
 Flask-SQLAlchemy
 M2Crypto
 cloud-sql-python-connector[pg8000]
