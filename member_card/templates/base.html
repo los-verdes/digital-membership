@@ -66,10 +66,13 @@
             <!-- losverdesatx.org -->
           </a>
 
+          {% if current_user.is_authenticated %}
           <a id="logout" class="mdl-menu__item" href="{{ url_for('logout') }}">
             <i class="material-icons">logout</i>
             Logout
           </a>
+          {% endif %}
+
         </ul>
       </div>
     </header>
