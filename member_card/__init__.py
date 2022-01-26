@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+from urllib.parse import urlparse
 
 import click
 from flask import Flask, g, redirect, render_template, request, send_file, url_for
@@ -30,6 +31,11 @@ app = Flask(__name__)
 login_manager = MembershipLoginManager()
 
 
+def get_base_url():
+    parsed_base_url = urlparse(request.base_url)
+    return f"{parsed_base_url.scheme}://{parsed_base_url.netloc}"
+
+
 def create_app():
     load_settings(app)
     register_asset_bundles(app)
@@ -40,15 +46,18 @@ def create_app():
     db.init_app(app)
 
     from social_flask.routes import social_auth
+
     app.register_blueprint(social_auth)
 
     from social_flask_sqlalchemy.models import init_social
+
     init_social(app, db.session)
 
     with app.app_context():
         db.create_all()
 
     from member_card import routes
+
     assert routes
 
     return app
@@ -159,7 +168,7 @@ def passes_apple_pay():
 @app.route("/verify-pass/<serial_number>")
 def verify_pass(serial_number):
     from member_card.db import db
-    from member_card.models import MembershipCard, AnnualMembership
+    from member_card.models import AnnualMembership, MembershipCard
 
     signature = request.args.get("signature")
     if not signature:

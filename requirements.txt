@@ -133,6 +133,8 @@ packaging==21.3
     # via google-cloud-firestore
 pg8000==1.23.0
     # via cloud-sql-python-connector
+pillow==9.0.0
+    # via qrcode
 proto-plus==1.19.8
     # via
     #   google-cloud-firestore
@@ -167,6 +169,8 @@ python3-openid==3.2.0
     # via social-auth-core
 pyyaml==6.0
     # via libcst
+qrcode[pil]==7.3.1
+    # via -r requirements.in
 requests==2.27.1
     # via
     #   -r requirements.in

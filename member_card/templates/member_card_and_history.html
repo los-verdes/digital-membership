@@ -9,6 +9,7 @@
     secondary_info_text="Member Since " ~ membership_card.member_since.strftime('%b %Y'),
     serial_number=membership_card.serial_number,
     aux_info_text="Good through " ~ membership_card.member_until.strftime('%b %d, %Y'),
+    qr_code_b64_png=membership_card.qr_code_b64_png,
   )
 }}
 {% endcall %}

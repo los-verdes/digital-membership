@@ -1,7 +1,11 @@
 import uuid
 from datetime import datetime, timezone
+from io import BytesIO, StringIO
 from os.path import abspath, dirname, join
 
+# from base64 import urlsafe_b64encode as b64e
+from base64 import b64encode as b64e
+import qrcode
 from logzero import logger
 from member_card.db import Model
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
@@ -92,6 +96,26 @@ class MembershipCard(Model):
     @property
     def serial_number_hex(self):
         return str(getattr(self.serial_number, "hex"))
+
+    @property
+    def qr_code_ascii(self):
+        # qr_code = qrcode.make(self.qr_code_message)
+        qr = qrcode.QRCode()
+        qr.add_data(self.qr_code_message)
+        with StringIO() as f:
+            qr.print_ascii(out=f)
+            f.seek(0)
+            return f.read()
+
+    @property
+    def qr_code_b64_png(self):
+        qr = qrcode.QRCode()
+        qr.add_data(self.qr_code_message)
+        img = qr.make_image(back_color='transparent')
+        with BytesIO() as f:
+            getattr(img, "save")(f, "PNG")
+            f.seek(0)
+            return b64e(f.read()).decode()
 
     @property
     def authentication_token_hex(self):

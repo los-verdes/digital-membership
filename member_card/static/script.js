@@ -5,6 +5,17 @@ $(document).ready(function () {
   });
 });
 
+var toggleQrCodeBtn = document.getElementById("toggle-qr-code-btn");
+if (toggleQrCodeBtn) {
+  toggleQrCodeBtn.addEventListener("click", function () {
+    var qrCode = document.getElementById("card-qr-code");
+    if (qrCode.style.display === "none") {
+      qrCode.style.display = "block";
+    } else {
+      qrCode.style.display = "none";
+    }
+  });
+}
 // document.getElementsByClassName("disconnect-form").addEventListener("click", function (event) {
 //   event.preventDefault();
 //   $(event.target).closest('form').submit();
@@ -12,9 +23,16 @@ $(document).ready(function () {
 var saveScreenshotBtn = document.getElementById("save-as-screenshot-btn");
 if (saveScreenshotBtn) {
   saveScreenshotBtn.addEventListener("click", function () {
-    html2canvas(document.querySelector('#save-as-screenshot-window')).then(function (canvas) {
-      saveAs(canvas.toDataURL(), 'lv-members-card.png');
-    });
+    html2canvas(document.querySelector('#save-as-screenshot-window'),
+      {
+        scale: 3,
+        backgroundColor: null,
+        onclone: function (clonedDoc) {
+          clonedDoc.getElementById('card-qr-code').style.display = 'block';
+        }
+      }).then(function (canvas) {
+        saveAs(canvas.toDataURL(), 'lv-members-card.png');
+      });
   });
 }
 

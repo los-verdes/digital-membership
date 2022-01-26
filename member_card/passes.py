@@ -1,10 +1,9 @@
 import functools
 import tempfile
 from typing import Callable
-from urllib.parse import urlparse
 import flask
 from logzero import logger
-
+from member_card import get_base_url
 from member_card.db import db, get_or_create
 from member_card.models import MembershipCard
 from member_card.utils import sign
@@ -34,8 +33,7 @@ def with_apple_developer_key() -> Callable:
 
 def get_or_create_membership_card(user):
     app = flask.current_app
-    parsed_base_url = urlparse(flask.request.base_url)
-    web_service_url = f"{parsed_base_url.scheme}://{parsed_base_url.netloc}/passkit"
+    web_service_url = f"{get_base_url()}/passkit"
     membership_card = get_or_create(
         session=db.session,
         model=MembershipCard,
@@ -55,7 +53,7 @@ def get_or_create_membership_card(user):
         logger.debug("generating QR code for message")
         serial_number = str(membership_card.serial_number)
         qr_code_signature = sign(serial_number)
-        qr_code_message = f"Content: {flask.url_for('verify_pass', serial_number=serial_number)}?signature={qr_code_signature}"
+        qr_code_message = f"Content: {get_base_url()}{flask.url_for('verify_pass', serial_number=serial_number)}?signature={qr_code_signature}"
         logger.debug(f"{qr_code_message=}")
         setattr(membership_card, 'qr_code_message', qr_code_message)
         db.session.add(membership_card)

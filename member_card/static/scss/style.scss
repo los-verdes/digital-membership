@@ -51,6 +51,25 @@ $button-active-blue: #1669f2;
   height: 100%;
 }
 
+div.qr-code {
+  margin: 0px;
+  > img {
+    display: none;
+    object-fit: contain;
+    width: 100%;
+  }
+  > small {
+    color: $bright-verde;
+    font-size: 0.30vw;
+    font-family: monospace;
+  }
+}
+// pre.qr-code {
+//   // line-height: 0px;
+//   line-height:1em;
+//   letter-spacing: -1px;
+//   font-size: x-large;
+// }
 img.lv-horizontal-logo-small {
   max-height: 29px;
 }
