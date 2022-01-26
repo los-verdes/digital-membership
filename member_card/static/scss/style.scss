@@ -81,6 +81,16 @@ img.lv-horizontal-logo {
   max-height: 57px;
 }
 
+
+.login-card > .mdl-card__title {
+  justify-content: center;
+}
+
+img.lv-horizontal-logo-large {
+  max-height: 100px;
+
+}
+
 div.membership-card {
   // For maintaining desired aspect ratio
   position: relative;

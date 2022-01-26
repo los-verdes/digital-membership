@@ -2,18 +2,20 @@
 // First grabbing any auth "disconnect" buttons we have hanging about
 // (at the time of this comment's writing, google-oauth2 is the only implicated auth method)
 var disconnectAuthButtons = document.getElementsByClassName("disconnect-auth-btn");
-var disconnectAuthFunc = function(event) {
+var disconnectAuthFunc = function (event) {
   event.preventDefault()
   $(event.target).closest('form').submit();
 };
 
-Array.from(disconnectAuthButtons).forEach(function(element) {
+Array.from(disconnectAuthButtons).forEach(function (element) {
   element.addEventListener('click', disconnectAuthFunc);
 });
+
 var toggleQrCodeBtn = document.getElementById("toggle-qr-code-btn");
+var qrCode = document.getElementById("card-qr-code");
+qrCode.style.display = "none";
 if (toggleQrCodeBtn) {
   toggleQrCodeBtn.addEventListener("click", function () {
-    var qrCode = document.getElementById("card-qr-code");
     if (qrCode.style.display === "none") {
       qrCode.style.display = "block";
     } else {

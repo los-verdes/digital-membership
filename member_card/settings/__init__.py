@@ -4,6 +4,8 @@ from logzero import logger
 
 
 class Settings(object):
+    LOG_LEVEL = os.getenv('LOG_LEVEL', 'info')
+
     APPLE_DEVELOPER_ORG_NAME = "Jeffrey Hogan"  # TODO: if LV is a legit 501c this can maybe become a less personal org...
     APPLE_DEVELOPER_PASS_TYPE_ID = "pass.es.losverd.card"
     APPLE_DEVELOPER_TEAM_ID = "KJHZP635V9"

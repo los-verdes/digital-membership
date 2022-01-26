@@ -1,9 +1,13 @@
 #!/usr/bin/env python
+import logging
 import os
 from urllib.parse import urlparse
-from flask_gravatar import Gravatar
+
 import click
-from flask import Flask, g, redirect, render_template, request, send_file, url_for
+import logzero
+from flask import (Flask, g, redirect, render_template, request, send_file,
+                   url_for)
+from flask_gravatar import Gravatar
 from flask_login import current_user as current_login_user
 from flask_login import login_required, logout_user
 from logzero import logger, setup_logger
@@ -13,14 +17,9 @@ from social_flask.utils import load_strategy
 from member_card.db import squarespace_orders_etl
 from member_card.models import User
 from member_card.squarespace import Squarespace
-from member_card.utils import (
-    MembershipLoginManager,
-    common_context,
-    load_settings,
-    register_asset_bundles,
-    verify,
-    social_url_for,
-)
+from member_card.utils import (MembershipLoginManager, common_context,
+                               load_settings, register_asset_bundles,
+                               social_url_for, verify)
 
 BASE_DIR = os.path.dirname(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "member_card")
@@ -39,6 +38,9 @@ def get_base_url():
 
 def create_app():
     load_settings(app)
+    if app.config['LOG_LEVEL'].lower() == "debug":
+        logzero.loglevel(logging.DEBUG)
+
     register_asset_bundles(app)
     login_manager.init_app(app)
 
