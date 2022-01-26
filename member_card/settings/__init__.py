@@ -155,7 +155,9 @@ def get_settings_obj_for_env(env=None, default_settings_class=Settings):
     if env == "production":
         return ProductionSettings()
     elif env == "remote-sql":
-        return RemoteSqlSettings()
+        settings = RemoteSqlSettings()
+        # breakpoint()
+        return settings
 
     settings_objs_by_env = {
         # "default": Settings,

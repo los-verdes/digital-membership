@@ -85,10 +85,11 @@ validation_msg="")
 
   <!-- Buttons enable various card-saving actions shown under the main card design -->
   <div class="mdl-card__actions mdl-card--border mdl-typography--text-right">
+    {% if not validation_msg %}
     <button class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" disabled>
       <i class="material-icons">download</i> Google Pay
     </button>
-    <a class="mdl-button mdl-js-button mdl-js-ripple-effect" href="passes/apple-pay" target="_blank">
+    <a class="mdl-button mdl-js-button mdl-js-ripple-effect" href="{{ url_for('passes_apple_pay') }}" target="_blank">
       <img src="{{ url_for('static', filename='Add_to_Apple_Wallet_rgb_US-UK.svg') }}">
     </a>
     <button id="toggle-qr-code-btn" class="mdl-button mdl-button--icon mdl-button--fab"
@@ -102,6 +103,11 @@ validation_msg="")
     <ul class="mdl-menu mdl-menu--top-right mdl-js-menu mdl-js-ripple-effect" data-mdl-for="save-as-screenshot-menu">
       <li id="save-as-screenshot-btn" class="mdl-menu__item">Save card as image (.png)</li>
     </ul>
+    {% else %}
+    <a class="mdl-button mdl-js-button mdl-js-ripple-effect" href="{{ url_for('home') }}">
+      Back to Home
+    </a>
+    {% endif %}
   </div>
   <!-- <div class="mdl-card__menu">
     <button id="download" data-html2canvas-ignore="true" title="Save as image (.png)"
