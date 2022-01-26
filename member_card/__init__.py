@@ -40,13 +40,16 @@ def create_app():
     db.init_app(app)
 
     from social_flask.routes import social_auth
-    from social_flask_sqlalchemy.models import init_social
-
     app.register_blueprint(social_auth)
+
+    from social_flask_sqlalchemy.models import init_social
     init_social(app, db.session)
 
     with app.app_context():
         db.create_all()
+
+    from member_card import routes
+    assert routes
 
     return app
 

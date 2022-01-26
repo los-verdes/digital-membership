@@ -71,6 +71,10 @@ class MembershipCard(Model):
         "logo@2x.png": "LosVerdes_Logo_RGB_300_Horizontal_BlackOnTransparent_CityYear_logo@2x.png",
     }
 
+    @property
+    def apple_pass_serial_number(self):
+        return str(getattr(self.serial_number, 'int'))
+
     def create_passfile(self):
 
         pass_info = Generic()
@@ -96,7 +100,7 @@ class MembershipCard(Model):
 
         passfile_attrs = dict(
             description="Los Verdes Membership Card",
-            serialNumber=str(self.serial_number.int),  # self.id,
+            serialNumber=self.apple_pass_serial_number,
             backgroundColor=hex2rgb(self.background_color),
             foregroundColor=hex2rgb(self.foreground_color),
             logoText=self.logo_text,

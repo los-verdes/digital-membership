@@ -202,38 +202,33 @@ def ensure_db_schemas(drop_first):
     from member_card.db import db
 
     doodads = [
-        # social_flask_models.PSABase,
-        # models.TableMetadata,
-        # models.AnnualMembership,
-        models.MembershipCard,
-        # models.User,
-    ]
-    engine = db.engine
-    if drop_first:
-        logger.warning("Dropping all tables first!")
-        from sqlalchemy import Column, String
-
-        def add_column(engine, table_name, column):
-            column_name = column.compile(dialect=engine.dialect)
-            column_type = column.type.compile(engine.dialect)
-            engine.execute(
-                "ALTER TABLE %s ADD COLUMN %s %s"
-                % (table_name, column_name, column_type)
-            )
-
-        column = Column("qr_code_message", String, primary_key=True)
-        add_column(engine, models.MembershipCard.__tablename__, column)
-        # for doodad in doodads:
-        # logger.warning(f"Dropping {doodad}!")
-        # doodad.metadata.drop_all(engine)
-
-    doodads = [
         social_flask_models.PSABase,
         models.TableMetadata,
         models.AnnualMembership,
         models.MembershipCard,
+        models.AppleDeviceRegistration,
         models.User,
     ]
+    engine = db.engine
+    if drop_first:
+        logger.warning("Dropping all tables first!")
+        # from sqlalchemy import Column, String
+
+        # def add_column(engine, table_name, column):
+        #     column_name = column.compile(dialect=engine.dialect)
+        #     column_type = column.type.compile(engine.dialect)
+        #     engine.execute(
+        #         "ALTER TABLE %s ADD COLUMN %s %s"
+        #         % (table_name, column_name, column_type)
+        #     )
+
+        # column = Column("qr_code_message", String, primary_key=True)
+        # add_column(engine, models.MembershipCard.__tablename__, column)
+        for doodad in doodads:
+            logger.warning(f"Dropping {doodad}!")
+            doodad.metadata.drop_all(engine)
+
+
     doodads.reverse()
     for doodad in doodads:
         logger.warning(f"Creating {doodad}!")
