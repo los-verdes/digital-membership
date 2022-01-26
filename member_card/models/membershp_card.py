@@ -90,6 +90,10 @@ class MembershipCard(Model):
         return str(getattr(self.serial_number, "int"))
 
     @property
+    def serial_number_hex(self):
+        return str(getattr(self.serial_number, "hex"))
+
+    @property
     def authentication_token_hex(self):
         return str(getattr(self.authentication_token, "hex"))
 
@@ -104,6 +108,11 @@ class MembershipCard(Model):
             "member_expiry_back",
             self.user.membership_expiry.strftime("%b %d, %Y"),
             "Good through",
+        )
+        pass_info.addBackField(
+            "serial_number",
+            self.serial_number_hex,
+            "Card #",
         )
         pass_kwargs = dict(
             passInformation=pass_info,
