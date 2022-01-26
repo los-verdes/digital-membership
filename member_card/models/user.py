@@ -21,7 +21,8 @@ class User(Model, UserMixin):
     def to_dict(self):
         return dict(
             id=self.id,
-            username=self.username,
+            # TODO: figure out why we're not getting usernames set...
+            # username=self.username,
             email=self.email,
             fullname=self.fullname,
             first_name=self.first_name,

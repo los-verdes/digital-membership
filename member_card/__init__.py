@@ -40,6 +40,8 @@ def create_app():
     load_settings(app)
     if app.config['LOG_LEVEL'].lower() == "debug":
         logzero.loglevel(logging.DEBUG)
+    else:
+        logzero.loglevel(logging.INFO)
 
     register_asset_bundles(app)
     login_manager.init_app(app)
