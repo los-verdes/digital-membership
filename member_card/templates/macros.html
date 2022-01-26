@@ -17,7 +17,7 @@
 </a>
 {% endmacro %}
 
-{% macro membership_card(title, primary_info_text, secondary_info_text, aux_info_text, validation_msg="") %}
+{% macro membership_card(title, primary_info_text, secondary_info_text, aux_info_text, serial_number, validation_msg="") %}
 <div class="members-card-wide mdl-card mdl-shadow--2dp">
   <!-- Using (mis-using?) the material design light card title class here as our card "holder" -->
   <!-- save-as-screenshot ID used to indicate what page contents are included in the resulting screenshot -->
@@ -62,6 +62,7 @@
 
   <!-- Buttons enable various card-saving actions shown under the main card design -->
   <div class="mdl-card__actions mdl-card--border mdl-typography--text-right">
+    <small>{{ serial_number }}</small>
     <button class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" disabled>
       <i class="material-icons">download</i> Google Pay
     </button>

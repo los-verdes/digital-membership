@@ -9,8 +9,9 @@
     title="Los Verdes Membership Card",
     primary_info_text=membership_card.user.fullname,
     secondary_info_text=secondary_info_text,
-aux_info_text=aux_info_text,
-)
+    serial_number=membership_card.serial_number,
+    aux_info_text=aux_info_text,
+  )
 }}
 {% endcall %}
 
@@ -28,10 +29,8 @@ aux_info_text=aux_info_text,
           <i class="material-icons mdl-list__item-icon">{% if membership_order.is_active %}verified{% else
             %}check_circle_outline{% endif %}</i>
           <details>
-            <summary
-              class="mdl-button mdl-js-button mdl-button--raised"
-              id="membership-details-{{ membership_order.id }}"
-            >
+            <summary class="mdl-button mdl-js-button mdl-button--raised"
+                     id="membership-details-{{ membership_order.id }}">
               Order #{{ membership_order.order_number }} - {{ membership_order.product_name }}
               ({{ membership_order.created_on.strftime("%x") }})
             </summary>
@@ -55,10 +54,7 @@ aux_info_text=aux_info_text,
     <h4 class="vhlm">Verde Hasta La Muerte</h4>
     <hr>
     <details>
-      <summary
-        class="mdl-button mdl-js-button mdl-button--raised"
-        id="user-details-{{ current_user.id }}"
-      >User
+      <summary class="mdl-button mdl-js-button mdl-button--raised" id="user-details-{{ current_user.id }}">User
         Details
       </summary>
 

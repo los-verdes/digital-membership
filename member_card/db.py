@@ -15,6 +15,8 @@ Model = getattr(db, "Model")
 def get_membership_table_last_sync():
     from member_card import models
 
+    # TODO: figure out how to respond when db is "empty" and we get this sort of exception:
+    # sqlalchemy.exc.NoResultFound: No row was found when one was required
     last_run_start_time = (
         db.session.query(models.TableMetadata)
         .filter_by(
@@ -186,3 +188,53 @@ def squarespace_orders_etl(squarespace_client, db_session, membership_sku, load_
             num_inactive_membership=len(inactive_memberships),
         )
     }
+
+
+def ensure_db_schemas(drop_first):
+    # TODO: figure out how to make this all work better
+    # metadata = MetaData()
+    # metadata.create_all()
+    # db.create_all()
+    # from social_flask_sqlalchemy import models
+    # from member_card.models import user
+    from social_flask_sqlalchemy import models as social_flask_models
+    from member_card import models
+    from member_card.db import db
+
+    doodads = [
+        # social_flask_models.PSABase,
+        # models.TableMetadata,
+        # models.AnnualMembership,
+        models.MembershipCard,
+        # models.User,
+    ]
+    engine = db.engine
+    if drop_first:
+        logger.warning("Dropping all tables first!")
+        from sqlalchemy import Column, String
+
+        def add_column(engine, table_name, column):
+            column_name = column.compile(dialect=engine.dialect)
+            column_type = column.type.compile(engine.dialect)
+            engine.execute(
+                "ALTER TABLE %s ADD COLUMN %s %s"
+                % (table_name, column_name, column_type)
+            )
+
+        column = Column("qr_code_message", String, primary_key=True)
+        add_column(engine, models.MembershipCard.__tablename__, column)
+        # for doodad in doodads:
+        # logger.warning(f"Dropping {doodad}!")
+        # doodad.metadata.drop_all(engine)
+
+    doodads = [
+        social_flask_models.PSABase,
+        models.TableMetadata,
+        models.AnnualMembership,
+        models.MembershipCard,
+        models.User,
+    ]
+    doodads.reverse()
+    for doodad in doodads:
+        logger.warning(f"Creating {doodad}!")
+        doodad.metadata.create_all(engine)

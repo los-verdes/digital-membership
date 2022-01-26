@@ -44,7 +44,11 @@ resource "google_app_engine_application" "digital_membership" {
 #   }
 #   autogenerate_revision_name = true
 # }
+
 # import 'google_cloud_run_service.digital_membership' 'us-central1/digital-membership'
+
+
+# TODO: give this fella a private IP only and hook up things eventually
 resource "google_sql_database_instance" "digital_membership" {
   name             = var.gcp_project_id
   region           = var.gcp_region

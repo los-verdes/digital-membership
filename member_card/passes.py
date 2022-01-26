@@ -32,12 +32,9 @@ def with_apple_developer_key() -> Callable:
     return decorator
 
 
-@with_apple_developer_key()
-def get_apple_pass_for_user(user, base_url, key_filepath=None):
-
+def get_or_create_membership_card(user, base_url):
     app = flask.current_app
-
-    apple_pass = get_or_create(
+    membership_card = get_or_create(
         session=db.session,
         model=MembershipCard,
         user_id=user.id,
@@ -47,17 +44,33 @@ def get_apple_pass_for_user(user, base_url, key_filepath=None):
         member_since=user.member_since,
         member_until=user.membership_expiry,
     )
+    db.session.add(membership_card)
+    db.session.commit()
+
+    # TODO: do this more efficient like:
+    if not membership_card.qr_code_message:
+        qr_code_signature = sign(membership_card.serial_number)
+        qr_code_message = f"Content: {base_url}/verify/{membership_card.serial_number}?signature={qr_code_signature}"
+        logger.debug(f"{qr_code_message=}")
+        setattr(membership_card, 'qr_code_message', qr_code_message)
+        db.session.add(membership_card)
+        db.session.commit()
+
+    return membership_card
+
+
+@with_apple_developer_key()
+def get_apple_pass_for_user(user, base_url, key_filepath=None):
+
+    app = flask.current_app
+    apple_pass = get_or_create_membership_card(user=user, base_url=base_url)
     db.session.add(apple_pass)
     db.session.commit()
-    qr_code_signature = sign(apple_pass.serial_number)
-    qr_code_message = f"Content: {base_url}/verify/{apple_pass.serial_number}?signature={qr_code_signature}"
-    logger.debug(f"{qr_code_message=}")
     # breakpoint()
     _, pkpass_out_path = tempfile.mkstemp()
     apple_pass.create_pkpass(
         key_filepath=key_filepath,
         key_password=app.config["APPLE_DEVELOPER_PRIVATE_KEY_PASSWORD"],
-        qr_code_message=qr_code_message,
         pkpass_out_path=pkpass_out_path,
     )
     return pkpass_out_path

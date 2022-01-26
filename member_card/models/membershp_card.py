@@ -41,11 +41,17 @@ class MembershipCard(Model):
     id = Column(Integer, primary_key=True, autoincrement=True, unique=True)
     serial_number = Column(UUID, primary_key=True, default=uuid.uuid4)
     user_id = Column(Integer, ForeignKey("users.id"))
-    user = relationship("User", back_populates="membership_cards")
+    user = relationship(
+        "User",
+        back_populates="membership_cards",
+        cascade="all, delete",
+        passive_deletes=True,
+    )
 
     # Card metadata:
     time_created = Column(DateTime(timezone=True), server_default=func.now())
     time_updated = Column(DateTime(timezone=True), onupdate=func.now())
+    qr_code_message = Column(String)
 
     # Apple Developer details:
     apple_pass_type_identifier = Column(String)
@@ -113,9 +119,7 @@ class MembershipCard(Model):
 
         return passfile
 
-    def create_pkpass(
-        self, key_filepath, key_password, qr_code_message, pkpass_out_path=None
-    ):
+    def create_pkpass(self, key_filepath, key_password, pkpass_out_path=None):
         serial_number = self.id
         cert_filepath = get_certificate_path("certificate.pem")
         wwdr_cert_filepath = get_certificate_path("wwdr.pem")
@@ -123,7 +127,7 @@ class MembershipCard(Model):
         logger.debug(
             f"Creating passfile with {self.apple_pass_type_identifier=} {serial_number=} (Signing details: {cert_filepath=} {key_filepath=} {wwdr_cert_filepath=}"
         )
-        passfile = self.create_passfile(qr_code_message=qr_code_message)
+        passfile = self.create_passfile(qr_code_message=self.qr_code_message)
         # breakpoint()
         logger.debug(f"{passfile.json_dict()=}")
         pkpass_string_buffer = passfile.create(

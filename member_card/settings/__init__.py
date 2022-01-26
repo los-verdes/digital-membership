@@ -39,7 +39,7 @@ class Settings(object):
     POSTGRES_PASS = None
     POSTGRES_DB = "lv-digital-membership"
 
-    SQLALCHEMY_DATABASE_URI = "postgresql://member-card-user:member-card-password@127.0.0.1:5432/digital-membership"
+    SQLALCHEMY_DATABASE_URI = "postgresql://member-card-user:member-card-password@127.0.0.1:5433/digital-membership"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     SOCIAL_AUTH_TRAILING_SLASH = True
@@ -112,6 +112,7 @@ class ProductionSettings(Settings):
                     )
                 },
             )
+            # breakpoint()
 
         else:
             raise Exception(
@@ -152,13 +153,15 @@ def get_settings_obj_for_env(env=None, default_settings_class=Settings):
         SQLALCHEMY_DATABASE_URI = "postgresql://member-card-user:member-card-password@127.0.0.1:5432/digital-membership"
 
     if env == "production":
-
         return ProductionSettings()
+    elif env == "remote-sql":
+        return RemoteSqlSettings()
 
     settings_objs_by_env = {
         # "default": Settings,
         "compose": DockerComposeSettings,
         # "production": ProductionSettings,
+        # "remote-sql": RemoteSqlSettings,
     }
 
     return settings_objs_by_env.get(env, default_settings_class)

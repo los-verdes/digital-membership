@@ -111,10 +111,13 @@ def home():
         return redirect("/login")
 
     if current_user.has_active_memberships:
+        from member_card.passes import get_or_create_membership_card
+
+        membership_card = get_or_create_membership_card(current_user, request.base_url)
         return render_template(
             "member_card_and_history.html",
             # member=g.user,
-            membership_card=g.user.latest_membership_card,
+            membership_card=membership_card,
             membership_orders=g.user.annual_memberships,
             membership_table_keys=list(AnnualMembership().to_dict().keys()),
         )
@@ -145,7 +148,10 @@ def passes_apple_pay():
             # team_identifier=app.config["APPLE_DEVELOPER_TEAM_ID"],
         )
         return send_file(
-            pkpass_out_path, attachment_filename=attachment_filename, as_attachment=True
+            pkpass_out_path,
+            attachment_filename=attachment_filename,
+            mimetype="application/vnd.apple.pkpass",
+            as_attachment=True,
         )
     return redirect(url_for("home"))
 
@@ -207,27 +213,12 @@ def logout():
 
 
 @app.cli.command("ensure-db-schemas")
-def ensure_db_schemas():
-    # from social_flask_sqlalchemy import models
-
-    # from member_card.models import user
-
+@click.option("-D", "--drop-first", default=False)
+def ensure_db_schemas(drop_first):
     logger.debug("ensure-db-schemas: calling `db.create_all()`")
-    # metadata = MetaData()
-    # metadata.create_all()
-    # db.create_all()
-    from social_flask_sqlalchemy import models as social_flask_models
+    from member_card.db import ensure_db_schemas
 
-    from member_card import models
-    from member_card.db import db
-
-    engine = db.engine
-    # engine = create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
-    models.User.metadata.create_all(engine)
-    models.TableMetadata.metadata.create_all(engine)
-    models.AnnualMembership.metadata.create_all(engine)
-    models.MembershipCard.metadata.create_all(engine)
-    social_flask_models.PSABase.metadata.create_all(engine)
+    ensure_db_schemas(drop_first)
 
 
 @app.cli.command("populate-db")
