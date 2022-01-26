@@ -114,13 +114,21 @@
         </div>
         {% endif %}
       </header>
-      <nav class="lv-navigation mdl-navigation mdl-color--grey-50">
+      <nav class="lv-navigation mdl-navigation mdl-color--green-50">
+        {% set navigation_bar = [
+        ('home', 'home', 'Home'),
+        ] -%}
+        {% set active_page = active_page|default('home') -%}
+
         {% if current_user.is_authenticated %}
-        <a class="mdl-navigation__link" href="{{ url_for('home') }}"><i class="mdl-color-text--green material-icons"
-             role="presentation">home</i>Home</a>
-        <div class="mdl-layout-spacer"></div>
-        <a class="mdl-navigation__link" href="#"><i class="mdl-color-text--green material-icons"
-             role="presentation">help_outline</i><span class="visuallyhidden">Help</span></a>
+        {% for route, icon, caption in navigation_bar %}
+        <a class="mdl-navigation__link" href="{{ url_for(route) }}">
+          <i class="mdl-color-text--green material-icons" role="presentation">
+            {{ icon }}
+          </i>
+          {{ caption }}
+        </a>
+        {% endfor %}
 
         {% else %}
         <li class="mdl-navigation__link" role="presentation">
@@ -128,6 +136,15 @@
         </li>
 
         {% endif %}
+        <div class="mdl-layout-spacer"></div>
+        <a class="mdl-navigation__link" href="#">
+          <i class="mdl-color-text--green material-icons" role="presentation">
+            help_outline
+          </i>
+          <span class="visuallyhidden">
+            Help
+          </span>
+        </a>
       </nav>
     </div>
 
