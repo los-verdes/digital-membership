@@ -9,12 +9,14 @@ $(document).ready(function () {
 //   event.preventDefault();
 //   $(event.target).closest('form').submit();
 // });
-
-document.getElementById("save-as-screenshot-btn").addEventListener("click", function () {
-  html2canvas(document.querySelector('#save-as-screenshot-window')).then(function (canvas) {
-    saveAs(canvas.toDataURL(), 'lv-members-card.png');
+var saveScreenshotBtn = document.getElementById("save-as-screenshot-btn");
+if (saveScreenshotBtn) {
+  saveScreenshotBtn.addEventListener("click", function () {
+    html2canvas(document.querySelector('#save-as-screenshot-window')).then(function (canvas) {
+      saveAs(canvas.toDataURL(), 'lv-members-card.png');
+    });
   });
-});
+}
 
 
 function saveAs(uri, filename) {

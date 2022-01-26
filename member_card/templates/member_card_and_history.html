@@ -2,15 +2,13 @@
 
 {% block content %}
 {% call macros.content_grid() %}
-{% set secondary_info_text = "Member Since " ~ membership_card.member_since.strftime('%b %Y') %}
-{% set aux_info_text = "Good through " ~ membership_card.member_until.strftime('%b %d, %Y') %}
 {{
   macros.membership_card(
     title="Los Verdes Membership Card",
     primary_info_text=membership_card.user.fullname,
-    secondary_info_text=secondary_info_text,
+    secondary_info_text="Member Since " ~ membership_card.member_since.strftime('%b %Y'),
     serial_number=membership_card.serial_number,
-    aux_info_text=aux_info_text,
+    aux_info_text="Good through " ~ membership_card.member_until.strftime('%b %d, %Y'),
   )
 }}
 {% endcall %}

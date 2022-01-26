@@ -15,10 +15,48 @@ $button-active-blue: #1669f2;
   }
 }
 
+.google-sign-in-button {
+  > img {
+    max-height: 46px;
+  }
+}
+
+// .mdl-dialog {
+//   width: 75vw;
+// }
+
 .lv-crest {
   background-image: url("lv_onverde.png");
   background-size: contain;
   background-repeat: no-repeat;
+}
+
+.mdl-tabs__tab-bar {
+  justify-content: left;
+}
+// .login {
+//   ~
+// }
+.login {
+  min-height: 50vh;
+}
+.login-side-cover {
+  // background: url("login_side_cover.png") center / cover;
+  background: url("lv_hands.png") center / cover;
+  // min-height: calc(300px);
+  height: 100%;
+}
+
+.login-signin-panel {
+  height: 100%;
+}
+
+img.lv-horizontal-logo-small {
+  max-height: 29px;
+}
+
+img.lv-horizontal-logo {
+  max-height: 57px;
 }
 
 div.membership-card {
@@ -185,3 +223,43 @@ div.membership-card > .membership-card-inner {
 .lv-header.mdl-layout__header {
   background-color: #00b140;
 }
+
+// dialog-polyfill business
+// ref: https://github.com/GoogleChrome/dialog-polyfill/blob/master/dist/dialog-polyfill.css
+// dialog {
+//   position: absolute;
+//   left: 0; right: 0;
+//   width: -moz-fit-content;
+//   width: -webkit-fit-content;
+//   width: fit-content;
+//   height: -moz-fit-content;
+//   height: -webkit-fit-content;
+//   height: fit-content;
+//   margin: auto;
+//   border: solid;
+//   padding: 1em;
+//   background: white;
+//   color: black;
+//   display: block;
+// }
+
+// dialog:not([open]) {
+//   display: none;
+// }
+
+// dialog + .backdrop {
+//   position: fixed;
+//   top: 0; right: 0; bottom: 0; left: 0;
+//   background: rgba(0,0,0,0.1);
+// }
+
+// ._dialog_overlay {
+//   position: fixed;
+//   top: 0; right: 0; bottom: 0; left: 0;
+// }
+
+// dialog.fixed {
+//   position: fixed;
+//   top: 50%;
+//   transform: translate(0, -50%);
+// }

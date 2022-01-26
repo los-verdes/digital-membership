@@ -1,22 +1,50 @@
 {% extends "base.html" %}
 
 {% block content %}
-{% call macros.content_grid() %}
-<div class="signin-card mdl-card mdl-shadow--2dp mdl-cell--middle">
-  <div class="mdl-card__title mdl-card--expand live-laugh-love-large mdl-typography--text-right">
-    <h4>
-      Los Verdes Digital Membership Card
-    </h4>
+{% call macros.content_grid(middle_column_size=8) %}
+<div class="mdl-grid mdl-grid--no-spacing login">
+  <div class="mdl-cell mdl-cell--6-col mdl-cell--hide-tablet mdl-cell--hide-phone">
+
+    <div class="mdl-card mdl-shadow--2dp login-side-cover">
+    </div>
+  </div>
+  <div class="mdl-cell mdl-cell--6-col-phone mdl-cell--8-col-tablet mdl-cell--4-col-phone">
+    <div class="mdl-card mdl-shadow--2dp login-signin-panel">
+      <div class="mdl-card__title">
+        <h2 class="mdl-card__title-text">
+          <img class="lv-horizontal-logo"
+               src="{{ url_for('static', filename='LosVerdes_Logo_RGB_300_Horizontal_BlackOnTransparent_CityYear_logo@2x.png') }}">
+        </h2>
+      </div>
+      <div class="mdl-card__supporting-text">
+        <div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
+          <div class="mdl-tabs__tab-bar">
+            <a href="#login-panel" class="mdl-tabs__tab is-active">Login</a>
+            <!-- <a href="#register-panel" class="mdl-tabs__tab">Register</a> -->
+          </div>
+
+          <div class="mdl-tabs__panel is-active" id="login-panel">
+            <h4>
+              Welcome Verdes!
+            </h4>
+            Please login to access the Los Verdes membership portal:
+            <br>
+            <br>
+            <br>
+
+            <div class="mdl-typography--text-bottom	mdl-typography--text-center">
+              {{ macros.sign_in_button() }}
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- <div class="mdl-card__actions mdla-card--border mdl-typography--text-right">
+        <span class="vhlm">Verde Hast La Muerte</span>
+      </div> -->
+    </div>
+
   </div>
 
-  <div class="mdl-card__supporting-text vhlm">
-    Sign in to display your card
-  </div>
-  <div class="mdl-card__actions mdl-card--border live-laugh-love">
-    <div class="mdl-layout-spacer"></div>
-    <br>
-    {{ macros.sign_in_button() }}
-  </div>
 </div>
 {% endcall %}
 {% endblock %}
