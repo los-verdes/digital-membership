@@ -116,7 +116,7 @@ def home():
     if current_user.has_active_memberships:
         from member_card.passes import get_or_create_membership_card
 
-        membership_card = get_or_create_membership_card(current_user, request.base_url)
+        membership_card = get_or_create_membership_card(current_user)
         return render_template(
             "member_card_and_history.html",
             # member=g.user,
@@ -145,10 +145,6 @@ def passes_apple_pay():
         attachment_filename = f"lv_apple_pass-{current_user.last_name.lower()}.pkpass"
         pkpass_out_path = get_apple_pass_for_user(
             user=current_user,
-            base_url=request.base_url,
-            # organization_name=app.config["APPLE_DEVELOPER_TEAM_ID"],
-            # pass_type_identifier=app.config["APPLE_DEVELOPER_PASS_TYPE_ID"],
-            # team_identifier=app.config["APPLE_DEVELOPER_TEAM_ID"],
         )
         return send_file(
             pkpass_out_path,
@@ -160,8 +156,8 @@ def passes_apple_pay():
 
 
 @login_required
-@app.route("/passes/apple-pay/verify/<serial_number>")
-def verify_apple_pay_pass(serial_number):
+@app.route("/verify-pass/<serial_number>")
+def verify_pass(serial_number):
     from member_card.db import db
     from member_card.models import MembershipCard, AnnualMembership
 

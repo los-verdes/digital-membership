@@ -6,7 +6,7 @@ from member_card.db import db
 from member_card.models import AppleDeviceRegistration, MembershipCard
 
 
-@app.route("/passes/<pass_type_identifier>/<serial_number>")
+@app.route("/passkit/v1/passes/<pass_type_identifier>/<serial_number>")
 def show(pass_type_identifier, serial_number):
     """
     Getting the latest version of a MembershipCard
@@ -24,7 +24,7 @@ def show(pass_type_identifier, serial_number):
     return jsonify(p.data)
 
 
-@app.route("/devices/<device_library_identifier>/registrations/<pass_type_identifier>")
+@app.route("/passkit/v1/devices/<device_library_identifier>/registrations/<pass_type_identifier>")
 def index(device_library_identifier, pass_type_identifier):
     """
     Getting the serial numbers for passes associated with a device
@@ -56,7 +56,7 @@ def index(device_library_identifier, pass_type_identifier):
 
 
 @app.route(
-    "/devices/<device_library_identifier>/registrations/<pass_type_identifier>/<serial_number>"
+    "/passkit/v1/devices/<device_library_identifier>/registrations/<pass_type_identifier>/<serial_number>"
 )
 def create(
     device_library_identifier, pass_type_identifier, serial_number, methods=["POST"]
@@ -85,7 +85,7 @@ def create(
     return ("Created", 201)
 
 
-@app.route("/devices/<device_library_identifier>/registrations/<pass_type_identifier>")
+@app.route("/passkit/v1/devices/<device_library_identifier>/registrations/<pass_type_identifier>")
 def destroy(device_library_identifier, pass_type_identifier, methods=["DELETE"]):
     """
     Unregistering a device

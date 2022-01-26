@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, timezone
 from os.path import abspath, dirname, join
 
 from logzero import logger
@@ -51,18 +52,21 @@ class MembershipCard(Model):
     # Card metadata:
     time_created = Column(DateTime(timezone=True), server_default=func.now())
     time_updated = Column(DateTime(timezone=True), onupdate=func.now())
-    qr_code_message = Column(String)
+    member_since = Column(DateTime)
+    member_until = Column(DateTime)
 
     # Apple Developer details:
     apple_pass_type_identifier = Column(String)
     apple_organization_name = Column(String)
     apple_team_identifier = Column(String)
 
+    # Passkit bits:
+    web_service_url = Column(String)
+    authentication_token = Column(UUID(as_uuid=True), default=uuid.uuid4)
+    qr_code_message = Column(String)
+
     # Display related attributes:
     logo_text = Column(String, default="LV Membership")
-
-    member_since = Column(DateTime)
-    member_until = Column(DateTime)
 
     passfile_files = {
         "icon.png": "LV_Tee_Crest_onVerde_rgb_filled_icon.png",
@@ -72,8 +76,22 @@ class MembershipCard(Model):
     }
 
     @property
+    def is_voided(self):
+        return self.member_until > datetime.now()
+
+    @property
+    def apple_pass_expiry_timestamp(self):
+        expiry_dt = self.member_until
+        expiry_dt = expiry_dt.replace(tzinfo=timezone.utc)
+        return expiry_dt.isoformat()
+
+    @property
     def apple_pass_serial_number(self):
-        return str(getattr(self.serial_number, 'int'))
+        return str(getattr(self.serial_number, "int"))
+
+    @property
+    def authentication_token_hex(self):
+        return str(getattr(self.authentication_token, "hex"))
 
     def create_passfile(self):
 
@@ -105,21 +123,27 @@ class MembershipCard(Model):
             foregroundColor=hex2rgb(self.foreground_color),
             logoText=self.logo_text,
             barcode=qr_code,
+            webServiceURL=self.web_service_url,
+            authenticationToken=self.authentication_token_hex,
+            exprirationDate=self.apple_pass_expiry_timestamp,
+            voided=self.is_voided,
+            userInfo=self.user.to_dict(),
         )
-        logger.debug(f"{passfile_attrs=}")
+        # logger.debug(f"{passfile_attrs=}")
         for attr_name, attr_value in passfile_attrs.items():
+            logger.debug(f"Setting passfile attribute {attr_name} to: {attr_value}")
             setattr(
                 passfile,
                 attr_name,
                 attr_value,
             )
 
-            # Including the icon and logo is necessary for the passbook to be valid.
-            static_dir = join(BASE_DIR, "static")
-            for passfile_filename, local_filename in self.passfile_files.items():
-                file_path = join(static_dir, local_filename)
-                logger.debug(f"adding {file_path} as pass file: {passfile_filename}")
-                passfile.addFile(passfile_filename, open(file_path, "rb"))
+        # Including the icon and logo is necessary for the passbook to be valid.
+        static_dir = join(BASE_DIR, "static")
+        for passfile_filename, local_filename in self.passfile_files.items():
+            file_path = join(static_dir, local_filename)
+            logger.debug(f"adding {file_path} as pass file: {passfile_filename}")
+            passfile.addFile(passfile_filename, open(file_path, "rb"))
 
         return passfile
 

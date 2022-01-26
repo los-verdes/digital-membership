@@ -228,7 +228,6 @@ def ensure_db_schemas(drop_first):
             logger.warning(f"Dropping {doodad}!")
             doodad.metadata.drop_all(engine)
 
-
     doodads.reverse()
     for doodad in doodads:
         logger.warning(f"Creating {doodad}!")
