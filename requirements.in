@@ -11,6 +11,9 @@ google-cloud-secret-manager
 gunicorn
 libsass
 logzero
+opencensus
+opencensus-ext-flask
+opencensus-ext-stackdriver
 psycopg2
 python-dateutil
 qrcode[pil]

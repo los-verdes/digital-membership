@@ -45,19 +45,19 @@ resource "google_secret_manager_secret_version" "digital_membership" {
     apple_pass_private_key_password = var.apple_pass_private_key_password
 
     # Cloud SQL connection details:
-    db_connection_name             = google_sql_database_instance.digital_membership.connection_name
-    db_database_name               = google_sql_database.database.name
-    db_username                    = google_sql_user.service_account.name
+    db_connection_name = google_sql_database_instance.digital_membership.connection_name
+    db_database_name   = google_sql_database.database.name
+    db_username        = google_sql_user.service_account.name
 
     # Flask's secret key: https://flask.palletsprojects.com/en/2.0.x/config/#SECRET_KEY
-    flask_secret_key                = random_password.flask_secret_key.result
+    flask_secret_key = random_password.flask_secret_key.result
 
     # For configuring python-social-auth / Google OAuth 2 bits:
-    social_auth_google_oauth2_key                 = var.oauth_client_id
-    social_auth_google_oauth2_secret             = var.oauth_client_secret
+    social_auth_google_oauth2_key    = var.oauth_client_id
+    social_auth_google_oauth2_secret = var.oauth_client_secret
 
     # Used to for <Squarespace orders> => <AnnualMembership orders> ETL jobs:
-    squarespace_api_key             = var.squarespace_api_key
+    squarespace_api_key = var.squarespace_api_key
   })
 }
 
