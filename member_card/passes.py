@@ -8,7 +8,7 @@ from member_card.db import db, get_or_create
 from member_card.models import MembershipCard
 from member_card.utils import sign
 
-DEFAULT_APPLE_KEY_FILEPATH = "/apple/private.key"
+DEFAULT_APPLE_KEY_FILEPATH = "/secrets/apple-private.key"
 
 
 def with_apple_developer_key() -> Callable:

@@ -1,16 +1,9 @@
-# cloudsql_instances = ["lv-digital-membership:us-central1:lv-digital-membership"]
-
-# port = 8080
-# capacity {
-#   memory                     = 256
-#   cpu_count                  = 1
-#   max_requests_per_container = 10
-#   request_timeout            = 15
-# }
-
-# auto_scaling {
-#   max = 1
-# }
+locals {
+  secret_version_parts           = split("/", google_secret_manager_secret_version.digital_membership.id)
+  secret_version_key             = element(local.secret_version_parts, length(local.secret_version_parts) - 1)
+  apple_key_secret_version_parts = split("/", data.google_secret_manager_secret_version.apple_private_key.id)
+  apple_key_secret_version_key   = element(local.apple_key_secret_version_parts, length(local.apple_key_secret_version_parts) - 1)
+}
 resource "google_cloud_run_service" "digital_membership" {
   provider                   = google-beta
   name                       = "digital-membership"
@@ -26,6 +19,7 @@ resource "google_cloud_run_service" "digital_membership" {
 
     metadata {
       annotations = {
+        "autoscaling.knative.dev/minScale"      = "0"
         "autoscaling.knative.dev/maxScale"      = "1"
         "run.googleapis.com/cloudsql-instances" = google_sql_database_instance.digital_membership.connection_name
         "run.googleapis.com/client-name"        = "member-card"
@@ -37,14 +31,14 @@ resource "google_cloud_run_service" "digital_membership" {
       containers {
         image = var.cloud_run_container_image
 
-        volume_mounts {
-          name       = "apple_developer_key"
-          mount_path = "/apple"
-        }
-
-        volume_mounts {
-          name       = "secrets_json"
-          mount_path = "/secrets"
+        env {
+          name = "DIGITAL_MEMBERSHIP_SECRETS_JSON"
+          value_from {
+            secret_key_ref {
+              name = google_secret_manager_secret.digital_membership.secret_id
+              key  = local.secret_version_key
+            }
+          }
         }
 
         env {
@@ -55,29 +49,34 @@ resource "google_cloud_run_service" "digital_membership" {
           name  = "FLASK_ENV"
           value = var.flask_env
         }
-      }
 
-      volumes {
-        name = "apple_developer_key"
-        secret {
-          secret_name  = var.apple_pass_private_key_secret_name
-          default_mode = 292 # 0444
-          items {
-            key  = "latest"
-            path = "private.key"
-            mode = 256 # 0400
+        ports {
+          name           = "http1"
+          protocol       = "TCP"
+          container_port = "8080"
+        }
+
+        resources {
+          limits = {
+            cpu    = "1"
+            memory = "256Mi"
           }
+        }
+
+        volume_mounts {
+          name       = "apple_developer_private_key"
+          mount_path = "/secrets"
         }
       }
 
       volumes {
-        name = "secrets_json"
+        name = "apple_developer_private_key"
         secret {
-          secret_name  = google_secret_manager_secret.digital_membership.secret_id
+          secret_name  = data.google_secret_manager_secret.apple_private_key.secret_id
           default_mode = 292 # 0444
           items {
-            key  = "latest"
-            path = "secrets.json"
+            key  = local.apple_key_secret_version_key
+            path = "apple-private.key"
             mode = 256 # 0400
           }
         }

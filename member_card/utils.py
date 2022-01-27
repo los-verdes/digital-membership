@@ -65,7 +65,7 @@ def load_settings(app):
     # logger.debug(
     #     f"app.config before loading settings from object {settings_obj}: {app.config=}"
     # )
-    app.config.from_object(settings_obj)
+    app.config.from_object(settings_obj())
     # logger.debug(
     #     f"app.config after loading settings from object {settings_obj}: {app.config=}"
     # )

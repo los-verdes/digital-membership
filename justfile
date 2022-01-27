@@ -1,18 +1,19 @@
 tf_subdir      := "./terraform"
 tfvars_file    := "lv-digital-membership.tfvars"
+local_image_name := 'member-card:latest'
 gcr_name := "gcr.io/lv-digital-membership/member-card"
 gcr_tag := `git describe --tags --dirty --long --always`
-gcr_image := gcr_name + ":" + gcr_tag
+gcr_image_name := gcr_name + ":" + gcr_tag
 
 export GCLOUD_PROJECT := "lv-digital-membership"
 
 set-tf-ver-output:
   echo "::set-output name=terraform_version::$(cat {{ tf_subdir }}/.terraform-version)"
 
-run-tf CMD:
+run-tf +CMD:
   terraform -chdir="{{ justfile_directory() + "/" + tf_subdir }}" \
     {{ CMD }} \
-    {{ if CMD != "init" { "-var-file=../" + tfvars_file } else { "" } }}
+    {{ if CMD =~ "init" { "" } else { "-var-file=../" + tfvars_file } }}
 
 tf-init:
   just run-tf init
@@ -30,13 +31,13 @@ serve:
   flask run --cert=tmp-certs/cert.pem --key=tmp-certs/key.pem
 
 build:
-  docker build . --tag 'member-card:latest'
+  docker build . --tag '{{ local_image_name }}'
 
-push TAG=`git describe --tags --dirty --long --always`: build
-  docker tag 'member-card:latest' '{{ gcr_image }}:{{ TAG }}'
-  docker push '{{ gcr_image }}:{{ TAG }}'
+push: build
+  docker tag '{{ local_image_name }}' '{{ gcr_image_name }}'
+  docker push '{{ gcr_image_name }}'
 
-deploy:
-  echo "{{ gcr_image }}"
+deploy: build push
+  echo "{{ gcr_image_name }}"
 
-  # just run-tf 'apply -auto-approve' -var='cloud_run_container_image={{ gcr_image }}'
+  just run-tf apply -auto-approve -var='cloud_run_container_image={{ gcr_image_name }}'
