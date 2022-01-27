@@ -131,7 +131,7 @@ class ProductionSettings(Settings):
             logger.debug(f"{db_socket_dir=}")
 
             self.APPLE_DEVELOPER_CERTIFICATE = self.secrets["apple_pass_certificate"]
-            self.APPLE_DEVELOPER_PRIVATE_KEY = self.secrets["apple_pass_private_key"]
+            # self.APPLE_DEVELOPER_PRIVATE_KEY = self.secrets["apple_pass_private_key"]
             self.APPLE_DEVELOPER_PRIVATE_KEY_PASSWORD = self.secrets[
                 "apple_pass_private_key_password"
             ]

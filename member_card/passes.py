@@ -8,6 +8,8 @@ from member_card.db import db, get_or_create
 from member_card.models import MembershipCard
 from member_card.utils import sign
 
+DEFAULT_APPLE_KEY_FILEPATH = "/apple/private.key"
+
 
 def with_apple_developer_key() -> Callable:
     def decorator(method: Callable) -> Callable:
@@ -55,15 +57,15 @@ def get_or_create_membership_card(user):
         qr_code_signature = sign(serial_number)
         qr_code_message = f"Content: {get_base_url()}{flask.url_for('verify_pass', serial_number=serial_number)}?signature={qr_code_signature}"
         logger.debug(f"{qr_code_message=}")
-        setattr(membership_card, 'qr_code_message', qr_code_message)
+        setattr(membership_card, "qr_code_message", qr_code_message)
         db.session.add(membership_card)
         db.session.commit()
 
     return membership_card
 
 
-@with_apple_developer_key()
-def get_apple_pass_for_user(user, key_filepath=None):
+# @with_apple_developer_key()
+def get_apple_pass_for_user(user, key_filepath=DEFAULT_APPLE_KEY_FILEPATH):
 
     app = flask.current_app
     apple_pass = get_or_create_membership_card(user=user)

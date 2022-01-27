@@ -21,7 +21,6 @@ app "digital-membership" {
       project  = "lv-digital-membership"
       location = "us-central1"
       service_account_name = "website@lv-digital-membership.iam.gserviceaccount.com"
-      port = 8080
 
       static_environment = {
         DIGITAL_MEMBERSHIP_GCP_SECRET_NAME = "projects/567739286055/secrets/digital-membership/versions/latest"
@@ -32,6 +31,7 @@ app "digital-membership" {
 
       cloudsql_instances = ["lv-digital-membership:us-central1:lv-digital-membership"]
 
+      port = 8080
       capacity {
         memory                     = 256
         cpu_count                  = 1

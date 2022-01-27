@@ -1,5 +1,18 @@
+# cloudsql_instances = ["lv-digital-membership:us-central1:lv-digital-membership"]
 
+# port = 8080
+# capacity {
+#   memory                     = 256
+#   cpu_count                  = 1
+#   max_requests_per_container = 10
+#   request_timeout            = 15
+# }
+
+# auto_scaling {
+#   max = 1
+# }
 resource "google_cloud_run_service" "digital_membership" {
+  provider                   = google-beta
   name                       = "digital-membership"
   location                   = var.gcp_region
   autogenerate_revision_name = true
@@ -16,14 +29,23 @@ resource "google_cloud_run_service" "digital_membership" {
         "autoscaling.knative.dev/maxScale"      = "1"
         "run.googleapis.com/cloudsql-instances" = google_sql_database_instance.digital_membership.connection_name
         "run.googleapis.com/client-name"        = "member-card"
-        "waypoint.hashicorp.com/nonce"          = "2022-01-26T22:43:45.799231Z"
       }
     }
 
     spec {
-      service_account_name = google_service_account.digital_membership.name
+      service_account_name = google_service_account.digital_membership.email
       containers {
         image = var.cloud_run_container_image
+
+        volume_mounts {
+          name       = "apple_developer_key"
+          mount_path = "/apple"
+        }
+
+        volume_mounts {
+          name       = "secrets_json"
+          mount_path = "/secrets"
+        }
 
         env {
           name  = "DIGITAL_MEMBERSHIP_GCP_SECRET_NAME"
@@ -33,31 +55,31 @@ resource "google_cloud_run_service" "digital_membership" {
           name  = "FLASK_ENV"
           value = var.flask_env
         }
+      }
 
-        # TODO: drop these waypoint bits?
-        env {
-          name  = "WAYPOINT_CEB_DISABLE"
-          value = "true"
+      volumes {
+        name = "apple_developer_key"
+        secret {
+          secret_name  = var.apple_pass_private_key_secret_name
+          default_mode = 292 # 0444
+          items {
+            key  = "latest"
+            path = "private.key"
+            mode = 256 # 0400
+          }
         }
-        env {
-          name  = "WAYPOINT_CEB_INVITE_TOKEN"
-          value = "3wADpN5xwNNwfxGZKnk4v9dsDrA7QBxCCxTP7defat9orbjg2HWhG1hUDdDcpDUECn3hcCZ8r8zUukMp7EJKn4xcBZDAVTqyfZ1RZfBL35Mmjd68VCT3pG1uDT9zcZ9UNybEYhwXfZdVg9Q2EA4mhWVy6RMHM1WzgsVrnMzjM2i627jXixvhUhBuTkC6rHh6cMK7KYaBEYBjm4VMR44fkRNF5RjYqD5mfgrKbhQqPmoc7hCZWbuEG"
-        }
-        env {
-          name  = "WAYPOINT_DEPLOYMENT_ID"
-          value = "01FTC8XB18A6TPMX2GS6N0RWYY"
-        }
-        env {
-          name  = "WAYPOINT_SERVER_ADDR"
-          value = "waypoint-server:9701"
-        }
-        env {
-          name  = "WAYPOINT_SERVER_TLS"
-          value = "1"
-        }
-        env {
-          name  = "WAYPOINT_SERVER_TLS_SKIP_VERIFY"
-          value = "1"
+      }
+
+      volumes {
+        name = "secrets_json"
+        secret {
+          secret_name  = google_secret_manager_secret.digital_membership.secret_id
+          default_mode = 292 # 0444
+          items {
+            key  = "latest"
+            path = "secrets.json"
+            mode = 256 # 0400
+          }
         }
       }
     }
