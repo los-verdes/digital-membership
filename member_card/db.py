@@ -1,15 +1,19 @@
 #!/usr/bin/env python
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
-
+from sqlalchemy import create_engine
+from google.cloud.sql.connector import connector, instance_connection_manager
 from dateutil.parser import parse
 from flask_sqlalchemy import SQLAlchemy
 from logzero import logger
+from typing import TYPE_CHECKING
 
 db = SQLAlchemy()
 Model = getattr(db, "Model")
-# Base = getattr(db, "Base")
-# Table = getattr(db, "Table")
+
+if TYPE_CHECKING:
+    from pg8000 import dbapi
+    from sqlalchemy.engine import Engine
 
 
 def get_membership_table_last_sync():
@@ -232,3 +236,27 @@ def ensure_db_schemas(drop_first):
     for doodad in doodads:
         logger.warning(f"Creating {doodad}!")
         doodad.metadata.create_all(engine)
+
+
+# def init_connection_engine(instance_connection_string, db_user, db_name) -> "Engine":
+#     """
+#     Utility function: Database pooling/connection init
+#     """
+
+#     def getconn() -> "dbapi.Connection":
+#         conn: "dbapi.Connection" = connector.connect(
+#             instance_connection_string,
+#             "pg8000",
+#             ip_type=instance_connection_manager.IPTypes.PRIVATE,
+#             user=db_user,
+#             db=db_name,
+#             enable_iam_auth=True,
+#         )
+#         return conn
+
+#     engine = create_engine(
+#         "postgresql+pg8000://",
+#         creator=getconn,
+#     )
+#     engine.dialect.description_encoding = None
+#     return engine

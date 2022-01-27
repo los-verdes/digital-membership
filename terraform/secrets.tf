@@ -20,13 +20,13 @@ resource "google_secret_manager_secret" "digital_membership" {
 resource "google_secret_manager_secret_version" "digital_membership" {
   secret = google_secret_manager_secret.digital_membership.id
   secret_data = jsonencode({
-    apple_pass_certificate = var.apple_pass_certificate
-    apple_pass_private_key = var.apple_pass_private_key
+    apple_pass_certificate          = var.apple_pass_certificate
+    apple_pass_private_key          = var.apple_pass_private_key
     apple_pass_private_key_password = var.apple_pass_private_key_password
-    sql_database_name   = google_sql_database.database.name
-    sql_connection_name = google_sql_database_instance.digital_membership.connection_name
-    sql_username        = google_sql_user.users.name
-    sql_password        = random_password.sql_password.result
+    sql_database_name               = google_sql_database.database.name
+    sql_connection_name             = google_sql_database_instance.digital_membership.connection_name
+    sql_username                    = google_sql_user.service_account.name
+    # sql_password                    = random_password.sql_password.result
     flask_secret_key    = random_password.flask_secret_key.result
     squarespace_api_key = var.squarespace_api_key
     oauth_client_id     = var.oauth_client_id
@@ -48,20 +48,6 @@ data "google_iam_policy" "secrets_access" {
       "serviceAccount:${google_service_account.digital_membership.email}",
     ]
   }
-}
-
-
-resource "google_service_account" "digital_membership" {
-  account_id   = "website"
-  display_name = "website"
-}
-
-
-
-resource "google_project_iam_member" "digital_membership_datastore_viewer" {
-  project = google_project.digital_membership.id
-  role    = "roles/cloudsql.client"
-  member  = "serviceAccount:${google_service_account.digital_membership.email}"
 }
 
 

@@ -29,6 +29,8 @@ resource "google_project_service" "digital_membership" {
 
     # "bigquery.googleapis.com",
     "sqladmin.googleapis.com", # for connecting to sql from cloudrun?
+
+    "compute.googleapis.com", # Needed to edit Cloud SQL config via the console for some reason?
   ])
   service                    = each.value
   disable_dependent_services = true

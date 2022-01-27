@@ -1,10 +1,36 @@
 import os
-from os.path import dirname, abspath, join
+from os.path import abspath, dirname, join
+from typing import TYPE_CHECKING
+
+from google.cloud.sql.connector import connector  # , instance_connection_manager
 from logzero import logger
+from functools import partial
+from sqlalchemy.pool import QueuePool
+
+# from sqlalchemy import create_engine
+
+
+if TYPE_CHECKING:
+    from pg8000 import dbapi
+    from sqlalchemy.engine import Engine
+
+
+def get_db_connector(
+    instance_connection_string, db_user, db_name
+) -> "dbapi.Connection":
+    conn: "dbapi.Connection" = connector.connect(
+        instance_connection_string,
+        "pg8000",
+        # ip_type=instance_connection_manager.IPTypes.PRIVATE,
+        user=db_user,
+        db=db_name,
+        enable_iam_auth=True,
+    )
+    return conn
 
 
 class Settings(object):
-    LOG_LEVEL = os.getenv('LOG_LEVEL', 'info')
+    LOG_LEVEL = os.getenv("LOG_LEVEL", "info")
 
     APPLE_DEVELOPER_ORG_NAME = "Jeffrey Hogan"  # TODO: if LV is a legit 501c this can maybe become a less personal org...
     APPLE_DEVELOPER_PASS_TYPE_ID = "pass.es.losverd.card"
@@ -96,9 +122,9 @@ class ProductionSettings(Settings):
             self.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = self.secrets["oauth_client_secret"]
             self.SECRET_KEY = self.secrets["flask_secret_key"]
             self.POSTGRES_USER = self.secrets["sql_username"]
-            logger.warning("setting prod sql_password...")
+            # logger.warning("setting prod sql_password...")
             # breakpoint()
-            self.POSTGRES_PASS = self.secrets["sql_password"]
+            # self.POSTGRES_PASS = self.secrets["sql_password"]
 
             db_socket_dir = os.environ.get("DB_SOCKET_DIR", "/cloudsql")
             # db_socket_dir = os.environ.get("DB_SOCKET_DIR", "/tmp/cloudsql")
@@ -115,23 +141,37 @@ class ProductionSettings(Settings):
             # f"postgresql+pg8000://{self.POSTGRES_USER}:{self.POSTGRES_PASS}@lv-digital-membership
             # ?
             # unix_sock={db_socket_dir}/lv-digital-membership:us-central1:lv-digital-membership/.s.PGSQL.5432"
-            from sqlalchemy import engine
 
-            self.SQLALCHEMY_DATABASE_URI = getattr(engine, "url").URL.create(
-                drivername="postgresql+pg8000",
-                username=self.POSTGRES_USER,  # e.g. "my-database-user"
-                password=self.POSTGRES_PASS,  # e.g. "my-database-password"
-                database=self.secrets["sql_database_name"],  # e.g. "my-database-name"
-                query={
-                    "unix_sock": "{}/{}/.s.PGSQL.5432".format(
-                        db_socket_dir,  # e.g. "/cloudsql"
-                        self.secrets[
-                            "sql_connection_name"
-                        ],  # i.e "<PROJECT-NAME>:<INSTANCE-REGION>:<INSTANCE-NAME>"
-                    )
-                },
-            )
+            self.SQLALCHEMY_DATABASE_URI = "postgresql+pg8000://"
+            # from sqlalchemy import engine
+
+            # self.SQLALCHEMY_DATABASE_URI = getattr(engine, "url").URL.create(
+            #     drivername="postgresql+pg8000",
+            #     username=self.POSTGRES_USER,  # e.g. "my-database-user"
+            #     password=self.POSTGRES_PASS,  # e.g. "my-database-password"
+            #     database=self.secrets["sql_database_name"],  # e.g. "my-database-name"
+            #     query={
+            #         "unix_sock": "{}/{}/.s.PGSQL.5432".format(
+            #             db_socket_dir,  # e.g. "/cloudsql"
+            #             self.secrets[
+            #                 "sql_connection_name"
+            #             ],  # i.e "<PROJECT-NAME>:<INSTANCE-REGION>:<INSTANCE-NAME>"
+            #         )
+            #     },
+            # )
             # breakpoint()
+            self.DB_CONNECTION_NAME = self.secrets["sql_connection_name"]
+            self.DB_DATABASE_NAME = self.secrets["sql_database_name"]
+            engine_creator = partial(
+                get_db_connector,
+                instance_connection_string=self.DB_CONNECTION_NAME,
+                db_user=self.POSTGRES_USER,
+                db_name=self.DB_DATABASE_NAME,
+            )
+            # queue_pool = QueuePool(engine_creator)
+            self.SQLALCHEMY_ENGINE_OPTIONS = dict(
+                creator=engine_creator,
+            )
 
         else:
             raise Exception(
@@ -144,22 +184,40 @@ class ProductionSettings(Settings):
 class RemoteSqlSettings(ProductionSettings):
     def __init__(self) -> None:
         super().__init__()
-        # from: https://realpython.com/flask-google-login/
-        if secret_name := os.getenv("DIGITAL_MEMBERSHIP_GCP_SECRET_NAME"):
-            from member_card.secrets import retrieve_app_secrets
+        self.SQLALCHEMY_ECHO = True
+        # import google.auth
+        # credentials, project = google.auth.default()
+        # breakpoint()
+        db_connection_kwargs = dict(
+            instance_connection_string=self.DB_CONNECTION_NAME,
+            db_user="Jeff.hogan1@gmail.com",
+            db_name=self.DB_DATABASE_NAME,
 
-            if ProductionSettings.secrets is None:
-                ProductionSettings.secrets = retrieve_app_secrets(secret_name)
-            self.secrets = ProductionSettings.secrets
-            self.POSTGRES_USER = self.secrets["sql_username"]
-            logger.warning("setting prod sql_password...")
-            # breakpoint()
-            self.POSTGRES_PASS = self.secrets["sql_password"]
+        )
+        logger.debug(f"{db_connection_kwargs=}")
+        engine_creator = partial(
+            get_db_connector, **db_connection_kwargs
+        )
+        # queue_pool = QueuePool(engine_creator)
+        self.SQLALCHEMY_ENGINE_OPTIONS = dict(
+            creator=engine_creator,
+        )
+        # # from: https://realpython.com/flask-google-login/
+        # if secret_name := os.getenv("DIGITAL_MEMBERSHIP_GCP_SECRET_NAME"):
+        #     from member_card.secrets import retrieve_app_secrets
 
-            db_socket_dir = os.environ.get("DB_SOCKET_DIR", "/cloudsql")
-            # db_socket_dir = os.environ.get("DB_SOCKET_DIR", "/tmp/cloudsql")
-            logger.debug(f"{db_socket_dir=}")
-            self.SQLALCHEMY_DATABASE_URI = f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASS}@127.0.0.1:5432/lv-digital-membership"
+        #     if ProductionSettings.secrets is None:
+        #         ProductionSettings.secrets = retrieve_app_secrets(secret_name)
+        #     self.secrets = ProductionSettings.secrets
+        #     self.POSTGRES_USER = self.secrets["sql_username"]
+        #     logger.warning("setting prod sql_password...")
+        #     # breakpoint()
+        #     self.POSTGRES_PASS = self.secrets["sql_password"]
+
+        #     db_socket_dir = os.environ.get("DB_SOCKET_DIR", "/cloudsql")
+        #     # db_socket_dir = os.environ.get("DB_SOCKET_DIR", "/tmp/cloudsql")
+        #     logger.debug(f"{db_socket_dir=}")
+        #     self.SQLALCHEMY_DATABASE_URI = f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASS}@127.0.0.1:5432/lv-digital-membership"
 
 
 def get_settings_obj_for_env(env=None, default_settings_class=Settings):
