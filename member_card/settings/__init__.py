@@ -162,17 +162,20 @@ class ProductionSettings(Settings):
             # breakpoint()
             self.DB_CONNECTION_NAME = self.secrets["sql_connection_name"]
             self.DB_DATABASE_NAME = self.secrets["sql_database_name"]
-            engine_creator = partial(
-                get_db_connector,
+
+            db_connection_kwargs = dict(
                 instance_connection_string=self.DB_CONNECTION_NAME,
                 db_user=self.POSTGRES_USER,
                 db_name=self.DB_DATABASE_NAME,
+
             )
-            # queue_pool = QueuePool(engine_creator)
+            logger.debug(f"{db_connection_kwargs=}")
+            engine_creator = partial(
+                get_db_connector, **db_connection_kwargs
+            )
             self.SQLALCHEMY_ENGINE_OPTIONS = dict(
                 creator=engine_creator,
             )
-
         else:
             raise Exception(
                 "Unable to load production settings, no secret version name found under  "

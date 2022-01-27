@@ -1,6 +1,9 @@
 tf_subdir      := "./terraform"
 tfvars_file    := "lv-digital-membership.tfvars"
-gcr_image := "gcr.io/lv-digital-membership/member-card"
+gcr_name := "gcr.io/lv-digital-membership/member-card"
+gcr_tag := `git describe --tags --dirty --long --always`
+gcr_image := gcr_name + ":" + gcr_tag
+
 export GCLOUD_PROJECT := "lv-digital-membership"
 
 set-tf-ver-output:
@@ -14,7 +17,7 @@ run-tf CMD:
 tf-init:
   just run-tf init
 
-tf-auto-apply: tf-init
+tf-auto-apply:
   just run-tf 'apply -auto-approve'
 
 flask +CMD:
@@ -32,3 +35,8 @@ build:
 push TAG=`git describe --tags --dirty --long --always`: build
   docker tag 'member-card:latest' '{{ gcr_image }}:{{ TAG }}'
   docker push '{{ gcr_image }}:{{ TAG }}'
+
+deploy:
+  echo "{{ gcr_image }}"
+
+  # just run-tf 'apply -auto-approve' -var='cloud_run_container_image={{ gcr_image }}'

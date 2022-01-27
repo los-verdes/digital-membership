@@ -26,7 +26,10 @@ resource "google_secret_manager_secret_version" "digital_membership" {
     apple_pass_private_key_password = var.apple_pass_private_key_password
     sql_database_name               = google_sql_database.database.name
     sql_connection_name             = google_sql_database_instance.digital_membership.connection_name
-    sql_username                    = google_service_account.digital_membership.email
+    # sql_username                    = google_service_account.digital_membership.email
+    # Note: Due to the length limit on a database username, for service accounts, Cloud SQL truncates the .gserviceaccount.com suffix in the email.
+    # For example, the username for the service account sa-name@project-id.iam.gserviceaccount.com becomes sa-name@project-id.iam.
+    sql_username                    = google_sql_user.service_account.name
     flask_secret_key                = random_password.flask_secret_key.result
     squarespace_api_key             = var.squarespace_api_key
     oauth_client_id                 = var.oauth_client_id
