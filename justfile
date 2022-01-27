@@ -6,7 +6,6 @@ gcr_tag := `git describe --tags --dirty --long --always`
 gcr_image_name := gcr_name + ":" + gcr_tag
 
 export GCLOUD_PROJECT := "lv-digital-membership"
-export GOOGLE_CLOUD_PROJECT := "lv-digital-membership"
 
 set-tf-ver-output:
   echo "::set-output name=terraform_version::$(cat {{ tf_subdir }}/.terraform-version)"

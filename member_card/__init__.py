@@ -5,29 +5,21 @@ from urllib.parse import urlparse
 
 import click
 import logzero
-from flask import Flask, g, redirect, render_template, request, send_file, url_for
+from flask import (Flask, g, redirect, render_template, request, send_file,
+                   url_for)
 from flask_gravatar import Gravatar
 from flask_login import current_user as current_login_user
 from flask_login import login_required, logout_user
 from logzero import logger, setup_logger
-from opencensus.ext.flask.flask_middleware import FlaskMiddleware
-from opencensus.ext.stackdriver.trace_exporter import StackdriverExporter
-from opencensus.trace.propagation import google_cloud_format
-from opencensus.trace.samplers import ProbabilitySampler
 from social_flask.template_filters import backends
 from social_flask.utils import load_strategy
 
 from member_card.db import squarespace_orders_etl
 from member_card.models import User
 from member_card.squarespace import Squarespace
-from member_card.utils import (
-    MembershipLoginManager,
-    common_context,
-    load_settings,
-    register_asset_bundles,
-    social_url_for,
-    verify,
-)
+from member_card.utils import (MembershipLoginManager, common_context,
+                               load_settings, register_asset_bundles,
+                               social_url_for, verify)
 
 BASE_DIR = os.path.dirname(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "member_card")
@@ -40,30 +32,16 @@ login_manager = MembershipLoginManager()
 
 
 def get_base_url():
-    parsed_base_url = urlparse(getattr(request, "base_url"))
+    parsed_base_url = urlparse(request.base_url)
     return f"{parsed_base_url.scheme}://{parsed_base_url.netloc}"
-
-
-propagator = google_cloud_format.GoogleCloudFormatPropagator()
-
-
-def createMiddleWare(exporter):
-    # Configure a flask middleware that listens for each request and applies automatic tracing.
-    # This needs to be set up before the application starts.
-    middleware = FlaskMiddleware(
-        app, exporter=exporter, propagator=propagator, sampler=ProbabilitySampler(rate=0.5)
-    )
-    return middleware
 
 
 def create_app():
     load_settings(app)
-    if app.config["LOG_LEVEL"].lower() == "debug":
+    if app.config['LOG_LEVEL'].lower() == "debug":
         logzero.loglevel(logging.DEBUG)
     else:
         logzero.loglevel(logging.INFO)
-
-    createMiddleWare(StackdriverExporter())
 
     register_asset_bundles(app)
     login_manager.init_app(app)

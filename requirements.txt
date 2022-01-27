@@ -24,7 +24,7 @@ charset-normalizer==2.0.10
     # via
     #   aiohttp
     #   requests
-click==7.1.2
+click==8.0.3
     # via flask
 cloud-sql-python-connector[pg8000]==0.5.0
     # via -r requirements.in
@@ -37,14 +37,13 @@ defusedxml==0.7.1
     # via
     #   python3-openid
     #   social-auth-core
-flask==1.1.4
+flask==2.0.2
     # via
     #   -r requirements.in
     #   flask-assets
     #   flask-gravatar
     #   flask-login
     #   flask-sqlalchemy
-    #   opencensus-ext-flask
 flask-assets==2.0
     # via -r requirements.in
 flask-gravatar==0.5.0
@@ -59,18 +58,15 @@ frozenlist==1.3.0
     # via
     #   aiohttp
     #   aiosignal
-google-api-core[grpc]==1.31.5
+google-api-core[grpc]==2.4.0
     # via
     #   google-api-python-client
     #   google-cloud-core
     #   google-cloud-firestore
-    #   google-cloud-monitoring
     #   google-cloud-secret-manager
-    #   google-cloud-trace
-    #   opencensus
 google-api-python-client==2.36.0
     # via cloud-sql-python-connector
-google-auth==1.35.0
+google-auth==2.3.3
     # via
     #   -r requirements.in
     #   google-api-core
@@ -79,22 +75,17 @@ google-auth==1.35.0
     #   google-cloud-core
 google-auth-httplib2==0.1.0
     # via google-api-python-client
-google-cloud-core==1.7.2
-    # via
-    #   google-cloud-firestore
-    #   google-cloud-trace
+google-cloud-core==2.2.1
+    # via google-cloud-firestore
 google-cloud-firestore==2.3.4
     # via -r requirements.in
-google-cloud-monitoring==2.8.0
-    # via opencensus-ext-stackdriver
 google-cloud-secret-manager==2.8.0
     # via -r requirements.in
-google-cloud-trace==0.24.0
-    # via opencensus-ext-stackdriver
 googleapis-common-protos[grpc]==1.54.0
     # via
     #   google-api-core
     #   grpc-google-iam-v1
+    #   grpcio-status
 greenlet==1.1.2
     # via sqlalchemy
 grpc-google-iam-v1==0.12.3
@@ -104,6 +95,9 @@ grpcio==1.43.0
     #   google-api-core
     #   googleapis-common-protos
     #   grpc-google-iam-v1
+    #   grpcio-status
+grpcio-status==1.43.0
+    # via google-api-core
 gunicorn==20.1.0
     # via -r requirements.in
 httplib2==0.20.2
@@ -114,9 +108,9 @@ idna==3.3
     # via
     #   requests
     #   yarl
-itsdangerous==1.1.0
+itsdangerous==2.0.1
     # via flask
-jinja2==2.11.3
+jinja2==3.0.3
     # via flask
 libcst==0.4.0
     # via google-cloud-secret-manager
@@ -138,21 +132,8 @@ oauthlib==3.1.1
     # via
     #   requests-oauthlib
     #   social-auth-core
-opencensus==0.8.0
-    # via
-    #   -r requirements.in
-    #   opencensus-ext-flask
-    #   opencensus-ext-stackdriver
-opencensus-context==0.1.2
-    # via opencensus
-opencensus-ext-flask==0.7.6
-    # via -r requirements.in
-opencensus-ext-stackdriver==0.8.0
-    # via -r requirements.in
 packaging==21.3
-    # via
-    #   google-api-core
-    #   google-cloud-firestore
+    # via google-cloud-firestore
 pg8000==1.23.0
     # via cloud-sql-python-connector
 pillow==9.0.0
@@ -160,12 +141,12 @@ pillow==9.0.0
 proto-plus==1.19.8
     # via
     #   google-cloud-firestore
-    #   google-cloud-monitoring
     #   google-cloud-secret-manager
 protobuf==3.19.3
     # via
     #   google-api-core
     #   googleapis-common-protos
+    #   grpcio-status
     #   proto-plus
 psycopg2==2.9.3
     # via -r requirements.in
@@ -189,8 +170,6 @@ python-dateutil==2.8.2
     # via -r requirements.in
 python3-openid==3.2.0
     # via social-auth-core
-pytz==2021.3
-    # via google-api-core
 pyyaml==6.0
     # via libcst
 qrcode[pil]==7.3.1
@@ -210,10 +189,8 @@ scramp==1.4.1
     # via pg8000
 six==1.16.0
     # via
-    #   google-api-core
     #   google-auth
     #   google-auth-httplib2
-    #   google-cloud-core
     #   grpcio
     #   libsass
     #   pyopenssl
@@ -254,7 +231,7 @@ wallet-py3k==0.0.4
     # via -r requirements.in
 webassets==2.0
     # via flask-assets
-werkzeug==1.0.1
+werkzeug==2.0.2
     # via flask
 yarl==1.7.2
     # via aiohttp
