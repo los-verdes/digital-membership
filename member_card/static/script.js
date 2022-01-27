@@ -11,10 +11,12 @@ Array.from(disconnectAuthButtons).forEach(function (element) {
   element.addEventListener('click', disconnectAuthFunc);
 });
 
-var toggleQrCodeBtn = document.getElementById("toggle-qr-code-btn");
 var qrCode = document.getElementById("card-qr-code");
-qrCode.style.display = "none";
-if (toggleQrCodeBtn) {
+if (qrCode) {
+  qrCode.style.display = "none";
+}
+var toggleQrCodeBtn = document.getElementById("toggle-qr-code-btn");
+if (toggleQrCodeBtn && qrCode) {
   toggleQrCodeBtn.addEventListener("click", function () {
     if (qrCode.style.display === "none") {
       qrCode.style.display = "block";
