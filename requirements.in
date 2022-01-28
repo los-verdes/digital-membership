@@ -7,7 +7,6 @@ flask
 flask-login
 google-auth
 google-cloud-firestore
-google-cloud-functions
 google-cloud-secret-manager
 gunicorn
 libsass

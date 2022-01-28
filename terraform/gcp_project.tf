@@ -20,7 +20,7 @@ resource "google_project_service" "digital_membership" {
     "serviceusage.googleapis.com",
 
     # For our "memberships" "database": TODO: clean this up at some point...
-    "firestore.googleapis.com",
+    # "firestore.googleapis.com",
 
     "secretmanager.googleapis.com", # direct usage
 
