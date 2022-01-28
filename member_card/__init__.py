@@ -156,7 +156,7 @@ def home():
 
         membership_card = get_or_create_membership_card(current_user)
         return render_template(
-            "member_card_and_history.html",
+            "member_card_and_history.html.j2",
             # member=g.user,
             membership_card=membership_card,
             membership_orders=g.user.annual_memberships,
@@ -164,7 +164,7 @@ def home():
         )
     else:
         return render_template(
-            "no_membership_landing_page.html",
+            "no_membership_landing_page.html.j2",
             # member=g.user,
             membership_card=g.user.latest_membership_card,
             membership_orders=g.user.annual_memberships,
@@ -214,7 +214,7 @@ def verify_pass(serial_number):
     logger.debug(f"{verified_card=}")
 
     return render_template(
-        "apple_pass_validation.html",
+        "apple_pass_validation.html.j2",
         validating_user=g.user,
         verified_card=verified_card,
         membership_table_keys=list(AnnualMembership().to_dict().keys()),
@@ -226,20 +226,20 @@ def verify_pass(serial_number):
 @app.route("/privacy-policy")
 def privacy_policy():
     return render_template(
-        "privacy_policy.html",
+        "privacy_policy.html.j2",
     )
 
 
 # @login_required
 # @app.route("/done/")
 # def done():
-#     return render_template("home2.html")
+#     return render_template("home2.html.j2")
 
 
 @app.route("/login")
 def login():
     """Logout view"""
-    return render_template("login.html")
+    return render_template("login.html.j2")
 
 
 @login_required

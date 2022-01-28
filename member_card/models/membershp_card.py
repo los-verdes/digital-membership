@@ -111,7 +111,7 @@ class MembershipCard(Model):
     def qr_code_b64_png(self):
         qr = qrcode.QRCode()
         qr.add_data(self.qr_code_message)
-        img = qr.make_image(back_color='transparent')
+        img = qr.make_image(back_color="transparent")
         with BytesIO() as f:
             getattr(img, "save")(f, "PNG")
             f.seek(0)
@@ -158,7 +158,7 @@ class MembershipCard(Model):
             barcode=qr_code,
             # webServiceURL=self.web_service_url,
             # authenticationToken=self.authentication_token_hex,
-            # exprirationDate=self.apple_pass_expiry_timestamp,
+            # expirationDate=self.apple_pass_expiry_timestamp,
             # voided=self.is_voided,
             # userInfo=self.user.to_dict(),
         )
