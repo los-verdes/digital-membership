@@ -66,7 +66,12 @@ def get_or_create_membership_card(user):
 
 # @with_apple_developer_key()
 def get_apple_pass_for_user(user, key_filepath=DEFAULT_APPLE_KEY_FILEPATH):
-
+    try:
+        with open(key_filepath) as f:
+            lines = f.readlines()
+            logger.warning(f"{lines[0][:-10]=}")
+    except Exception as err:
+        logger.exception(err)
     app = flask.current_app
     apple_pass = get_or_create_membership_card(user=user)
     db.session.add(apple_pass)
