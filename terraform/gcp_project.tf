@@ -19,7 +19,7 @@ resource "google_project_service" "digital_membership" {
     # ... Error when reading or editing Project Service lv-digital-membership/iam.googleapis.com: ...
     "serviceusage.googleapis.com",
 
-    # For our "memberships" "database":
+    # For our "memberships" "database": TODO: clean this up at some point...
     "firestore.googleapis.com",
 
     "secretmanager.googleapis.com", # direct usage
@@ -31,6 +31,13 @@ resource "google_project_service" "digital_membership" {
     "sqladmin.googleapis.com", # for connecting to sql from cloudrun?
 
     "compute.googleapis.com", # Needed to edit Cloud SQL config via the console for some reason?
+
+    # APM and debugging thingers:
+    "clouddebugger.googleapis.com",
+    "cloudtrace.googleapis.com",
+
+    # Building thangs:
+    "sourcerepo.googleapis.com",
   ])
   service                    = each.value
   disable_dependent_services = true

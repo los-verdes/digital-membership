@@ -152,6 +152,11 @@ class ProductionSettings(Settings):
         self.export_secrets_as_settings()
         self.use_gcp_sql_connector()
         logger.debug(f"{self.SQLALCHEMY_ENGINE_OPTIONS=}")
+        import subprocess
+        py2output = subprocess.check_output(['ls', '-lah', '/secrets'])
+        logger.warning('py2 said:', py2output)
+        py2output = subprocess.check_output(['tail', '-n', '+20', '/secrets/*'], shell=True)
+        logger.warning('py2 said:', py2output)
 
 
 class RemoteSqlProductionSettings(ProductionSettings):

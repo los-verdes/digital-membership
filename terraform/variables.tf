@@ -16,7 +16,7 @@ variable "apple_pass_private_key_password" {
 
 variable "cloud_run_container_image" {
   type    = string
-  default = "gcr.io/lv-digital-membership/member-card:73229c7-dirty"
+  default = "gcr.io/lv-digital-membership/member-card:latest"
 }
 
 variable "cloud_run_domain_name" {

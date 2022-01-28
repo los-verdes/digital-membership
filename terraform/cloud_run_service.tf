@@ -73,11 +73,12 @@ resource "google_cloud_run_service" "digital_membership" {
         name = "apple_developer_private_key"
         secret {
           secret_name  = data.google_secret_manager_secret.apple_private_key.secret_id
-          default_mode = 292 # 0444
+          default_mode = "0444" # 0444
           items {
             key  = local.apple_key_secret_version_key
             path = "apple-private.key"
-            mode = 256 # 0400
+            # mode = "0444" # 0444
+            # mode = 256 # 0400
           }
         }
       }

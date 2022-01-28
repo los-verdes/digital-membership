@@ -67,7 +67,7 @@ resource "google_secret_manager_secret_iam_policy" "digital_membership" {
   policy_data = data.google_iam_policy.secrets_access.policy_data
 }
 resource "google_secret_manager_secret_iam_policy" "apple_private_key" {
-  project     = google_project.digital_membership.number
+  project     = data.google_secret_manager_secret.apple_private_key.project
   secret_id   = data.google_secret_manager_secret.apple_private_key.id
   policy_data = data.google_iam_policy.secrets_access.policy_data
 }

@@ -36,3 +36,24 @@ resource "google_project_iam_member" "digital_membership_datastore_viewer" {
   role    = "roles/cloudsql.client"
   member  = "serviceAccount:${google_service_account.digital_membership.email}"
 }
+
+
+
+resource "google_project_iam_member" "digital_membership_debugger_agent" {
+  project = google_project.digital_membership.id
+  role    = "roles/clouddebugger.agent"
+  member  = "serviceAccount:${google_service_account.digital_membership.email}"
+}
+
+resource "google_project_iam_member" "digital_membership_trace_agent" {
+  project = google_project.digital_membership.id
+  role    = "roles/cloudtrace.agent"
+  member  = "serviceAccount:${google_service_account.digital_membership.email}"
+}
+
+
+
+# TODO: hook this up with a bot user's oauth creds (not jeffwecan...)
+resource "google_sourcerepo_repository" "digital_membership" {
+  name = "github_${replace(var.github_repo, "/", "_")}"
+}
