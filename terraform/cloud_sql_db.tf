@@ -4,6 +4,7 @@ resource "google_sql_database_instance" "digital_membership" {
   region              = var.gcp_region
   database_version    = "POSTGRES_13"
   deletion_protection = "true"
+  require_ssl         = true
 
   settings {
     tier = "db-f1-micro"
