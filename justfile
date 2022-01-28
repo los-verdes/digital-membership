@@ -47,3 +47,9 @@ deploy: build push
   echo "{{ gcr_image_name }}"
   # sed -i'' 's~cloud_run_container_image = .*~cloud_run_container_image = "{{ gcr_image_name }}"~g' lv-digital-membership.tfvars
   just tf apply -auto-approve -var='cloud_run_container_image={{ gcr_image_name }}'
+
+sync-subscriptions:
+  flask sync-subscriptions
+
+remote-sync-subscriptions:
+  echo "invoke cloudfunction..."

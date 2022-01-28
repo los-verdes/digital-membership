@@ -41,7 +41,7 @@ jobs:
       - name: "Authenticate to Google Cloud"
         uses: "google-github-actions/auth@v0"
         with:
-          workload_identity_provider: "projects/567739286055/locations/global/workloadIdentityPools/jeffwecan-digital-membership/providers/jeffwecan-digital-membership"
+          workload_identity_provider: "projects/567739286055/locations/global/workloadIdentityPools/los-verdes-digital-membership/providers/los-verdes-digital-membership"
           service_account: "gh-terraform-applier@lv-digital-membership.iam.gserviceaccount.com"
 
       - name: Apply - terraform

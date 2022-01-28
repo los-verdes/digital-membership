@@ -17,7 +17,7 @@ openssl req \
 
 cat << CONF > ./tmp-certs/cert.conf
 [dn]
-CN=crt-github-runners.ci-vault.hashicorp.services
+CN=losverd.es
 [req]
 distinguished_name = dn
 prompt = no

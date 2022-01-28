@@ -153,10 +153,25 @@ class ProductionSettings(Settings):
         self.use_gcp_sql_connector()
         logger.debug(f"{self.SQLALCHEMY_ENGINE_OPTIONS=}")
         import subprocess
-        py2output = subprocess.check_output(['ls', '-lah', '/secrets'])
-        logger.warning('py2 said:', py2output)
-        py2output = subprocess.check_output(['tail', '-n', '+20', '/secrets/*'], shell=True)
-        logger.warning('py2 said:', py2output)
+
+        py2output = subprocess.check_output(["ls", "-lah", "/secrets"])
+        logger.warning("py2 said:", py2output)
+        py2output = subprocess.check_output(
+            ["tail", "-n", "+20", "/secrets/*"], shell=True
+        )
+        logger.warning("py2 said:", py2output)
+
+
+class RemoteSecretsProductionSettings(ProductionSettings):
+    def __init__(self) -> None:
+        if secret_name := os.getenv("DIGITAL_MEMBERSHIP_GCP_SECRET_NAME"):
+            logger.info(f"Loading secrets from {secret_name=}")
+            from member_card.secrets import retrieve_app_secrets
+
+            if not self._secrets:
+                self._secrets = retrieve_app_secrets(secret_name)
+
+        super().__init__()
 
 
 class RemoteSqlProductionSettings(ProductionSettings):
@@ -185,6 +200,7 @@ def get_settings_obj_for_env(env=None, default_settings_class=Settings):
         "compose": DockerComposeSettings,
         "production": ProductionSettings,
         "remote-sql": RemoteSqlProductionSettings,
+        "cloudfunction": RemoteSecretsProductionSettings,
     }
 
     return settings_objs_by_env.get(env, default_settings_class)

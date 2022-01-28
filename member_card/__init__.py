@@ -254,13 +254,13 @@ def ensure_db_schemas(drop_first):
     ensure_db_schemas(drop_first)
 
 
-@app.cli.command("populate-db")
+@app.cli.command("sync-subscriptons")
 @click.option("-m", "--membership-sku", default="SQ3671268")
 @click.option("-l", "--load-all", default=False)
-def populate_db(membership_sku, load_all):
+def sync_subscriptons(membership_sku, load_all):
     from member_card.db import db
 
-    squarespace = Squarespace(api_key=os.environ["SQUARESPACE_API_KEY"])
+    squarespace = Squarespace(api_key=app.config["SQUARESPACE_API_KEY"])
     etl_results = squarespace_orders_etl(
         squarespace_client=squarespace,
         db_session=db.session,

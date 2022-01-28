@@ -59,6 +59,10 @@ variable "github_repo" {
   type = string
 }
 
+variable "membership_squarespace_sku" {
+  type = string
+}
+
 variable "squarespace_api_key" {
   sensitive = true
 }
