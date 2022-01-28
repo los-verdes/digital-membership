@@ -6,8 +6,7 @@ from os.path import abspath, dirname, join
 
 import qrcode
 from logzero import logger
-from member_card.db import Model
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
+from member_card.db import db
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -36,15 +35,15 @@ def get_certificate_path(filename):
     return join(BASE_DIR, "certificates", filename)
 
 
-class MembershipCard(Model):
+class MembershipCard(db.Model):
     __tablename__ = "membership_cards"
 
     background_color = "#00B140"
     foreground_color = "#000000"
 
-    id = Column(Integer, primary_key=True, autoincrement=True, unique=True)
-    serial_number = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(Integer, ForeignKey("users.id"))
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True, unique=True)
+    serial_number = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     user = relationship(
         "User",
         back_populates="membership_cards",
@@ -53,23 +52,23 @@ class MembershipCard(Model):
     )
 
     # Card metadata:
-    time_created = Column(DateTime(timezone=True), server_default=func.now())
-    time_updated = Column(DateTime(timezone=True), onupdate=func.now())
-    member_since = Column(DateTime)
-    member_until = Column(DateTime)
+    time_created = db.Column(db.DateTime(timezone=True), server_default=func.now())
+    time_updated = db.Column(db.DateTime(timezone=True), onupdate=func.now())
+    member_since = db.Column(db.DateTime)
+    member_until = db.Column(db.DateTime)
 
     # Apple Developer details:
-    apple_pass_type_identifier = Column(String)
-    apple_organization_name = Column(String)
-    apple_team_identifier = Column(String)
+    apple_pass_type_identifier = db.Column(db.String)
+    apple_organization_name = db.Column(db.String)
+    apple_team_identifier = db.Column(db.String)
 
     # Passkit bits:
-    web_service_url = Column(String)
-    authentication_token = Column(UUID(as_uuid=True), default=uuid.uuid4)
-    qr_code_message = Column(String)
+    web_service_url = db.Column(db.String)
+    authentication_token = db.Column(UUID(as_uuid=True), default=uuid.uuid4)
+    qr_code_message = db.Column(db.String)
 
     # Display related attributes:
-    logo_text = Column(String, default="LV Membership")
+    logo_text = db.Column(db.String, default="LV Membership")
 
     passfile_files = {
         "icon.png": "LV_Tee_Crest_onVerde_rgb_filled_icon.png",
