@@ -19,7 +19,9 @@ def with_apple_developer_key() -> Callable:
             key_filepath = DEFAULT_APPLE_KEY_FILEPATH
 
             # running_in_cloud_run = os.getenv("K_SERVICE", False)
-            running_in_cloud_run = os.getenv("FLASK_ENV", "unknown").lower().strip() == "production"
+            running_in_cloud_run = (
+                os.getenv("FLASK_ENV", "unknown").lower().strip() == "production"
+            )
             if running_in_cloud_run or (
                 key_filepath
                 and os.path.isfile(key_filepath)

@@ -1,10 +1,9 @@
 import uuid
+from base64 import b64encode as b64e
 from datetime import datetime, timezone
 from io import BytesIO, StringIO
 from os.path import abspath, dirname, join
 
-# from base64 import urlsafe_b64encode as b64e
-from base64 import b64encode as b64e
 import qrcode
 from logzero import logger
 from member_card.db import Model

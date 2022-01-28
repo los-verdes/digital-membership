@@ -2,44 +2,34 @@ import re
 from collections import OrderedDict
 from datetime import datetime, timedelta
 
-from member_card.db import Model
-from sqlalchemy import (
-    Boolean,
-    Column,
-    DateTime,
-    Enum,
-    ForeignKey,
-    Integer,
-    String,
-    Table,
-)
-from sqlalchemy.orm import relationship, backref
+from member_card.db import db
+from sqlalchemy.orm import backref, relationship
 
-membership_card_to_membership_assoc_table = Table(
+membership_card_to_membership_assoc_table = db.Table(
     "membership_cards_to_memberships",
-    Model.metadata,
-    Column(
+    db.Model.metadata,
+    db.Column(
         "membership_card_id",
-        Integer,
-        ForeignKey("membership_cards.id"),
+        db.Integer,
+        db.ForeignKey("membership_cards.id"),
         primary_key=True,
     ),
-    Column(
+    db.Column(
         "annual_membership_id",
-        Integer,
-        ForeignKey("annual_membership.id"),
+        db.Integer,
+        db.ForeignKey("annual_membership.id"),
         primary_key=True,
     ),
 )
 
 
-class AnnualMembership(Model):
+class AnnualMembership(db.Model):
     __tablename__ = "annual_membership"
 
     one_year_ago = datetime.now() - timedelta(days=366)
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     user = relationship("User", back_populates="annual_memberships")
     membership_cards = relationship(
         "MembershipCard",
@@ -48,26 +38,26 @@ class AnnualMembership(Model):
         backref=backref("annual_memberships", lazy=True),
     )
 
-    order_id = Column(String(32), unique=True)
-    order_number = Column(String, unique=True)
-    channel = Column(String(32))
-    channel_name = Column(String(32))
-    billing_address_first_name = Column(String(64))
-    billing_address_last_name = Column(String(64))
-    channel_name = Column(String(64))
-    external_order_reference = Column(String(32), nullable=True)
-    created_on = Column(DateTime)
-    modified_on = Column(DateTime)
-    fulfilled_on = Column(DateTime, nullable=True)
-    customer_email = Column(String(120))
-    line_item_id = Column(String(32))
-    sku = Column(String(20))
-    variant_id = Column(String(36))
-    product_id = Column(String(32))
-    product_name = Column(String(200))
-    test_mode = Column(Boolean, default=False)
-    fulfillment_status = Column(
-        Enum(
+    order_id = db.Column(db.String(32), unique=True)
+    order_number = db.Column(db.String, unique=True)
+    channel = db.Column(db.String(32))
+    channel_name = db.Column(db.String(32))
+    billing_address_first_name = db.Column(db.String(64))
+    billing_address_last_name = db.Column(db.String(64))
+    channel_name = db.Column(db.String(64))
+    external_order_reference = db.Column(db.String(32), nullable=True)
+    created_on = db.Column(db.DateTime)
+    modified_on = db.Column(db.DateTime)
+    fulfilled_on = db.Column(db.DateTime, nullable=True)
+    customer_email = db.Column(db.String(120))
+    line_item_id = db.Column(db.String(32))
+    sku = db.Column(db.String(20))
+    variant_id = db.Column(db.String(36))
+    product_id = db.Column(db.String(32))
+    product_name = db.Column(db.String(200))
+    test_mode = db.Column(db.Boolean, default=False)
+    fulfillment_status = db.Column(
+        db.Enum(
             "PENDING",
             "FULFILLED",
             "CANCELED",

@@ -1,8 +1,10 @@
+---
 name: Sync Subscriptions
 
-on: {}
+on:
   # schedule:
-  #   - cron: "0 0 * * *"
+  #   - cron: "0 12 * * *"
+  workflow_dispatch: {}
 
 jobs:
   ensure-watches:

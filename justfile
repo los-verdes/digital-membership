@@ -70,7 +70,16 @@ lint:
   # act \
   #   --platform='ubuntu-latest=nektos/act-environments-ubuntu:18.04-full' \
   #   --job=lint
+  # VALIDATE_JSCPD_ALL_CODEBASE
+  # -e PYTHONPATH
   docker run \
+    -e VALIDATE_GITLEAKS=false \
+    -e VALIDATE_PYTHON_MYPY=false \
+    -e IGNORE_GITIGNORED_FILES=true \
+    -e VALIDATE_CSS=false \
+    -e VALIDATE_PYTHON_ISORT=false \
+    -e VALIDATE_JAVASCRIPT_STANDARD=false \
     -e RUN_LOCAL=true \
     -v '{{ justfile_directory() }}:/tmp/lint' \
+    -v '{{ justfile_directory() }}:/tmp/lint/.venv/lib/python3.' \
     github/super-linter

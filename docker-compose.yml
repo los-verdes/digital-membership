@@ -1,11 +1,6 @@
+---
+
 version: "3.4"
-
-
-# x-alloc-volume:
-#   &alloc-volume
-#   type: bind
-#   source: ./compose/tmp/alloc
-#   target: /alloc
 
 services:
 
@@ -27,7 +22,6 @@ services:
     ports:
       - "127.0.0.1:5000:5000"
     volumes:
-      # - <<: *alloc-volume
       - "./member_card:/member_card"
     environment:
       - PYTHONPATH=/member_card:/member_card/member_card
@@ -35,17 +29,17 @@ services:
 
 
   postgres:
-      image: postgres:14.1
-      restart: always
-      environment:
-        - POSTGRES_DB=digital-membership
-        - POSTGRES_USER=member-card-user
-        - POSTGRES_PASSWORD=member-card-password
-      logging:
-        options:
-          max-size: 10m
-          max-file: "3"
-      ports:
-        - '5433:5432'
-      volumes:
-        - ./postgres-data:/var/lib/postgresql/data
+    image: postgres:14.1
+    restart: always
+    environment:
+      - POSTGRES_DB=digital-membership
+      - POSTGRES_USER=member-card-user
+      - POSTGRES_PASSWORD=member-card-password
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+    ports:
+      - '5433:5432'
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data

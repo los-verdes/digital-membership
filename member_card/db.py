@@ -6,7 +6,6 @@ from dateutil.parser import parse
 from flask_sqlalchemy import SQLAlchemy
 from logzero import logger
 
-
 db = SQLAlchemy()
 Model = getattr(db, "Model")
 

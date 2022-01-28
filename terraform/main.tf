@@ -17,6 +17,31 @@ provider "google" {
   region  = var.gcp_region
 }
 
+resource "google_compute_network" "digital_membership" {
+  provider = google-beta
+
+  name = "private-network"
+}
+
+resource "google_compute_global_address" "digital_membership" {
+  provider = google-beta
+
+  name          = "private-ip-address"
+  purpose       = "VPC_PEERING"
+  address_type  = "INTERNAL"
+  prefix_length = 16
+  network       = google_compute_network.digital_membership.id
+}
+
+resource "google_service_networking_connection" "digital_membership" {
+  provider = google-beta
+
+  network                 = google_compute_network.digital_membership.id
+  service                 = "servicenetworking.googleapis.com"
+  reserved_peering_ranges = [google_compute_global_address.digital_membership.name]
+}
+
+
 resource "google_app_engine_application" "digital_membership" {
   project       = google_project.digital_membership.project_id
   location_id   = regexall("[-a-z]+", var.gcp_region)[0]

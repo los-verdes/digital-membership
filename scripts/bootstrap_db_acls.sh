@@ -10,7 +10,7 @@ set -eou pipefail
 # export SQLALCHEMY_DATABASE_URI="$1"
 PGHOST='127.0.0.1'
 PGPORT='5432'
-gcloud_user="$(gcloud auth list 2>/dev/null | egrep '^\*' | awk '{print $2;}')" # | sed 's/@/%40/')"
+gcloud_user="$(gcloud auth list 2>/dev/null | grep -E '^\*' | awk '{print $2;}')" # | sed 's/@/%40/')"
 gcloud_access_token="$(gcloud auth application-default print-access-token)"
 PGUSER="${PGUSER-"$gcloud_user"}"
 PGPASSWORD="${PGPASSWORD-"$gcloud_access_token"}"
@@ -48,6 +48,7 @@ USER_NAMES="$(\
     | sed '$ d' \
     | awk '{print $1;}'
 )"
+echo "USER_NAMES: $USER_NAMES"
 
 echo "Setting up read_only role"
 cat << SQL | psql

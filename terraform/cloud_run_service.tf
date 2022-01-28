@@ -63,7 +63,7 @@ resource "google_cloud_run_service" "digital_membership" {
         }
 
         ports {
-          name           = "http1"
+          name = "http1"
           # protocol       = "TCP"
           container_port = "8080"
         }

@@ -1,10 +1,10 @@
 import json
 import os
 from functools import partial
-from os.path import abspath, dirname, join
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Tuple
 
 from google.cloud.sql.connector import connector
+from google.cloud.sql.connector.instance_connection_manager import IPTypes
 from logzero import logger
 
 if TYPE_CHECKING:
@@ -12,96 +12,43 @@ if TYPE_CHECKING:
 
 
 class Settings(object):
-    _secrets = dict()
+    _secrets: dict = dict()
 
-    def export_dict_as_settings(self, dict_to_export):
-        for key, value in dict_to_export.items():
-            settings_key = key.upper()
-            logger.debug(f"Exporting {key} as settings key: {settings_key}")
-            setattr(self, settings_key, value)
+    APPLE_DEVELOPER_ORG_NAME: str = "Jeffrey Hogan"  # TODO: if LV is a legit 501c this can maybe become a less personal org...
+    APPLE_DEVELOPER_PASS_TYPE_ID: str = "pass.es.losverd.card"
+    APPLE_DEVELOPER_TEAM_ID: str = "KJHZP635V9"
 
-    def export_secrets_as_settings(self):
-        logger.debug(f"Exporting {list(self._secrets.keys())} as setting attributes...")
-        self.export_dict_as_settings(self._secrets)
-
-    def use_gcp_sql_connector(self):
-        db_connection_kwargs = dict(
-            instance_connection_string=self.DB_CONNECTION_NAME,
-            db_user=self.DB_USERNAME,
-            db_name=self.DB_DATABASE_NAME,
-        )
-
-        logger.debug(f"{db_connection_kwargs=}")
-
-        def get_db_connector(
-            instance_connection_string, db_user, db_name
-        ) -> "dbapi.Connection":
-            conn: "dbapi.Connection" = connector.connect(
-                instance_connection_string,
-                "pg8000",
-                # ip_type=instance_connection_manager.IPTypes.PRIVATE,
-                user=db_user,
-                db=db_name,
-                enable_iam_auth=True,
-            )
-            return conn
-
-        engine_creator = partial(get_db_connector, **db_connection_kwargs)
-        self.SQLALCHEMY_ENGINE_OPTIONS = dict(
-            creator=engine_creator,
-        )
-
-    def __init__(self) -> None:
-        logger.debug(f"Initializing settings class: {type(self)}...")
-
-    def assert_required_settings_present(self):
-        pass
-
-    LOG_LEVEL = os.getenv("LOG_LEVEL", "info")
-
-    APPLE_DEVELOPER_ORG_NAME = "Jeffrey Hogan"  # TODO: if LV is a legit 501c this can maybe become a less personal org...
-    APPLE_DEVELOPER_PASS_TYPE_ID = "pass.es.losverd.card"
-    APPLE_DEVELOPER_TEAM_ID = "KJHZP635V9"
-
-    APPLE_DEVELOPER_CERTIFICATE = os.environ.get("APPLE_DEVELOPER_CERTIFICATE", None)
-    APPLE_DEVELOPER_PRIVATE_KEY = os.environ.get("APPLE_DEVELOPER_PRIVATE_KEY", None)
-    APPLE_PASS_PRIVATE_KEY_PASSWORD = os.environ.get(
-        "APPLE_PASS_PRIVATE_KEY_PASSWORD", None
+    APPLE_DEVELOPER_CERTIFICATE: str = os.environ.get("APPLE_DEVELOPER_CERTIFICATE", "")
+    APPLE_DEVELOPER_PRIVATE_KEY: str = os.environ.get("APPLE_DEVELOPER_PRIVATE_KEY", "")
+    APPLE_PASS_PRIVATE_KEY_PASSWORD: str = os.environ.get(
+        "APPLE_PASS_PRIVATE_KEY_PASSWORD", ""
     )
 
-    SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get("GOOGLE_CLIENT_ID", None)
-    SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", None)
-    SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = os.getenv("GOOGLE_OAUTH2_SCOPE", [])
-    GOOGLE_DISCOVERY_URL = (
+    DB_CONNECTION_NAME: str = os.environ["DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME"]
+    DB_USERNAME: str = os.environ["DIGITAL_MEMBERSHIP_DB_USERNAME"]
+    DB_DATABASE_NAME: str = os.environ["DIGITAL_MEMBERSHIP_DB_DATABASE_NAME"]
+
+    DEBUG: bool = True
+    # from: https://github.com/python-social-auth/social-examples
+    DEBUG_TB_INTERCEPT_REDIRECTS: bool = False
+
+    GOOGLE_DISCOVERY_URL: str = (
         "https://accounts.google.com/.well-known/openid-configuration"
     )
 
-    # from: https://github.com/python-social-auth/social-examples
-    SECRET_KEY = os.environ.get("SECRET_KEY", "not-very-secret-at-all")
-    SESSION_COOKIE_NAME = "psa_session"
-    DEBUG = True
-    DATABASE_URI = "%s/db.sqlite3" % dirname(abspath(join(__file__, "..")))
-    DEBUG_TB_INTERCEPT_REDIRECTS = False
-    SESSION_PROTECTION = "strong"
+    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "info")
 
-    SOCIAL_AUTH_LOGIN_URL = "/login"
-    SOCIAL_AUTH_LOGIN_REDIRECT_URL = "/"
-    SOCIAL_AUTH_DISCONNECT_REDIRECT_URL = "/logout"
-    SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
-    SOCIAL_AUTH_USER_MODEL = "member_card.models.user.User"
-    SOCIAL_AUTH_STORAGE = "social_flask_sqlalchemy.models.FlaskStorage"
-    SOCIAL_AUTH_AUTHENTICATION_BACKENDS = ("social_core.backends.google.GoogleOAuth2",)
+    SOCIAL_AUTH_DISCONNECT_REDIRECT_URL: str = "/logout"
+    SOCIAL_AUTH_GOOGLE_OAUTH2_KEY: str = os.environ.get("GOOGLE_CLIENT_ID", "")
+    SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: str = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+    SOCIAL_AUTH_LOGIN_REDIRECT_URL: str = "/"
+    SOCIAL_AUTH_LOGIN_URL: str = "/login"
+    SOCIAL_AUTH_REDIRECT_IS_HTTPS: bool = True
+    SOCIAL_AUTH_STORAGE: str = "social_flask_sqlalchemy.models.FlaskStorage"
+    SOCIAL_AUTH_TRAILING_SLASH: bool = True
+    SOCIAL_AUTH_USER_MODEL: str = "member_card.models.user.User"
 
-    DB_CONNECTION_NAME = os.environ["DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME"]
-    DB_USERNAME = os.environ["DIGITAL_MEMBERSHIP_DB_USERNAME"]
-    DB_DATABASE_NAME = os.environ["DIGITAL_MEMBERSHIP_DB_DATABASE_NAME"]
-
-    SQLALCHEMY_DATABASE_URI = "postgresql://member-card-user:member-card-password@127.0.0.1:5433/digital-membership"
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-
-    SOCIAL_AUTH_TRAILING_SLASH = True
-
-    SOCIAL_AUTH_PIPELINE = (
+    SOCIAL_AUTH_PIPELINE: Tuple[str, ...] = (
         "social_core.pipeline.social_auth.social_details",
         "social_core.pipeline.social_auth.social_uid",
         "social_core.pipeline.social_auth.auth_allowed",
@@ -117,7 +64,11 @@ class Settings(object):
         "social_core.pipeline.debug.debug",
     )
 
-    SOCIAL_AUTH_DISCONNECT_PIPELINE = (
+    SOCIAL_AUTH_AUTHENTICATION_BACKENDS: Tuple[str, ...] = (
+        "social_core.backends.google.GoogleOAuth2",
+    )
+
+    SOCIAL_AUTH_DISCONNECT_PIPELINE: Tuple[str, ...] = (
         # Verifies that the social association can be disconnected from the current
         # user (ensure that the user login mechanism is not compromised by this
         # disconnection).
@@ -130,17 +81,67 @@ class Settings(object):
         "social_core.pipeline.disconnect.disconnect",
     )
 
+    SESSION_PROTECTION: str = "strong"
+    SECRET_KEY: str = os.environ.get("SECRET_KEY", "not-very-secret-at-all")
+    SESSION_COOKIE_NAME: str = "psa_session"
+
+    SQLALCHEMY_DATABASE_URI: str = "postgresql://member-card-user:member-card-password@127.0.0.1:5433/digital-membership"
+    SQLALCHEMY_TRACK_MODIFICATIONS: bool = False
+
+    def export_dict_as_settings(self, dict_to_export: dict[str, str]) -> None:
+        for key, value in dict_to_export.items():
+            settings_key = key.upper()
+            logger.debug(f"Exporting {key} as settings key: {settings_key}")
+            setattr(self, settings_key, value)
+
+    def export_secrets_as_settings(self) -> None:
+        logger.debug(f"Exporting {list(self._secrets.keys())} as setting attributes...")
+        self.export_dict_as_settings(self._secrets)
+
+    def use_gcp_sql_connector(self) -> None:
+        db_connection_kwargs = dict(
+            instance_connection_string=self.DB_CONNECTION_NAME,
+            db_user=self.DB_USERNAME,
+            db_name=self.DB_DATABASE_NAME,
+        )
+
+        logger.debug(f"{db_connection_kwargs=}")
+
+        def get_db_connector(
+            instance_connection_string: str, db_user: str, db_name: str
+        ) -> "dbapi.Connection":
+            conn: "dbapi.Connection" = connector.connect(
+                instance_connection_string,
+                "pg8000",
+                ip_type=IPTypes.PRIVATE,
+                user=db_user,
+                db=db_name,
+                enable_iam_auth=True,
+            )
+            return conn
+
+        engine_creator = partial(get_db_connector, **db_connection_kwargs)
+        self.SQLALCHEMY_ENGINE_OPTIONS = dict(
+            creator=engine_creator,
+        )
+
+    def __init__(self) -> None:
+        logger.debug(f"Initializing settings class: {type(self)}...")
+
+    def assert_required_settings_present(self) -> None:
+        pass
+
 
 class DockerComposeSettings(Settings):
     pass
-    # SQLALCHEMY_DATABASE_URI = "postgresql://member-card-user:member-card-password@db:5432/digital-membership"
-    SQLALCHEMY_DATABASE_URI = "postgresql://member-card-user:member-card-password@127.0.0.1:5432/digital-membership"
+    # SQLALCHEMY_DATABASE_URI: str = "postgresql://member-card-user:member-card-password@db:5432/digital-membership"
+    SQLALCHEMY_DATABASE_URI: str = "postgresql://member-card-user:member-card-password@127.0.0.1:5432/digital-membership"
 
 
 class ProductionSettings(Settings):
-    DEBUG = False
-    SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
-    SQLALCHEMY_DATABASE_URI = "postgresql+pg8000://"
+    DEBUG: bool = False
+    SOCIAL_AUTH_REDIRECT_IS_HTTPS: bool = True
+    SQLALCHEMY_DATABASE_URI: str = "postgresql+pg8000://"
 
     def __init__(self) -> None:
 
@@ -158,7 +159,7 @@ class ProductionSettings(Settings):
 
 
 class RemoteSqlProductionSettings(ProductionSettings):
-    SQLALCHEMY_ECHO = True
+    SQLALCHEMY_ECHO: bool = True
 
     def __init__(self) -> None:
         if secret_name := os.getenv("DIGITAL_MEMBERSHIP_GCP_SECRET_NAME"):
@@ -171,7 +172,7 @@ class RemoteSqlProductionSettings(ProductionSettings):
         super().__init__()
 
 
-def get_settings_obj_for_env(env=None, default_settings_class=Settings):
+def get_settings_obj_for_env(env: str = None, default_settings_class=Settings):
     if env is None:
         env = os.getenv("FLASK_ENV", "unknown").lower().strip()
 

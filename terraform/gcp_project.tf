@@ -42,6 +42,9 @@ resource "google_project_service" "digital_membership" {
 
     # For our sync subscriptions cloud function:
     # "cloudfunctions.googleapis.com",
+
+    # private IP jazz for cloud sql:
+    "servicenetworking.googleapis.com",
   ])
 
   service                    = each.value

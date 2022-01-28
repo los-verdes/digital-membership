@@ -6,12 +6,16 @@ resource "google_sql_database_instance" "digital_membership" {
   deletion_protection = "true"
   require_ssl         = true
 
+  depends_on = [google_service_networking_connection.private_vpc_connection]
+
   settings {
     tier = "db-f1-micro"
+
     database_flags {
       name  = "cloudsql.iam_authentication"
       value = "on"
     }
+
     backup_configuration {
       enabled    = true
       location   = var.gcp_region
@@ -20,7 +24,12 @@ resource "google_sql_database_instance" "digital_membership" {
       backup_retention_settings {
         retained_backups = 3
       }
+    }
 
+    ip_configuration {
+      ipv4_enabled    = false
+      require_ssl     = true
+      private_network = google_compute_network.private_network.id
     }
   }
 }

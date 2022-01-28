@@ -9,12 +9,12 @@ from flask_login import LoginManager
 from logzero import logger
 from social_core.backends.google import GooglePlusAuth
 from social_core.backends.utils import load_backends
+from social_core.pipeline.user import get_username as social_get_username
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from webassets.filter import get_filter
 
 from member_card.settings import get_settings_obj_for_env
-from social_core.pipeline.user import get_username as social_get_username
 
 # import pg8000
 # import sqlalchemy

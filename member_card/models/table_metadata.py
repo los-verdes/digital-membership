@@ -1,9 +1,8 @@
-from member_card.db import Model
-from sqlalchemy import Column, String
+from member_card.db import db
 
 
-class TableMetadata(Model):
+class TableMetadata(db.Model):
     __tablename__ = "table_metadata"
-    table_name = Column(String, primary_key=True)
-    attribute_name = Column(String, primary_key=True)
-    attribute_value = Column(String)
+    table_name = db.Column(db.String, primary_key=True)
+    attribute_name = db.Column(db.String, primary_key=True)
+    attribute_value = db.Column(db.String)

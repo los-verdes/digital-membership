@@ -24,7 +24,9 @@ def show(pass_type_identifier, serial_number):
     return jsonify(p.data)
 
 
-@app.route("/passkit/v1/devices/<device_library_identifier>/registrations/<pass_type_identifier>")
+@app.route(
+    "/passkit/v1/devices/<device_library_identifier>/registrations/<pass_type_identifier>"
+)
 def index(device_library_identifier, pass_type_identifier):
     """
     Getting the serial numbers for passes associated with a device
@@ -49,7 +51,10 @@ def index(device_library_identifier, pass_type_identifier):
     if r:
         # XXX: Is this the correct return value for serial number?
         return jsonify(
-            {"lastUpdated": p.time_updated, "serialNumbers": [p.apple_pass_serial_number]}
+            {
+                "lastUpdated": p.time_updated,
+                "serialNumbers": [p.apple_pass_serial_number],
+            }
         )
     else:
         return ("No Content", 204)
@@ -85,7 +90,9 @@ def create(
     return ("Created", 201)
 
 
-@app.route("/passkit/v1/devices/<device_library_identifier>/registrations/<pass_type_identifier>")
+@app.route(
+    "/passkit/v1/devices/<device_library_identifier>/registrations/<pass_type_identifier>"
+)
 def destroy(device_library_identifier, pass_type_identifier, methods=["DELETE"]):
     """
     Unregistering a device
