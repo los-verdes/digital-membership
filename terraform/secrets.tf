@@ -38,7 +38,7 @@ resource "google_secret_manager_secret_version" "digital_membership" {
     # db_username        = google_sql_user.service_account.name
 
     # Flask's secret key: https://flask.palletsprojects.com/en/2.0.x/config/#SECRET_KEY
-    flask_secret_key = random_password.flask_secret_key.result
+    secret_key = random_password.flask_secret_key.result
 
     # For configuring python-social-auth / Google OAuth 2 bits:
     social_auth_google_oauth2_key    = var.oauth_client_id

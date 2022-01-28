@@ -54,6 +54,9 @@ class Settings(object):
     def __init__(self) -> None:
         logger.debug(f"Initializing settings class: {type(self)}...")
 
+    def assert_required_settings_present(self):
+        pass
+
     LOG_LEVEL = os.getenv("LOG_LEVEL", "info")
 
     APPLE_DEVELOPER_ORG_NAME = "Jeffrey Hogan"  # TODO: if LV is a legit 501c this can maybe become a less personal org...
