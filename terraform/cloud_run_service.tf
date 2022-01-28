@@ -46,13 +46,25 @@ resource "google_cloud_run_service" "digital_membership" {
           value = google_secret_manager_secret_version.digital_membership.name
         }
         env {
+          name  = "DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME"
+          value = google_sql_database_instance.digital_membership.connection_name
+        }
+        env {
+          name  = "DIGITAL_MEMBERSHIP_DB_USERNAME"
+          value = google_sql_user.service_accounts["website"].name
+        }
+        env {
+          name  = "DIGITAL_MEMBERSHIP_DB_DATABASE_NAME"
+          value = google_sql_database.database.name
+        }
+        env {
           name  = "FLASK_ENV"
           value = var.flask_env
         }
 
         ports {
           name           = "http1"
-          protocol       = "TCP"
+          # protocol       = "TCP"
           container_port = "8080"
         }
 

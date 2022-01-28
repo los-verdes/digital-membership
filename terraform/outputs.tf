@@ -18,7 +18,11 @@ locals {
 #   value = google_sql_database_instance.digital_membership
 # }
 
-output "gh_terraform_applier_sa_email" {
+output "db_task_runner_service_account_email" {
+  value = google_service_account.db_task_runner.email
+}
+
+output "gh_terraform_applier_service_account_email" {
   value = google_service_account.gh_terraform_applier.email
 }
 
@@ -43,6 +47,6 @@ output "secret_name" {
   value = google_secret_manager_secret_version.digital_membership.name
 }
 
-output "website_sa_email" {
+output "website_service_account_email" {
   value = google_service_account.digital_membership.email
 }

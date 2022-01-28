@@ -36,15 +36,19 @@ resource "google_sql_user" "mangement" {
   type     = "BUILT_IN"
 }
 
-resource "google_sql_user" "service_account" {
-  name     = replace(google_service_account.digital_membership.email, ".gserviceaccount.com", "")
+resource "google_sql_user" "service_accounts" {
+  for_each = {
+    website        = google_service_account.digital_membership.email,
+    db-task-runner = google_service_account.db_task_runner.email,
+  }
+  name     = replace(each.value, ".gserviceaccount.com", "")
   instance = google_sql_database_instance.digital_membership.name
   type     = "CLOUD_IAM_SERVICE_ACCOUNT"
 }
 
 resource "google_sql_user" "users" {
   for_each = toset(concat(var.gcp_project_owners, var.gcp_project_editors))
-  name     = each.value
+  name     = lower(each.value)
   instance = google_sql_database_instance.digital_membership.name
   type     = "CLOUD_IAM_USER"
 }

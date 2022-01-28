@@ -7,6 +7,7 @@ from member_card import get_base_url
 from member_card.db import db, get_or_create
 from member_card.models import MembershipCard
 from member_card.utils import sign
+import os
 
 DEFAULT_APPLE_KEY_FILEPATH = "/secrets/apple-private.key"
 
@@ -15,13 +16,28 @@ def with_apple_developer_key() -> Callable:
     def decorator(method: Callable) -> Callable:
         @functools.wraps(method)
         def new_func(*args, **kwargs):
+            key_filepath = kwargs.get("key_filepath")
+            if (
+                key_filepath
+                and os.path.isfile(key_filepath)
+                and os.access(key_filepath, os.R_OK)
+            ):
+                return method(*args, **kwargs)
+
+            if unformatted_key := flask.current_app.config[
+                "APPLE_DEVELOPER_PRIVATE_KEY"
+            ]:
+                error_msg = f"File {key_filepath} doesn't exist or isn't readable _and_ no key found under APPLE_DEVELOPER_PRIVATE_KEY env var!"
+                logger.error(error_msg)
+                raise Exception(error_msg)
+
+            logger.warning(
+                f"File {key_filepath} doesn't exist or isn't readable, pulling key from 1password and stashing in temp file...."
+            )
             with tempfile.NamedTemporaryFile(mode="w", suffix=".key") as key_fp:
                 logger.info(
                     f"Stashing Apple developer key under a temporary file {key_fp.name=}"
                 )
-                unformatted_key = flask.current_app.config[
-                    "APPLE_DEVELOPER_PRIVATE_KEY"
-                ]
                 formatted_key = "\n".join(unformatted_key.split("\\n"))
                 key_fp.write(formatted_key)
                 key_fp.seek(0)
@@ -64,7 +80,7 @@ def get_or_create_membership_card(user):
     return membership_card
 
 
-# @with_apple_developer_key()
+@with_apple_developer_key()
 def get_apple_pass_for_user(user, key_filepath=DEFAULT_APPLE_KEY_FILEPATH):
     # try:
     #     with open(key_filepath) as f:

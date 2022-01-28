@@ -41,7 +41,7 @@ resource "google_project_service" "digital_membership" {
     "cloudbuild.googleapis.com",
 
     # For our sync subscriptions cloud function:
-    "cloudfunctions.googleapis.com",
+    # "cloudfunctions.googleapis.com",
   ])
 
   service                    = each.value

@@ -1,8 +1,8 @@
 name: Sync Subscriptions
 
-on:
-  schedule:
-    - cron: "0 0 * * *"
+on: {}
+  # schedule:
+  #   - cron: "0 0 * * *"
 
 jobs:
   ensure-watches:
@@ -33,7 +33,13 @@ jobs:
         uses: "google-github-actions/auth@v0"
         with:
           workload_identity_provider: "projects/567739286055/locations/global/workloadIdentityPools/los-verdes-digital-membership/providers/los-verdes-digital-membership"
-          service_account: "gh-terraform-applier@lv-digital-membership.iam.gserviceaccount.com"
+          service_account: "db-task-runner@lv-digital-membership.iam.gserviceaccount.com"
 
       - name: Sync Subscriptions
-        run: just remote-sync-subscriptions
+        run: just sync-subscriptions
+        env:
+          # get these from TF outputs or such eventually?
+          DIGITAL_MEMBERSHIP_DB_USERNAME: "db-task-runner@lv-digital-membership.iam"
+          # DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME: "lv-digital-membership:us-central1:lv-digital-membership"
+          # DIGITAL_MEMBERSHIP_DB_DATABASE_NAME: "lv-digital-membership"
+          FLASK_ENV: "remote-sql"

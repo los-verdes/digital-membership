@@ -20,6 +20,10 @@ module "github_oidc" {
   }
   attribute_condition = "assertion.repository=='${var.github_repo}'"
   sa_mapping = {
+    "subcriptions-syncer" = {
+      sa_name   = google_service_account.db_task_runner.name
+      attribute = "attribute.job_workflow_ref/${var.github_repo}/.github/workflows/sync_subscriptions.yml@refs/heads/main"
+    }
     "gh-terraform-applier" = {
       sa_name   = google_service_account.gh_terraform_applier.name
       attribute = "attribute.environment/gcp-project"

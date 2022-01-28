@@ -23,21 +23,21 @@ resource "google_app_engine_application" "digital_membership" {
   database_type = "CLOUD_FIRESTORE"
 }
 
-
 resource "google_service_account" "digital_membership" {
   account_id   = "website"
   display_name = "website"
 }
 
-
+resource "google_service_account" "db_task_runner" {
+  account_id   = "db-task-runner"
+  display_name = "Database task runner"
+}
 
 resource "google_project_iam_member" "digital_membership_datastore_viewer" {
   project = google_project.digital_membership.id
   role    = "roles/cloudsql.client"
   member  = "serviceAccount:${google_service_account.digital_membership.email}"
 }
-
-
 
 resource "google_project_iam_member" "digital_membership_debugger_agent" {
   project = google_project.digital_membership.id
@@ -50,8 +50,6 @@ resource "google_project_iam_member" "digital_membership_trace_agent" {
   role    = "roles/cloudtrace.agent"
   member  = "serviceAccount:${google_service_account.digital_membership.email}"
 }
-
-
 
 # TODO: hook this up with a bot user's oauth creds (not jeffwecan...)
 resource "google_sourcerepo_repository" "digital_membership" {

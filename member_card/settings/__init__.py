@@ -89,9 +89,9 @@ class Settings(object):
     SOCIAL_AUTH_STORAGE = "social_flask_sqlalchemy.models.FlaskStorage"
     SOCIAL_AUTH_AUTHENTICATION_BACKENDS = ("social_core.backends.google.GoogleOAuth2",)
 
-    DB_CONNECTION_NAME = "lv-digital-membership:us-central1:lv-digital-membership"
-    DB_USERNAME = "website"
-    DB_DATABASE_NAME = "lv-digital-membership"
+    DB_CONNECTION_NAME = os.environ["DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME"]
+    DB_USERNAME = os.environ["DIGITAL_MEMBERSHIP_DB_USERNAME"]
+    DB_DATABASE_NAME = os.environ["DIGITAL_MEMBERSHIP_DB_DATABASE_NAME"]
 
     SQLALCHEMY_DATABASE_URI = "postgresql://member-card-user:member-card-password@127.0.0.1:5433/digital-membership"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -152,26 +152,6 @@ class ProductionSettings(Settings):
         self.export_secrets_as_settings()
         self.use_gcp_sql_connector()
         logger.debug(f"{self.SQLALCHEMY_ENGINE_OPTIONS=}")
-        import subprocess
-
-        py2output = subprocess.check_output(["ls", "-lah", "/secrets"])
-        logger.warning("py2 said:", py2output)
-        py2output = subprocess.check_output(
-            ["tail", "-n", "+20", "/secrets/*"], shell=True
-        )
-        logger.warning("py2 said:", py2output)
-
-
-class RemoteSecretsProductionSettings(ProductionSettings):
-    def __init__(self) -> None:
-        if secret_name := os.getenv("DIGITAL_MEMBERSHIP_GCP_SECRET_NAME"):
-            logger.info(f"Loading secrets from {secret_name=}")
-            from member_card.secrets import retrieve_app_secrets
-
-            if not self._secrets:
-                self._secrets = retrieve_app_secrets(secret_name)
-
-        super().__init__()
 
 
 class RemoteSqlProductionSettings(ProductionSettings):
@@ -185,10 +165,6 @@ class RemoteSqlProductionSettings(ProductionSettings):
             if not self._secrets:
                 self._secrets = retrieve_app_secrets(secret_name)
 
-        # Setting DB_USERNAME explicitly here so local users can use their own gcloud auth creds:
-        if local_db_username := os.getenv("DB_USERNAME"):
-            self._secrets["db_username"] = local_db_username
-
         super().__init__()
 
 
@@ -200,7 +176,6 @@ def get_settings_obj_for_env(env=None, default_settings_class=Settings):
         "compose": DockerComposeSettings,
         "production": ProductionSettings,
         "remote-sql": RemoteSqlProductionSettings,
-        "cloudfunction": RemoteSecretsProductionSettings,
     }
 
     return settings_objs_by_env.get(env, default_settings_class)

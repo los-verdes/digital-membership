@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -exou pipefail
+set -eou pipefail
 # function title_case() {
 #     gsed 's/.*/\L&/; s/[a-z]*/\u&/g' <<<"$1"
 # }
@@ -27,7 +27,7 @@ export PGDATABASE
 # export DATABASE="lv-digital-membership"
 
 RO_USERS=""
-RW_USERS="tf-management website@lv-digital-membership.iam Jeff.hogan1@gmail.com"
+RW_USERS="tf-management db-task-runner@lv-digital-membership.iam website@lv-digital-membership.iam jeff.hogan1@gmail.com"
 
 TABLE_NAMES="$(\
   echo "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname != 'pg_catalog' AND schemaname != 'information_schema'" \
@@ -48,7 +48,6 @@ USER_NAMES="$(\
     | sed '$ d' \
     | awk '{print $1;}'
 )"
-echo "USER_NAMES: $USER_NAMES"
 
 echo "Setting up read_only role"
 cat << SQL | psql
@@ -74,12 +73,18 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE ON SEQUENCES TO read_write
 ALTER DEFAULT PRIVILEGES FOR ROLE read_write IN SCHEMA public GRANT SELECT ON TABLES TO read_only;
 SQL
 
+TYPE_NAMES="fulfillment_status_enum"
+echo "Ensuring types are owned by read_write role...."
+for TYPE_NAME in $TYPE_NAMES; do
+  echo "ALTER TYPE "'"'"$TYPE_NAME"'"'" OWNER to "'"'"read_write"'"'";" | psql
+done
+
 echo "Ensuring tables are owned by read_write role...."
 for TABLE_NAME in $TABLE_NAMES; do
   echo "ALTER TABLE "'"'"$TABLE_NAME"'"'" OWNER to "'"'"read_write"'"'";" | psql
 done
 
-exit 0;
+
 for RO_USER in $RO_USERS; do
   echo "GRANT read_only to "'"'"$RO_USER"'"'"" | psql
 done

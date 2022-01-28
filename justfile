@@ -7,6 +7,11 @@ gcr_image_name := gcr_name + ":" + gcr_tag
 gcr_latest_image_name := gcr_name + ":latest"
 
 export GCLOUD_PROJECT := "lv-digital-membership"
+# TODO: dev as default after we get done setting this all up....
+export FLASK_ENV := "remote-sql"
+export DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME := "lv-digital-membership:us-central1:lv-digital-membership"
+# export DIGITAL_MEMBERSHIP_DB_USERNAME := "db-task-runner@lv-digital-membership.iam"
+export DIGITAL_MEMBERSHIP_DB_DATABASE_NAME := "lv-digital-membership"
 
 set-tf-ver-output:
   echo "::set-output name=terraform_version::$(cat {{ tf_subdir }}/.terraform-version)"
@@ -29,6 +34,12 @@ serve:
   # export DB_SOCKET_DIR={{ justfile_directory() + "./cloudsql"}}
   # ./run_app.py
   # sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain tmp-certs/cert.pem
+  # eval "$(op signin my)"
+  # => export APPLE_DEVELOPER_PRIVATE_KEY="$(awk '{printf "%s\\n", $0}' <<<"$(op get document --vault="Los Verdes" 'private.key - Apple Developer Certificate - v0prod - pass.es.losverd.card')")"
+  # => export GOOGLE_CLIENT_ID="$(op get item --vault="Los Verdes" 'Local Dev  (Google OAuth Credentials) - Los Verdes Digital Membership' | jq -r '.details.sections | .[] | select(.title == "credentials").fields | .[] | select(.n == "username").v')"
+  # => export GOOGLE_CLIENT_SECRET="$(op get item --vault="Los Verdes" 'Local Dev  (Google OAuth Credentials) - Los Verdes Digital Membership' | jq -r '.details.sections | .[] | select(.title == "credentials").fields | .[] | select(.n == "credential").v')"
+  # ~/bin/cloud_sql_proxy -instances='lv-digital-membership:us-central1:lv-digital-membership=tcp:5432'  -enable_iam_login
+  # export DIGITAL_MEMBERSHIP_DB_USERNAME="$(gcloud auth list 2>/dev/null | egrep '^\*' | awk '{print $2;}')"
   flask run --cert=tmp-certs/cert.pem --key=tmp-certs/key.pem
 
 build:
@@ -53,3 +64,12 @@ sync-subscriptions:
 
 remote-sync-subscriptions:
   echo "invoke cloudfunction..."
+
+lint:
+  # act \
+  #   --platform='ubuntu-latest=nektos/act-environments-ubuntu:18.04-full' \
+  #   --job=lint
+  docker run \
+    -e RUN_LOCAL=true \
+    -v '{{ justfile_directory() }}:/tmp/lint' \
+    github/super-linter

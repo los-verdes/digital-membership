@@ -8,16 +8,6 @@ resource "random_password" "sql_password" {
   special = false
 }
 
-data "google_iam_policy" "secrets_access" {
-  binding {
-    role = "roles/secretmanager.secretAccessor"
-    members = [
-      # "serviceAccount:567739286055-compute@developer.gserviceaccount.com",
-      "serviceAccount:${google_service_account.digital_membership.email}",
-    ]
-  }
-}
-
 resource "google_secret_manager_secret" "digital_membership" {
   secret_id = "digital-membership"
 
@@ -25,7 +15,6 @@ resource "google_secret_manager_secret" "digital_membership" {
     automatic = true
   }
 }
-
 
 # We set up this secret outside of Terraform to minimize the possibility of inadvertent leakage...
 data "google_secret_manager_secret" "apple_private_key" {
@@ -36,7 +25,6 @@ data "google_secret_manager_secret_version" "apple_private_key" {
   secret = data.google_secret_manager_secret.apple_private_key.id
 }
 
-
 resource "google_secret_manager_secret_version" "digital_membership" {
   secret = google_secret_manager_secret.digital_membership.id
   secret_data = jsonencode({
@@ -45,9 +33,9 @@ resource "google_secret_manager_secret_version" "digital_membership" {
     apple_pass_private_key_password = var.apple_pass_private_key_password
 
     # Cloud SQL connection details:
-    db_connection_name = google_sql_database_instance.digital_membership.connection_name
-    db_database_name   = google_sql_database.database.name
-    db_username        = google_sql_user.service_account.name
+    # db_connection_name = google_sql_database_instance.digital_membership.connection_name
+    # db_database_name   = google_sql_database.database.name
+    # db_username        = google_sql_user.service_account.name
 
     # Flask's secret key: https://flask.palletsprojects.com/en/2.0.x/config/#SECRET_KEY
     flask_secret_key = random_password.flask_secret_key.result
@@ -64,14 +52,33 @@ resource "google_secret_manager_secret_version" "digital_membership" {
 resource "google_secret_manager_secret_iam_policy" "digital_membership" {
   project     = google_secret_manager_secret.digital_membership.project
   secret_id   = google_secret_manager_secret.digital_membership.id
-  policy_data = data.google_iam_policy.secrets_access.policy_data
+  policy_data = data.google_iam_policy.digital_membership_secret_access.policy_data
 }
+
+data "google_iam_policy" "digital_membership_secret_access" {
+  binding {
+    role = "roles/secretmanager.secretAccessor"
+    members = [
+      "serviceAccount:${google_service_account.digital_membership.email}",
+      "serviceAccount:${google_service_account.db_task_runner.email}",
+    ]
+  }
+}
+
 resource "google_secret_manager_secret_iam_policy" "apple_private_key" {
   project     = data.google_secret_manager_secret.apple_private_key.project
   secret_id   = data.google_secret_manager_secret.apple_private_key.id
-  policy_data = data.google_iam_policy.secrets_access.policy_data
+  policy_data = data.google_iam_policy.apple_private_key_secret_access.policy_data
 }
 
+data "google_iam_policy" "apple_private_key_secret_access" {
+  binding {
+    role = "roles/secretmanager.secretAccessor"
+    members = [
+      "serviceAccount:${google_service_account.digital_membership.email}",
+    ]
+  }
+}
 # resource "google_project_iam_member" "digital_membership_datastore_viewer" {
 #   project = google_project.digital_membership.id
 #   role    = "roles/datastore.viewer"

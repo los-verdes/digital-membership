@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  super-linter:
+  lint:
     name: "Lint Configuration"
     runs-on: ubuntu-latest
     steps:
