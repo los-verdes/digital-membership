@@ -24,7 +24,7 @@ def show(pass_type_identifier, serial_number):
     serial_number -- The unique pass identifier, as specified in the pass
     """
     logger.debug(
-        f"passkit::show() => {request.headers.keys()=} ==> {request.headers.get('ApplePass', 'EMPTY!')[:-4]=}"
+        f"passkit::show() => {list(request.headers.keys())=} ==> {request.headers.get('ApplePass', 'EMPTY!')[-4:]=}"
     )
     # We store a card's serial number as a UUID in our database, but represent it as a
     # 128-bit integer for our apple passes
@@ -51,7 +51,7 @@ def index(device_library_identifier, pass_type_identifier):
     all passes.
     """
     logger.info(
-        f"passkit::show() => {request.headers.keys()=} ==> {request.headers.get('ApplePass', 'EMPTY!')[:-4]=}"
+        f"passkit::show() => {list(request.headers.keys())=} ==> {request.headers.get('ApplePass', 'EMPTY!')[-4:]=}"
     )
     p = MembershipCard.query.filter_by(
         apple_pass_type_identifier=pass_type_identifier
@@ -90,7 +90,7 @@ def create(device_library_identifier, pass_type_identifier, serial_number):
                                  the pass
     """
     logger.info(
-        f"passkit::create() => {request.headers.keys()=} ==> {request.headers.get('ApplePass', 'EMPTY!')[:-4]=}"
+        f"passkit::create() => {list(request.headers.keys())=} ==> {request.headers.get('ApplePass', 'EMPTY!')[-4:]=}"
     )
     # We store a card's serial number as a UUID in our database, but represent it as a
     # 128-bit integer for our apple passes
@@ -125,7 +125,7 @@ def destroy(device_library_identifier, pass_type_identifier, serial_number):
                                  the pass
     """
     logger.info(
-        f"passkit::destroy() => {request.headers.keys()=} ==> {request.headers.get('ApplePass', 'EMPTY!')[:-4]=}"
+        f"passkit::destroy() => {list(request.headers.keys())=} ==> {request.headers.get('ApplePass', 'EMPTY!')[-4:]=}"
     )
     p = MembershipCard.query.filter_by(
         apple_pass_type_identifier=pass_type_identifier,
