@@ -26,7 +26,7 @@ module "github_oidc" {
     }
     "gh-terraform-applier" = {
       sa_name   = google_service_account.gh_terraform_applier.name
-      attribute = "attribute.environment/gcp-project"
+      attribute = "attribute.environment/production"
     }
   }
 }
