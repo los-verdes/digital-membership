@@ -48,6 +48,11 @@ resource "google_project_service" "digital_membership" {
 
     # Google Pay Passes API
     "walletobjects.googleapis.com",
+
+    # For TF applies by a service account(?):
+    # │ Error: Error when reading or editing App Engine Application "lv-digital-membership":
+    # googleapi: Error 403: App Engine Admin API has not been used in project ...
+    "appengine.googleapis.com",
   ])
 
   service                    = each.value
