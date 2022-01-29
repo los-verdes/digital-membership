@@ -9,9 +9,9 @@ from member_card.models import AppleDeviceRegistration, MembershipCard
 
 @app.route("/passkit/v1/log", methods=["POST"])
 def passkit_log():
-    logger.info(f"passkit_log() => {request.headers=}")
-    logger.info(f"passkit_log() => {request.get_data()=}")
-    logger.info(f"passkit_log() => {request.get_json()=}")
+    logger.debug(f"passkit_log() => {request.headers=}")
+    logger.debug(f"passkit_log() => {request.get_data()=}")
+    logger.warning(f"passkit_log() => {request.get_json()=}")
     return "thanks!"
 
 
