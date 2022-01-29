@@ -30,7 +30,7 @@ def show(pass_type_identifier, serial_number):
     # 128-bit integer for our apple passes
     serial_number = UUID(int=serial_number)
     p = MembershipCard.query.filter_by(
-        pass_type_identifier=pass_type_identifier, serial_number=serial_number
+        apple_pass_type_identifier=pass_type_identifier, serial_number=serial_number
     ).first_or_404()
 
     return jsonify(p.data)
@@ -54,7 +54,7 @@ def index(device_library_identifier, pass_type_identifier):
         f"passkit::show() => {request.headers.keys()=} ==> {request.headers.get('ApplePass', 'EMPTY!')[:-4]=}"
     )
     p = MembershipCard.query.filter_by(
-        pass_type_identifier=pass_type_identifier
+        apple_pass_type_identifier=pass_type_identifier
     ).first_or_404()
 
     r = p.registrations.filter_by(device_library_identifier=device_library_identifier)
@@ -92,8 +92,11 @@ def create(device_library_identifier, pass_type_identifier, serial_number):
     logger.info(
         f"passkit::create() => {request.headers.keys()=} ==> {request.headers.get('ApplePass', 'EMPTY!')[:-4]=}"
     )
+    # We store a card's serial number as a UUID in our database, but represent it as a
+    # 128-bit integer for our apple passes
+    serial_number = UUID(int=serial_number)
     p = MembershipCard.query.filter_by(
-        pass_type_identifier=pass_type_identifier, serial_number=serial_number
+        apple_pass_type_identifier=pass_type_identifier, serial_number=serial_number
     ).first_or_404()
 
     registrations = p.registrations.filter_by(
@@ -125,7 +128,7 @@ def destroy(device_library_identifier, pass_type_identifier, serial_number):
         f"passkit::destroy() => {request.headers.keys()=} ==> {request.headers.get('ApplePass', 'EMPTY!')[:-4]=}"
     )
     p = MembershipCard.query.filter_by(
-        pass_type_identifier=pass_type_identifier,
+        apple_pass_type_identifier=pass_type_identifier,
         serial_number=serial_number,
     ).first_or_404()
     registrations = p.registrations.filter_by(
