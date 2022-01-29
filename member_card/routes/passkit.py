@@ -36,7 +36,7 @@ def show(pass_type_identifier, serial_number):
     )
     # We store a card's serial number as a UUID in our database, but represent it as a
     # 128-bit integer for our apple passes
-    serial_number = UUID(int=serial_number)
+    serial_number = UUID(int=int(serial_number))
 
     p = MembershipCard.query.filter(
         apple_pass_type_identifier=pass_type_identifier,
@@ -125,7 +125,7 @@ def create(device_library_identifier, pass_type_identifier, serial_number):
     )
     # We store a card's serial number as a UUID in our database, but represent it as a
     # 128-bit integer for our apple passes
-    serial_number = UUID(int=serial_number)
+    serial_number = UUID(int=int(serial_number))
     p = MembershipCard.query.filter_by(
         apple_pass_type_identifier=pass_type_identifier, serial_number=serial_number
     ).first_or_404()
@@ -163,7 +163,7 @@ def destroy(device_library_identifier, pass_type_identifier, serial_number):
     )
     # We store a card's serial number as a UUID in our database, but represent it as a
     # 128-bit integer for our apple passes
-    serial_number = UUID(int=serial_number)
+    serial_number = UUID(int=int(serial_number))
     p = MembershipCard.query.filter_by(
         apple_pass_type_identifier=pass_type_identifier,
         serial_number=serial_number,
