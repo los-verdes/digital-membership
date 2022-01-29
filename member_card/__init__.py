@@ -4,19 +4,13 @@ import os
 from urllib.parse import urlparse
 
 import click
-
-# import logzero
 from flask import Flask, g, redirect, render_template, request, send_file, url_for
 from flask_gravatar import Gravatar
 from flask_login import current_user as current_login_user
 from flask_login import login_required, logout_user
-
-# from logzero import logger
-# import logging, setup_logger
 from social_flask.template_filters import backends
 from social_flask.utils import load_strategy
-
-from logging.config import dictConfig
+from flask.logging import default_handler
 
 from member_card.db import squarespace_orders_etl
 from member_card.models import User
@@ -24,35 +18,16 @@ from member_card.models import User
 # from google_cloud_logger import GoogleCloudFormatter
 from member_card.squarespace import Squarespace
 from member_card.utils import (
-    MembershipLoginManager,
+    MembershipLoginManager,  # configure_logging,
     common_context,
     load_settings,
     register_asset_bundles,
     social_url_for,
     verify,
-    # configure_logging,
 )
 
 BASE_DIR = os.path.dirname(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "member_card")
-)
-
-dictConfig(
-    {
-        "version": 1,
-        "formatters": {
-            "json": {
-                "()": "google_cloud_logger.GoogleCloudFormatter",
-                "application_info": {
-                    "type": "python-application",
-                    "name": "digital-membership",
-                },
-                "format": "[%(asctime)s] %(levelname)s in %(module)s: %(message)s",
-            }
-        },
-        "handlers": {"json": {"class": "logging.StreamHandler", "formatter": "json"}},
-        "loggers": {"root": {"level": "INFO", "handlers": ["json"]}},
-    }
 )
 
 
@@ -70,6 +45,8 @@ def get_base_url():
 
 
 def create_app():
+
+    app.logger.removeHandler(default_handler)
     load_settings(app)
     # configure_logging()
     # if app.config["LOG_LEVEL"].lower() == "debug":

@@ -61,6 +61,11 @@ resource "google_cloud_run_service" "digital_membership" {
           name  = "FLASK_ENV"
           value = var.flask_env
         }
+        env {
+          name  = "LOG_LEVEL"
+          value = "DEBUG"
+        }
+
 
         ports {
           name = "http1"
