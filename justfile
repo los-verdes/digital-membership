@@ -5,7 +5,7 @@ gcr_name := "gcr.io/lv-digital-membership/member-card"
 gcr_tag := `git describe --tags --dirty --long --always`
 gcr_image_name := gcr_name + ":" + gcr_tag
 gcr_latest_image_name := gcr_name + ":latest"
-
+python_reqs_file := "requirements.txt"
 export GCLOUD_PROJECT := "lv-digital-membership"
 # TODO: dev as default after we get done setting this all up....
 export FLASK_ENV := "developement"
@@ -27,6 +27,19 @@ tf-init:
 
 tf-auto-apply:
   just tf 'apply -auto-approve'
+
+ci-install-python-reqs:
+  #!/bin/bash
+  if [[ '{{ env_var_or_default("CI", "false") }}' == "true" ]]
+  then
+    echo 'Installing python requirements from {{ python_reqs_file }}...'
+    pip3 install \
+      --quiet \
+      --requirement='{{ python_reqs_file }}'
+  else
+    echo "skipping pip install outside of GitHub Actions..."
+  fi
+
 
 flask +CMD:
   flask {{ CMD }}
@@ -62,11 +75,8 @@ deploy: build push
   just tf init
   just tf apply -auto-approve -var='cloud_run_container_image={{ gcr_image_name }}'
 
-sync-subscriptions:
-  flask sync-subscriptions
-
-remote-sync-subscriptions:
-  echo "invoke cloudfunction..."
+sync-subscriptions: ci-install-python-reqs
+  just flask sync-subscriptions
 
 lint:
   # act \
