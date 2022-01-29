@@ -20,13 +20,24 @@
 </a>
 {% endmacro %}
 
-{% macro membership_card(title, primary_info_text, secondary_info_text, aux_info_text, serial_number,
+{% macro membership_card(
+title,
+primary_info_text,
+secondary_info_text,
+aux_info_text,
+serial_number,
 qr_code_b64_png="",
-validation_msg="")
+validation_msg="",
+above_card_heading="",
+show_card_actions_bar=True
+)
 %}
 <div class="members-card-wide mdl-card mdl-shadow--2dp">
   <!-- Using (mis-using?) the material design light card title class here as our card "holder" -->
   <!-- save-as-screenshot ID used to indicate what page contents are included in the resulting screenshot -->
+  {% if above_card_heading %}
+  <h4 class="mdl-typography--text-center">{{ above_card_heading }}</h4>
+  {% endif %}
   <div class="mdl-card__title">
     <div id="save-as-screenshot-window" class="membership-card">
       <div class="membership-card-inner">
@@ -69,7 +80,7 @@ validation_msg="")
           <!-- Small bottom-left corner. Normally hidden, shows up when saving card as a screenshot -->
           <div
                class="mdl-cell mdl-cell--4-col mdl-cell--2-col-tablet mdl-cell--1-col-phone qr-code mdl-cell--bottom mdl-typography--text-right">
-               <small>{{ serial_number }}</small>
+            <small>{{ serial_number }}</small>
             <img id="card-qr-code" alt='QR code for card verification'
                  src='data:image/png;base64,{{ qr_code_b64_png | default("")}}' />
             <!-- <pre class="qr-code">
@@ -83,6 +94,7 @@ validation_msg="")
     </div>
   </div>
 
+  {% if show_card_actions_bar %}
   <!-- Buttons enable various card-saving actions shown under the main card design -->
   <div class="mdl-card__actions mdl-card--border mdl-typography--text-right">
     {% if not validation_msg %}
@@ -92,8 +104,7 @@ validation_msg="")
     <a class="mdl-button mdl-js-button mdl-js-ripple-effect" href="{{ url_for('passes_apple_pay') }}" target="_blank">
       <img src="{{ url_for('static', filename='Add_to_Apple_Wallet_rgb_US-UK.svg') }}">
     </a>
-    <button id="toggle-qr-code-btn" class="mdl-button mdl-button--icon mdl-button--fab"
-            title="Toggle QR code display">
+    <button id="toggle-qr-code-btn" class="mdl-button mdl-button--icon mdl-button--fab" title="Toggle QR code display">
       <i class="material-icons">qr_code</i>
     </button>
     <button id="save-as-screenshot-menu" class="mdl-button mdl-button--icon mdl-button--fab mdl-button--colored"
@@ -109,6 +120,7 @@ validation_msg="")
     </a>
     {% endif %}
   </div>
+  {% endif %}
   <!-- <div class="mdl-card__menu">
     <button id="download" data-html2canvas-ignore="true" title="Save as image (.png)"
       class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect mdl-button--fab mdl-button--colored">

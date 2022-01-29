@@ -8,7 +8,8 @@ gcr_latest_image_name := gcr_name + ":latest"
 
 export GCLOUD_PROJECT := "lv-digital-membership"
 # TODO: dev as default after we get done setting this all up....
-# export FLASK_ENV := "remote-sql"
+export FLASK_ENV := "developement"
+export FLASK_DEBUG := "true"
 export DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME := "lv-digital-membership:us-central1:lv-digital-membership-30c67c90"
 export DIGITAL_MEMBERSHIP_DB_USERNAME := `gcloud auth list 2>/dev/null | grep -E '^\*' | awk '{print $2;}'`
 export DIGITAL_MEMBERSHIP_DB_DATABASE_NAME := "lv-digital-membership"
