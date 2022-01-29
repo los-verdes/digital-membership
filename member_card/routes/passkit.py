@@ -1,9 +1,16 @@
 from uuid import UUID
 
 from flask import jsonify, request
+from logzero import logger
 from member_card import app
 from member_card.db import db
 from member_card.models import AppleDeviceRegistration, MembershipCard
+
+
+@app.route("/passkit/v1/log")
+def passkit_log(methods=["POST"]):
+    logger.info(f"passkit_log() => {request.get_json()=}")
+    return "thanks!"
 
 
 @app.route("/passkit/v1/passes/<pass_type_identifier>/<serial_number>")
