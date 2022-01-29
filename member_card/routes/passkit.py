@@ -161,6 +161,9 @@ def destroy(device_library_identifier, pass_type_identifier, serial_number):
     logging.info(
         f"passkit::destroy() => {list(request.headers.keys())=} ==> {request.headers.get('Authorization', 'EMPTY!')[-4:]=}"
     )
+    # We store a card's serial number as a UUID in our database, but represent it as a
+    # 128-bit integer for our apple passes
+    serial_number = UUID(int=serial_number)
     p = MembershipCard.query.filter_by(
         apple_pass_type_identifier=pass_type_identifier,
         serial_number=serial_number,
