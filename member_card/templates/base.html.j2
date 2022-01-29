@@ -1,0 +1,182 @@
+{% import 'macros.html.j2' as macros %}
+{% set title_str %}{% block title %}Los Verdes - Digital Membership Card{% endblock %}{% endset %}
+<!doctype html>
+<!--
+  Los Verdes Digital Membership Page
+  Copyright 2022 Google Inc. All rights reserved.
+-->
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="Digital membership card portal for members of the Los Verdes supporters group.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title_str }}</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.green-light_green.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Almendra+Display&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&display=swap" rel="stylesheet">
+  {% assets "style" %}
+  <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}">
+  {% endassets %}
+  <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-3YFLF9K9KG"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-3YFLF9K9KG');
+  </script>
+
+  <script defer src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <!-- <script async src="{{ url_for('static', filename='dialog-polyfill.js')}}"></script> -->
+  <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+  <script defer src="{{ url_for('static', filename='html2canvas.min.js')}}"></script>
+  <script defer type="module" src="{{ url_for('static', filename='script.js')}}"></script>
+</head>
+
+<body>
+
+  <div class="lv-layout mdl-layout mdl-js-layout mdl-layout--fixed-header">
+    <header class="lv-header mdl-layout__header">
+      <div class="mdl-layout__header-row">
+        <span class="mdl-layout-title mdl-layout--large-screen-only">{{ title_str }}</span>
+        <div class="mdl-layout-spacer"></div>
+        <!-- <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable">
+          <label class="mdl-button mdl-js-button mdl-button--icon" for="search">
+            <i class="material-icons">search</i>
+          </label>
+          <div class="mdl-textfield__expandable-holder">
+            <input class="mdl-textfield__input" type="text" id="search">
+            <label class="mdl-textfield__label" for="search">Enter your query...</label>
+          </div>
+        </div> -->
+        <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon" id="hdrbtn">
+          <i class="material-icons">more_vert</i>
+        </button>
+        <ul class="mdl-menu mdl-js-menu mdl-js-ripple-effect mdl-menu--bottom-right" for="hdrbtn">
+          <a class="mdl-menu__item" href="{{ url_for('privacy_policy') }}">
+            Privacy Policy
+          </a>
+          <!-- <li class="mdl-menu__item">About</li>
+          <li class="mdl-menu__item">Contact</li> -->
+          <!-- <li class="mdl-menu__item">Legal information</li> -->
+          <a class="mdl-menu__item" href="https://losverdesatx.org" target="_blank">
+            <span class="material-icons">
+              open_in_new
+            </span>
+            LV Site
+            <!-- losverdesatx.org -->
+          </a>
+
+          {% if current_user.is_authenticated %}
+          <a id="logout" class="mdl-menu__item" href="{{ url_for('logout') }}">
+            <i class="material-icons">logout</i>
+            Logout
+          </a>
+          {% endif %}
+
+        </ul>
+      </div>
+    </header>
+    <div class="lv-drawer mdl-layout__drawer mdl-color--green">
+      <header class="lv-drawer-header">
+        <img class="lv-horizontal-logo mdl-cell--top"
+             src="{{ url_for('static', filename='LosVerdes_Logo_RGB_300_Horizontal_BlackOnTransparent_CityYear_logo@2x.png') }}">
+        {% if current_user.is_authenticated %}
+
+        <img src="{{ current_user.email | gravatar }}" class="lv-avatar">
+        <div class="lv-avatar-dropdown">
+          <span>{{ current_user.email }}</span>
+          <div class="mdl-layout-spacer"></div>
+          <button id="accbtn" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon">
+            <i class="material-icons" role="presentation">arrow_drop_down</i>
+            <span class="visuallyhidden">Accounts</span>
+          </button>
+          <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="accbtn">
+
+            <a id="logout" class="mdl-menu__item mdl-navigation__link " href="{{ url_for('logout') }}">
+              <i class="material-icons">logout</i>
+              Logout
+            </a>
+
+            {% set association = associated.get("google-oauth2") %}
+            {% if association %}
+            <form id="google-oauth2-disconnect" class="disconnect-form"
+                  action="{{ url('social:disconnect_individual', backend=association.provider, association_id=association.id) }}"
+                  method="post">
+              <input type="hidden" name="csrfmiddlewaretoken" value="">
+              <a class="mdl-menu__item mdl-navigation__link disconnect-auth-btn" name="google oauth2" href="#">
+                <i class="material-icons">remove_circle_outline</i>
+                Disconnect Google Account
+              </a>
+            </form>
+            <!-- End if association -->
+            {% endif %}
+          </ul>
+        </div>
+        {% endif %}
+      </header>
+      <nav class="lv-navigation mdl-navigation mdl-color--green-50">
+        {% set navigation_bar = [
+        ('home', 'home', 'Home'),
+        ] -%}
+        {% set active_page = active_page|default('home') -%}
+
+        {% if current_user.is_authenticated %}
+        {% for route, icon, caption in navigation_bar %}
+        <a class="mdl-navigation__link" href="{{ url_for(route) }}">
+          <i class="mdl-color-text--green material-icons" role="presentation">
+            {{ icon }}
+          </i>
+          {{ caption }}
+        </a>
+        {% endfor %}
+
+        {% else %}
+        <li class="mdl-navigation__link" role="presentation">
+          {{ macros.sign_in_button() }}
+        </li>
+
+        {% endif %}
+        <div class="mdl-layout-spacer"></div>
+        <!-- TODO: actually implement some sort of "help" / documentation content here?
+        <a class="mdl-navigation__link" href="#">
+          <i class="mdl-color-text--green material-icons" role="presentation">
+            help_outline
+          </i>
+          <span class="visuallyhidden">
+            Help
+          </span>
+        </a> -->
+      </nav>
+    </div>
+
+    <main class="mdl-layout__content">
+      <div class="page-content">{% block content required %}{% endblock %}</div>
+    </main>
+
+    <!-- {% block footer %}
+    <footer class="mdl-mini-footer">
+      <div class="mdl-mini-footer__left-section">
+        <div class="mdl-logo">Title</div>
+        <ul class="mdl-mini-footer__link-list">
+          <li><a href="#">Help</a></li>
+          <li><a href="#">Privacy & Terms</a></li>
+        </ul>
+      </div>
+    </footer>
+    {% endblock %} -->
+
+    <!-- End of "outer" div that holds our entire layout -->
+  </div>
+</body>
+
+</html>

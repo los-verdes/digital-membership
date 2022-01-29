@@ -1,7 +1,7 @@
-import logging
 from typing import TYPE_CHECKING
 
 import requests
+from logzero import logger
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -64,7 +64,7 @@ class Squarespace(object):
             A dictionary containing JSON compatible key/value combinations.
         """
         url = "%s/%s/%s" % (self.api_baseurl, self.api_version, path)
-        logging.debug("url:%s object:%s", url, object)
+        # logger.debug("url:%s object:%s", url, object)
         return self.process_request(self.http.post(url, json=object))
 
     def get(self, path, args=None) -> dict:
@@ -73,7 +73,7 @@ class Squarespace(object):
             args = {}
 
         url = "%s/%s/%s" % (self.api_baseurl, self.api_version, path)
-        logging.debug("url:%s args:%s", url, args)
+        # logger.debug("url:%s args:%s", url, args)
         return self.process_request(self.http.get(url, params=args))
 
     def process_request(self, request) -> dict:
@@ -85,15 +85,15 @@ class Squarespace(object):
         elif request.status_code == 401:
             raise ValueError("The API key %s is not valid.", self.api_key)
         elif 200 < request.status_code < 299:
-            logging.warning("Squarespace success response %s:", request.status_code)
-            logging.warning(request.text)
+            logger.warning("Squarespace success response %s:", request.status_code)
+            logger.warning(request.text)
             raise NotImplementedError(
                 "Squarespace sent us a success response we're not prepared for!"
             )
 
-        logging.error("Squarespace error response %s:", request.status_code)
-        logging.error("URL: %s", request.url)
-        logging.error(request.text)
+        logger.error("Squarespace error response %s:", request.status_code)
+        logger.error("URL: %s", request.url)
+        logger.error(request.text)
 
         if 400 <= request.status_code < 499:
             raise RuntimeError("Squarespace thinks this request is bogus")
@@ -128,7 +128,7 @@ class Squarespace(object):
             if "nextPageCursor" in result["pagination"]
             else None
         )
-
+        # breakpoint()
         return result["result"]
 
     def next_page(self) -> "Iterable":
@@ -145,3 +145,50 @@ class Squarespace(object):
             count += 1
             for order in self.next_page():
                 yield order
+
+    def load_membership_orders_datetime_window(
+        self,
+        membership_sku,
+        modified_before=None,
+        modified_after=None,
+    ):
+        # ) -> List[AnnualMembership]:
+        order_params = dict(
+            modifiedAfter=modified_after,
+            modifiedBefore=modified_before,
+        )
+
+        return self.load_all_membership_orders(
+            membership_sku, order_params=order_params
+        )
+
+    def load_all_membership_orders(self, membership_sku, order_params=None):
+        # ) -> List[AnnualMembership]:
+        # remove "None"s
+        if order_params is None:
+            order_params = {}
+        order_params = {k: v for k, v in order_params.items() if v is not None}
+
+        all_orders = []
+        membership_orders = []
+
+        logger.debug(f"Grabbing all orders with {order_params=}")
+
+        for order in self.all_orders(**order_params):
+            all_orders.append(order)
+
+            order_product_names = [i["productName"] for i in order["lineItems"]]
+            if any(i["sku"] == membership_sku for i in order["lineItems"]):
+                logger.debug(
+                    f"{order['id']=} (#{order['orderNumber']}) includes {membership_sku=} in {order_product_names=}"
+                )
+                membership_orders.append(order)
+                continue
+            # logger.debug(
+            #     f"#{order['orderNumber']} has no {membership_sku=} in {order_product_names=}"
+            # )
+
+        logger.debug(
+            f"{len(all_orders)=} loaded with {len(membership_orders)=} and whatnot"
+        )
+        return membership_orders

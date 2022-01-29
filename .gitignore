@@ -1,0 +1,7 @@
+.webassets-cache/
+*.sqlite3
+**/static/style.css
+postgres-data/
+.srl
+tmp-certs/
+member_card/static/style.css

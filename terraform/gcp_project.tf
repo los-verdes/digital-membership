@@ -15,9 +15,41 @@ resource "google_project_service" "digital_membership" {
     "iamcredentials.googleapis.com", # IAM Credentials API
     "sts.googleapis.com",
 
-    # Error: Error when reading or editing Project Service lv-digital-membership/iam.googleapis.com:
+    # Seemingly required for service-account-based applies of this config to avoid this here error:
+    # ... Error when reading or editing Project Service lv-digital-membership/iam.googleapis.com: ...
     "serviceusage.googleapis.com",
+
+    # For our "memberships" "database": TODO: clean this up at some point...
+    # "firestore.googleapis.com",
+
+    "secretmanager.googleapis.com", # direct usage
+
+    "containerregistry.googleapis.com", # hosting cloudrun images
+    "run.googleapis.com",
+
+    # "bigquery.googleapis.com",
+    "sqladmin.googleapis.com", # for connecting to sql from cloudrun?
+
+    "compute.googleapis.com", # Needed to edit Cloud SQL config via the console for some reason?
+
+    # APM and debugging thingers:
+    "clouddebugger.googleapis.com",
+    "cloudtrace.googleapis.com",
+
+    # Building thangs:
+    "sourcerepo.googleapis.com",
+    "cloudbuild.googleapis.com",
+
+    # For our sync subscriptions cloud function:
+    # "cloudfunctions.googleapis.com",
+
+    # private IP jazz for cloud sql:
+    # "servicenetworking.googleapis.com",
+
+    # Google Pay Passes API
+    "walletobjects.googleapis.com",
   ])
+
   service                    = each.value
   disable_dependent_services = true
 

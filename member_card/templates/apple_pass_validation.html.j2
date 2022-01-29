@@ -1,0 +1,16 @@
+{% extends "base.html.j2" %}
+
+{% block content %}
+{% call macros.content_grid() %}
+{{
+  macros.membership_card(
+    title="Los Verdes Membership Card",
+    primary_info_text=verified_card.user.fullname,
+    secondary_info_text="Member Since " ~ verified_card.member_since.strftime('%b %Y'),
+    aux_info_text="Good through " ~ verified_card.member_until.strftime('%b %d, %Y'),
+    serial_number=verified_card.serial_number,
+    validation_msg="CARD VALIDATED! (by " ~ validating_user.first_name ~ ")",
+  )
+}}
+{% endcall %}
+{% endblock %}

@@ -1,0 +1,47 @@
+---
+name: Sync Subscriptions
+
+on:
+  # schedule:
+  #   - cron: "0 12 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ensure-watches:
+    name: Sync Subscriptions
+    runs-on: ubuntu-latest
+    permissions:
+      contents: "read"
+      id-token: "write"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup just
+        uses: extractions/setup-just@v1
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Utilize pip cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ env.pythonLocation }}-${{ hashFiles('events_page/requirements.txt') }}
+
+      - name: "Authenticate to Google Cloud"
+        uses: "google-github-actions/auth@v0"
+        with:
+          workload_identity_provider: "projects/567739286055/locations/global/workloadIdentityPools/los-verdes-digital-membership/providers/los-verdes-digital-membership"
+          service_account: "db-task-runner@lv-digital-membership.iam.gserviceaccount.com"
+
+      - name: Sync Subscriptions
+        run: just sync-subscriptions
+        env:
+          # get these from TF outputs or such eventually?
+          DIGITAL_MEMBERSHIP_DB_USERNAME: "db-task-runner@lv-digital-membership.iam"
+          # DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME: "lv-digital-membership:us-central1:lv-digital-membership"
+          # DIGITAL_MEMBERSHIP_DB_DATABASE_NAME: "lv-digital-membership"
+          FLASK_ENV: "remote-sql"

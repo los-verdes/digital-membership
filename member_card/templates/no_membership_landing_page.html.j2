@@ -1,0 +1,39 @@
+{% extends "base.html.j2" %}
+
+{% block content %}
+
+
+{% call macros.content_grid() %}
+
+<div class="mdl-card mdl-shadow--2dp mdl-cell--middle">
+  <div class="mdl-card__title mdl-card--expand live-laugh-love-large mdl-typography--text-right">
+    <h4>
+      No Active Membership Found!
+    </h4>
+  </div>
+
+  <div class="mdl-card__supporting-text">
+    If you believe this information is incorrect:
+    <ul class='mdl-list'>
+      <li class="mdl-list__item">
+        Check that the email address you signed in with matches the email used to purchase your membership
+      </li>
+      <li class="mdl-list__item">
+        Otherwise, please feel free to contact <a
+           href="mailto:los-verdes-tech-support@googlegroups.com">los-verdes-tech-support@googlegroups.com</a> for
+        assistance.
+      </li>
+      <li class="mdl-list__item"> Or! Go grab a membership over at the Los Verdes store:
+        <br>
+      </li>
+    </ul>
+
+    <a class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored"
+       href="https://www.losverdesatx.org/lv-store/membership" target="_black">
+      Click here to open the membership store in a new tab
+    </a>
+
+  </div>
+</div>
+{% endcall %}
+{% endblock %}

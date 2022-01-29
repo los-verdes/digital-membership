@@ -1,3 +1,4 @@
+---
 name: Lint and Test
 
 on:
@@ -11,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  super-linter:
+  lint:
     name: "Lint Configuration"
     runs-on: ubuntu-latest
     steps:
@@ -23,6 +24,12 @@ jobs:
       - name: Super Linter
         uses: github/super-linter/slim@v4
         env:
+          DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IGNORE_GITIGNORED_FILES: true
           VALIDATE_ALL_CODEBASE: true
+          VALIDATE_JSCPD_ALL_CODEBASE: true
+          VALIDATE_PYTHON_MYPY: false
+          VALIDATE_CSS: false
+          VALIDATE_JAVASCRIPT_STANDARD: false
           VALIDATE_PYTHON_ISORT: false

@@ -1,0 +1,45 @@
+---
+
+version: "3.4"
+
+services:
+
+  member_card:
+    build: .
+    image: "gcr.io/lv-digital-membership/member-card:latest"
+    restart: always
+    command: flask run
+    links:
+      - "postgres:postgres"
+    depends_on:
+      - "postgres"
+    # healthcheck:
+    #   test: "curl localhost:3000/healthcheck"
+    #   interval: "60s"
+    #   timeout: "3s"
+    #   start_period: "5s"
+    #   retries: 3
+    ports:
+      - "127.0.0.1:5000:5000"
+    volumes:
+      - "./member_card:/member_card"
+    environment:
+      - PYTHONPATH=/member_card:/member_card/member_card
+      - SQLALCHEMY_DATABASE_URI=postgresql://member-card-user:member-card-password@db:5432/digital-membership
+
+
+  postgres:
+    image: postgres:14.1
+    restart: always
+    environment:
+      - POSTGRES_DB=digital-membership
+      - POSTGRES_USER=member-card-user
+      - POSTGRES_PASSWORD=member-card-password
+    logging:
+      options:
+        max-size: 10m
+        max-file: "3"
+    ports:
+      - '5433:5432'
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
