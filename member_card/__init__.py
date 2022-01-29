@@ -37,7 +37,8 @@ login_manager = MembershipLoginManager()
 
 def get_base_url():
     parsed_base_url = urlparse(request.base_url)
-    return f"{parsed_base_url.scheme}://{parsed_base_url.netloc}"
+    # return f"{parsed_base_url.scheme}://{parsed_base_url.netloc}"
+    return f"https://{parsed_base_url.netloc}"
 
 
 def create_app():

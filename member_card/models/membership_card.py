@@ -157,7 +157,7 @@ class MembershipCard(db.Model):
             webServiceURL=self.web_service_url,
             authenticationToken=self.authentication_token_hex,
             expirationDate=self.apple_pass_expiry_timestamp,
-            # voided=self.is_voided,
+            voided=self.is_voided,
             userInfo=self.user.to_dict(),
         )
         # logger.debug(f"{passfile_attrs=}")
