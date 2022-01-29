@@ -1,5 +1,5 @@
 ---
-name: Deploy Infrastructure
+name: Deploy
 
 concurrency:
   group: "deploy-infrastructure"
@@ -11,7 +11,7 @@ on:
 
 jobs:
   deploy-infrastructure:
-    name: Deploy Infrastructure
+    name: Deploy
     runs-on: ubuntu-latest
     environment: gcp-project
     permissions:
@@ -45,12 +45,11 @@ jobs:
           workload_identity_provider: "projects/567739286055/locations/global/workloadIdentityPools/los-verdes-digital-membership/providers/los-verdes-digital-membership"
           service_account: "gh-terraform-applier@lv-digital-membership.iam.gserviceaccount.com"
 
-      - name: Apply - terraform
-        run: just tf-auto-apply
+      - name: Deploy
+        run: just deploy
         env:
           TF_VAR_squarespace_api_key: ${{ secrets.cloudflare_api_token }}
           TF_VAR_oauth_client_id: ${{ secrets.oauth_client_id }}
           TF_VAR_oauth_client_secret: ${{ secrets.oauth_client_secret }}
           TF_VAR_apple_pass_certificate: ${{ secrets.apple_pass_certificate }}
-          # TF_VAR_apple_pass_private_key: ${{ secrets.apple_pass_private_key }}
           TF_VAR_apple_pass_private_key_password: ${{ secrets.apple_pass_private_key_password }}

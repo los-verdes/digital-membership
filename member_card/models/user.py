@@ -1,20 +1,19 @@
 from datetime import timedelta
 
 from flask_login import UserMixin
-from member_card.db import Model
-from sqlalchemy import Boolean, Column, Integer, String
+from member_card.db import db
 from sqlalchemy.orm import relationship
 
 
-class User(Model, UserMixin):
+class User(db.Model, UserMixin):
     __tablename__ = "users"
-    id = Column(Integer, primary_key=True)
-    username = Column(String(200))
-    email = Column(String(200), unique=True)
-    fullname = Column(String(100))
-    first_name = Column(String(100))
-    last_name = Column(String(100))
-    active = Column(Boolean, default=True)
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(200))
+    email = db.Column(db.String(200), unique=True)
+    fullname = db.Column(db.String(100))
+    first_name = db.Column(db.String(100))
+    last_name = db.Column(db.String(100))
+    active = db.Column(db.Boolean, default=True)
     annual_memberships = relationship("AnnualMembership", back_populates="user")
     membership_cards = relationship("MembershipCard", back_populates="user")
 

@@ -4,7 +4,6 @@ from functools import partial
 from typing import TYPE_CHECKING, Tuple
 
 from google.cloud.sql.connector import connector
-from google.cloud.sql.connector.instance_connection_manager import IPTypes
 from logzero import logger
 
 if TYPE_CHECKING:
@@ -81,6 +80,8 @@ class Settings(object):
         "social_core.pipeline.disconnect.disconnect",
     )
 
+    SQUARESPACE_API_KEY: str = os.getenv("SQUARESPACE_API_KEY", "")
+
     SESSION_PROTECTION: str = "strong"
     SECRET_KEY: str = os.environ.get("SECRET_KEY", "not-very-secret-at-all")
     SESSION_COOKIE_NAME: str = "psa_session"
@@ -113,7 +114,6 @@ class Settings(object):
             conn: "dbapi.Connection" = connector.connect(
                 instance_connection_string,
                 "pg8000",
-                ip_type=IPTypes.PRIVATE,
                 user=db_user,
                 db=db_name,
                 enable_iam_auth=True,

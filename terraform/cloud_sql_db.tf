@@ -1,12 +1,14 @@
+resource "random_id" "db_name_suffix" {
+  byte_length = 4
+}
+
+
 # TODO: give this fella a private IP only and hook up things eventually
 resource "google_sql_database_instance" "digital_membership" {
-  name                = var.gcp_project_id
+  name                = "${var.gcp_project_id}-${random_id.db_name_suffix.hex}"
   region              = var.gcp_region
   database_version    = "POSTGRES_13"
   deletion_protection = "true"
-  require_ssl         = true
-
-  depends_on = [google_service_networking_connection.private_vpc_connection]
 
   settings {
     tier = "db-f1-micro"
@@ -27,9 +29,8 @@ resource "google_sql_database_instance" "digital_membership" {
     }
 
     ip_configuration {
-      ipv4_enabled    = false
-      require_ssl     = true
-      private_network = google_compute_network.private_network.id
+      ipv4_enabled = true
+      require_ssl  = true
     }
   }
 }

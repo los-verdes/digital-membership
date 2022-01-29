@@ -65,9 +65,9 @@ def create_app():
     with app.app_context():
         db.create_all()
 
-    from member_card import routes
+    from member_card.routes import passkit
 
-    assert routes
+    assert passkit
 
     gravatar = Gravatar(
         app,
@@ -258,10 +258,10 @@ def ensure_db_schemas(drop_first):
     ensure_db_schemas(drop_first)
 
 
-@app.cli.command("sync-subscriptons")
+@app.cli.command("sync-subscriptions")
 @click.option("-m", "--membership-sku", default="SQ3671268")
 @click.option("-l", "--load-all", default=False)
-def sync_subscriptons(membership_sku, load_all):
+def sync_subscriptions(membership_sku, load_all):
     from member_card.db import db
 
     squarespace = Squarespace(api_key=app.config["SQUARESPACE_API_KEY"])

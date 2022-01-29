@@ -154,11 +154,11 @@ class MembershipCard(db.Model):
             foregroundColor=hex2rgb(self.foreground_color),
             logoText=self.logo_text,
             barcode=qr_code,
-            # webServiceURL=self.web_service_url,
-            # authenticationToken=self.authentication_token_hex,
-            # expirationDate=self.apple_pass_expiry_timestamp,
+            webServiceURL=self.web_service_url,
+            authenticationToken=self.authentication_token_hex,
+            expirationDate=self.apple_pass_expiry_timestamp,
             # voided=self.is_voided,
-            # userInfo=self.user.to_dict(),
+            userInfo=self.user.to_dict(),
         )
         # logger.debug(f"{passfile_attrs=}")
         for attr_name, attr_value in passfile_attrs.items():

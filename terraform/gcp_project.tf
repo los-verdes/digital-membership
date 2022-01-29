@@ -44,7 +44,10 @@ resource "google_project_service" "digital_membership" {
     # "cloudfunctions.googleapis.com",
 
     # private IP jazz for cloud sql:
-    "servicenetworking.googleapis.com",
+    # "servicenetworking.googleapis.com",
+
+    # Google Pay Passes API
+    "walletobjects.googleapis.com",
   ])
 
   service                    = each.value

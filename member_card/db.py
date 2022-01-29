@@ -7,7 +7,6 @@ from flask_sqlalchemy import SQLAlchemy
 from logzero import logger
 
 db = SQLAlchemy()
-Model = getattr(db, "Model")
 
 
 def get_membership_table_last_sync():

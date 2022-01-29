@@ -17,31 +17,6 @@ provider "google" {
   region  = var.gcp_region
 }
 
-resource "google_compute_network" "digital_membership" {
-  provider = google-beta
-
-  name = "private-network"
-}
-
-resource "google_compute_global_address" "digital_membership" {
-  provider = google-beta
-
-  name          = "private-ip-address"
-  purpose       = "VPC_PEERING"
-  address_type  = "INTERNAL"
-  prefix_length = 16
-  network       = google_compute_network.digital_membership.id
-}
-
-resource "google_service_networking_connection" "digital_membership" {
-  provider = google-beta
-
-  network                 = google_compute_network.digital_membership.id
-  service                 = "servicenetworking.googleapis.com"
-  reserved_peering_ranges = [google_compute_global_address.digital_membership.name]
-}
-
-
 resource "google_app_engine_application" "digital_membership" {
   project       = google_project.digital_membership.project_id
   location_id   = regexall("[-a-z]+", var.gcp_region)[0]
@@ -79,4 +54,16 @@ resource "google_project_iam_member" "digital_membership_trace_agent" {
 # TODO: hook this up with a bot user's oauth creds (not jeffwecan...)
 resource "google_sourcerepo_repository" "digital_membership" {
   name = "github_${replace(var.github_repo, "/", "_")}"
+}
+
+resource "google_service_account_iam_binding" "allow_sa_impersonation_tokens" {
+  service_account_id = google_service_account.digital_membership.name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  members            = [for u in concat(var.gcp_project_owners, var.gcp_project_editors) : "user:${u}"]
+}
+
+resource "google_service_account_iam_binding" "allow_sa_impersonation" {
+  service_account_id = google_service_account.digital_membership.name
+  role               = "roles/iam.serviceAccountUser"
+  members            = [for u in concat(var.gcp_project_owners, var.gcp_project_editors) : "user:${u}"]
 }
