@@ -1,3 +1,4 @@
+# logzero
 Flask-Assets
 Flask-Gravatar
 Flask-SQLAlchemy
@@ -8,9 +9,9 @@ flask-login
 google-auth
 google-cloud-firestore
 google-cloud-secret-manager
+google_cloud_logger
 gunicorn
 libsass
-logzero
 psycopg2
 python-dateutil
 qrcode[pil]

@@ -4,7 +4,9 @@ from zoneinfo import ZoneInfo
 
 from dateutil.parser import parse
 from flask_sqlalchemy import SQLAlchemy
-from logzero import logger
+
+# from logzero import logger
+import logging
 
 db = SQLAlchemy()
 
@@ -34,10 +36,10 @@ def get_or_update(session, model, filters, kwargs):
     filters = {f: kwargs[f] for f in filters if f in kwargs}
     kwargs = {k: v for k, v in kwargs.items() if v is not None}
     # for k, v in kwargs.items():
-    #     logger.warning(f"{k} : {type(v)}")
+    #     logging.warning(f"{k} : {type(v)}")
     instance = session.query(model).filter_by(**filters).first()
 
-    logger.debug(f"Getting or updatin' {model.__name__} matching {filters=}")
+    logging.debug(f"Getting or updatin' {model.__name__} matching {filters=}")
     if instance:
         for k, v in kwargs.items():
             setattr(instance, k, v)
@@ -50,12 +52,12 @@ def get_or_update(session, model, filters, kwargs):
 def get_or_create(session, model, **kwargs):
     kwargs = {k: v for k, v in kwargs.items() if v is not None}
     # for k, v in kwargs.items():
-    #     logger.warning(f"{k} : {type(v)}")
+    #     logging.warning(f"{k} : {type(v)}")
     instance = session.query(model).filter_by(**kwargs).first()
     if instance:
         return instance
     else:
-        logger.debug(f"Creating {model.__name__} with {kwargs=}")
+        logging.debug(f"Creating {model.__name__} with {kwargs=}")
         instance = model(**kwargs)
         # session.add(instance)
         # session.commit()
@@ -78,7 +80,7 @@ def squarespace_orders_etl(squarespace_client, db_session, membership_sku, load_
     # modified_before_dt = datetime.now(tz=ZoneInfo("UTC"))
 
     if instance and not load_all:
-        logger.debug(f"{instance=}")
+        logging.debug(f"{instance=}")
         modified_after_dt = datetime.fromtimestamp(
             float(instance.attribute_value)
         ) - timedelta(days=1)
@@ -123,9 +125,9 @@ def squarespace_orders_etl(squarespace_client, db_session, membership_sku, load_
                 member_user_ids_by_email[customer_email] = member_user_id
 
             if not member_user_id:
-                logger.debug(f"{member_user_id=}")
+                logging.debug(f"{member_user_id=}")
                 breakpoint()
-                logger.debug(f"{member_user_id=}")
+                logging.debug(f"{member_user_id=}")
             membership_kwargs = dict(
                 order_id=subscription_order["id"],
                 order_number=subscription_order["orderNumber"],
@@ -175,7 +177,7 @@ def squarespace_orders_etl(squarespace_client, db_session, membership_sku, load_
 
     active_memberships = [m for m in memberships if m.is_active]
     inactive_memberships = [m for m in memberships if not m.is_active]
-    logger.info(
+    logging.info(
         f"Stats: {len(memberships)=} / {len(active_memberships)=} / {len(inactive_memberships)=}"
     )
     return {
@@ -209,7 +211,7 @@ def ensure_db_schemas(drop_first):
     ]
     engine = db.engine
     if drop_first:
-        logger.warning("Dropping all tables first!")
+        logging.warning("Dropping all tables first!")
         # from sqlalchemy import Column, String
 
         # def add_column(engine, table_name, column):
@@ -223,10 +225,10 @@ def ensure_db_schemas(drop_first):
         # column = Column("qr_code_message", String, primary_key=True)
         # add_column(engine, models.MembershipCard.__tablename__, column)
         for doodad in doodads:
-            logger.warning(f"Dropping {doodad}!")
+            logging.warning(f"Dropping {doodad}!")
             doodad.metadata.drop_all(engine)
 
     doodads.reverse()
     for doodad in doodads:
-        logger.warning(f"Creating {doodad}!")
+        logging.warning(f"Creating {doodad}!")
         doodad.metadata.create_all(engine)

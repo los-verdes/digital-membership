@@ -1,7 +1,9 @@
 from uuid import UUID
 
-from flask import jsonify, request
-from logzero import logger
+from flask import g, jsonify, request, send_file
+
+# from logzero import logger
+import logging
 from member_card import app
 from member_card.db import db
 from member_card.models import AppleDeviceRegistration, MembershipCard
@@ -9,9 +11,9 @@ from member_card.models import AppleDeviceRegistration, MembershipCard
 
 @app.route("/passkit/v1/log", methods=["POST"])
 def passkit_log():
-    logger.debug(f"passkit_log() => {request.headers=}")
-    logger.debug(f"passkit_log() => {request.get_data()=}")
-    logger.warning(f"passkit_log() => {request.get_json()=}")
+    logging.debug(f"passkit_log() => {request.headers=}")
+    logging.debug(f"passkit_log() => {request.get_data()=}")
+    logging.warning(f"passkit_log() => {request.get_json()=}")
     return "thanks!"
 
 
@@ -23,17 +25,40 @@ def show(pass_type_identifier, serial_number):
     pass_type_identifier -- The pass’s type, as specified in the pass
     serial_number -- The unique pass identifier, as specified in the pass
     """
-    logger.debug(
+    logging.debug(
         f"passkit::show() => {list(request.headers.keys())=} ==> {request.headers.get('ApplePass', 'EMPTY!')[-4:]=}"
+    )
+    logging.debug(
+        f"passkit::show() => {list(request.headers.keys())=} ==> {request.headers.get('Authorization', 'EMPTY!')[-4:]=}"
+    )
+    logging.debug(
+        f"passkit::show() => {list(request.headers.keys())=} ==> {request.headers.get('if-modified-since', 'EMPTY!')[-4:]=}"
     )
     # We store a card's serial number as a UUID in our database, but represent it as a
     # 128-bit integer for our apple passes
     serial_number = UUID(int=serial_number)
-    p = MembershipCard.query.filter_by(
-        apple_pass_type_identifier=pass_type_identifier, serial_number=serial_number
-    ).first_or_404()
 
-    return jsonify(p.data)
+    p = MembershipCard.query.filter(
+        apple_pass_type_identifier=pass_type_identifier,
+        serial_number=serial_number,
+    )
+    if p:
+
+        from member_card.passes import get_apple_pass_for_user
+
+        current_user = g.user
+        attachment_filename = f"lv_apple_pass-{current_user.last_name.lower()}.pkpass"
+        pkpass_out_path = get_apple_pass_for_user(
+            user=current_user,
+        )
+        return send_file(
+            pkpass_out_path,
+            attachment_filename=attachment_filename,
+            mimetype="application/vnd.apple.pkpass",
+            as_attachment=True,
+        )
+    # return jsonify(p.data)
+    return "", 304
 
 
 @app.route(
@@ -50,8 +75,11 @@ def index(device_library_identifier, pass_type_identifier):
     that have been updated since the time indicated by tag. Otherwise, return
     all passes.
     """
-    logger.info(
+    logging.info(
         f"passkit::show() => {list(request.headers.keys())=} ==> {request.headers.get('ApplePass', 'EMPTY!')[-4:]=}"
+    )
+    logging.info(
+        f"passkit::show() => {list(request.headers.keys())=} ==> {request.headers.get('Authorization', 'EMPTY!')[-4:]=}"
     )
     p = MembershipCard.query.filter_by(
         apple_pass_type_identifier=pass_type_identifier
@@ -89,8 +117,11 @@ def create(device_library_identifier, pass_type_identifier, serial_number):
     serial_number             -- The unique pass identifier, as specified in
                                  the pass
     """
-    logger.info(
+    logging.info(
         f"passkit::create() => {list(request.headers.keys())=} ==> {request.headers.get('ApplePass', 'EMPTY!')[-4:]=}"
+    )
+    logging.info(
+        f"passkit::create() => {list(request.headers.keys())=} ==> {request.headers.get('Authorization', 'EMPTY!')[-4:]=}"
     )
     # We store a card's serial number as a UUID in our database, but represent it as a
     # 128-bit integer for our apple passes
@@ -124,8 +155,11 @@ def destroy(device_library_identifier, pass_type_identifier, serial_number):
     serial_number             -- The unique pass identifier, as specified in
                                  the pass
     """
-    logger.info(
+    logging.info(
         f"passkit::destroy() => {list(request.headers.keys())=} ==> {request.headers.get('ApplePass', 'EMPTY!')[-4:]=}"
+    )
+    logging.info(
+        f"passkit::destroy() => {list(request.headers.keys())=} ==> {request.headers.get('Authorization', 'EMPTY!')[-4:]=}"
     )
     p = MembershipCard.query.filter_by(
         apple_pass_type_identifier=pass_type_identifier,

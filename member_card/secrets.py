@@ -1,7 +1,9 @@
 import os
 import json
 from google.cloud.secretmanager import SecretManagerServiceClient
-from logzero import logger
+
+# from logzero import logger
+import logging
 
 DEFAULT_SECRET_PLACEHOLDERS = {
     "SLACK_SIGNING_SECRET": os.getenv("SLACK_SIGNING_SECRET"),
@@ -11,7 +13,7 @@ DEFAULT_SECRET_PLACEHOLDERS = {
 
 
 def retrieve_app_secrets(secret_name, defaults=DEFAULT_SECRET_PLACEHOLDERS):
-    logger.debug(f"Retrieving app secrets from {secret_name=}")
+    logging.debug(f"Retrieving app secrets from {secret_name=}")
     if secret_name is None:
         return defaults
     response = SecretManagerServiceClient().access_secret_version(
@@ -20,5 +22,5 @@ def retrieve_app_secrets(secret_name, defaults=DEFAULT_SECRET_PLACEHOLDERS):
     payload = response.payload.data.decode("UTF-8")
     app_secrets = json.loads(payload)
     redacted_secrets = {k: v[-4:] for k, v in app_secrets.items()}
-    logger.debug(f"secrets received: {redacted_secrets}")
+    logging.debug(f"secrets received: {redacted_secrets}")
     return app_secrets

@@ -1,7 +1,9 @@
 from typing import TYPE_CHECKING
 
 import requests
-from logzero import logger
+
+# from logzero import logger
+import logging
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -64,7 +66,7 @@ class Squarespace(object):
             A dictionary containing JSON compatible key/value combinations.
         """
         url = "%s/%s/%s" % (self.api_baseurl, self.api_version, path)
-        # logger.debug("url:%s object:%s", url, object)
+        # logging.debug("url:%s object:%s", url, object)
         return self.process_request(self.http.post(url, json=object))
 
     def get(self, path, args=None) -> dict:
@@ -73,7 +75,7 @@ class Squarespace(object):
             args = {}
 
         url = "%s/%s/%s" % (self.api_baseurl, self.api_version, path)
-        # logger.debug("url:%s args:%s", url, args)
+        # logging.debug("url:%s args:%s", url, args)
         return self.process_request(self.http.get(url, params=args))
 
     def process_request(self, request) -> dict:
@@ -85,15 +87,15 @@ class Squarespace(object):
         elif request.status_code == 401:
             raise ValueError("The API key %s is not valid.", self.api_key)
         elif 200 < request.status_code < 299:
-            logger.warning("Squarespace success response %s:", request.status_code)
-            logger.warning(request.text)
+            logging.warning("Squarespace success response %s:", request.status_code)
+            logging.warning(request.text)
             raise NotImplementedError(
                 "Squarespace sent us a success response we're not prepared for!"
             )
 
-        logger.error("Squarespace error response %s:", request.status_code)
-        logger.error("URL: %s", request.url)
-        logger.error(request.text)
+        logging.error("Squarespace error response %s:", request.status_code)
+        logging.error("URL: %s", request.url)
+        logging.error(request.text)
 
         if 400 <= request.status_code < 499:
             raise RuntimeError("Squarespace thinks this request is bogus")
@@ -172,23 +174,23 @@ class Squarespace(object):
         all_orders = []
         membership_orders = []
 
-        logger.debug(f"Grabbing all orders with {order_params=}")
+        logging.debug(f"Grabbing all orders with {order_params=}")
 
         for order in self.all_orders(**order_params):
             all_orders.append(order)
 
             order_product_names = [i["productName"] for i in order["lineItems"]]
             if any(i["sku"] == membership_sku for i in order["lineItems"]):
-                logger.debug(
+                logging.debug(
                     f"{order['id']=} (#{order['orderNumber']}) includes {membership_sku=} in {order_product_names=}"
                 )
                 membership_orders.append(order)
                 continue
-            # logger.debug(
+            # logging.debug(
             #     f"#{order['orderNumber']} has no {membership_sku=} in {order_product_names=}"
             # )
 
-        logger.debug(
+        logging.debug(
             f"{len(all_orders)=} loaded with {len(membership_orders)=} and whatnot"
         )
         return membership_orders
