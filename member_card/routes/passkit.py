@@ -23,6 +23,9 @@ def show(pass_type_identifier, serial_number):
     pass_type_identifier -- The pass’s type, as specified in the pass
     serial_number -- The unique pass identifier, as specified in the pass
     """
+    logger.debug(
+        f"passkit::show() => {request.headers.keys()=} ==> {request.headers.get('ApplePass', 'EMPTY!')[:-4]=}"
+    )
     # We store a card's serial number as a UUID in our database, but represent it as a
     # 128-bit integer for our apple passes
     serial_number = UUID(int=serial_number)
@@ -47,6 +50,9 @@ def index(device_library_identifier, pass_type_identifier):
     that have been updated since the time indicated by tag. Otherwise, return
     all passes.
     """
+    logger.info(
+        f"passkit::show() => {request.headers.keys()=} ==> {request.headers.get('ApplePass', 'EMPTY!')[:-4]=}"
+    )
     p = MembershipCard.query.filter_by(
         pass_type_identifier=pass_type_identifier
     ).first_or_404()
@@ -70,11 +76,10 @@ def index(device_library_identifier, pass_type_identifier):
 
 
 @app.route(
-    "/passkit/v1/devices/<device_library_identifier>/registrations/<pass_type_identifier>/<serial_number>", methods=["POST"]
+    "/passkit/v1/devices/<device_library_identifier>/registrations/<pass_type_identifier>/<serial_number>",
+    methods=["POST"],
 )
-def create(
-    device_library_identifier, pass_type_identifier, serial_number
-):
+def create(device_library_identifier, pass_type_identifier, serial_number):
     """
     Registering a device to receive push notifications for a pass
     Keyword arguments:
@@ -84,6 +89,9 @@ def create(
     serial_number             -- The unique pass identifier, as specified in
                                  the pass
     """
+    logger.info(
+        f"passkit::create() => {request.headers.keys()=} ==> {request.headers.get('ApplePass', 'EMPTY!')[:-4]=}"
+    )
     p = MembershipCard.query.filter_by(
         pass_type_identifier=pass_type_identifier, serial_number=serial_number
     ).first_or_404()
@@ -100,9 +108,10 @@ def create(
 
 
 @app.route(
-    "/passkit/v1/devices/<device_library_identifier>/registrations/<pass_type_identifier>", methods=["DELETE"]
+    "/passkit/v1/devices/<device_library_identifier>/registrations/<pass_type_identifier>/<serial_number>",
+    methods=["DELETE"],
 )
-def destroy(device_library_identifier, pass_type_identifier):
+def destroy(device_library_identifier, pass_type_identifier, serial_number):
     """
     Unregistering a device
     Keyword arguments:
@@ -112,8 +121,12 @@ def destroy(device_library_identifier, pass_type_identifier):
     serial_number             -- The unique pass identifier, as specified in
                                  the pass
     """
+    logger.info(
+        f"passkit::destroy() => {request.headers.keys()=} ==> {request.headers.get('ApplePass', 'EMPTY!')[:-4]=}"
+    )
     p = MembershipCard.query.filter_by(
-        pass_type_identifier=pass_type_identifier
+        pass_type_identifier=pass_type_identifier,
+        serial_number=serial_number,
     ).first_or_404()
     registrations = p.registrations.filter_by(
         device_library_identifier=device_library_identifier
