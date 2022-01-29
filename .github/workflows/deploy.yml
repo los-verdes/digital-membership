@@ -39,11 +39,17 @@ jobs:
         with:
           terraform_version: ${{ steps.read_tf_version.outputs.terraform_version }}
 
-      - name: "Authenticate to Google Cloud"
-        uses: "google-github-actions/auth@v0"
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v0
         with:
           workload_identity_provider: "projects/567739286055/locations/global/workloadIdentityPools/los-verdes-digital-membership/providers/los-verdes-digital-membership"
           service_account: "gh-terraform-applier@lv-digital-membership.iam.gserviceaccount.com"
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0
+
+      - name: Configure docker for GCR auth
+        run: gcloud auth configure-docker -q
 
       - name: Deploy
         run: just deploy
