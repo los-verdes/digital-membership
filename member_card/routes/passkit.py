@@ -7,8 +7,8 @@ from member_card.db import db
 from member_card.models import AppleDeviceRegistration, MembershipCard
 
 
-@app.route("/passkit/v1/log")
-def passkit_log(methods=["POST"]):
+@app.route("/passkit/v1/log", methods=["POST"])
+def passkit_log():
     logger.info(f"passkit_log() => {request.headers=}")
     logger.info(f"passkit_log() => {request.get_data()=}")
     logger.info(f"passkit_log() => {request.get_json()=}")
@@ -70,10 +70,10 @@ def index(device_library_identifier, pass_type_identifier):
 
 
 @app.route(
-    "/passkit/v1/devices/<device_library_identifier>/registrations/<pass_type_identifier>/<serial_number>"
+    "/passkit/v1/devices/<device_library_identifier>/registrations/<pass_type_identifier>/<serial_number>", methods=["POST"]
 )
 def create(
-    device_library_identifier, pass_type_identifier, serial_number, methods=["POST"]
+    device_library_identifier, pass_type_identifier, serial_number
 ):
     """
     Registering a device to receive push notifications for a pass
@@ -100,9 +100,9 @@ def create(
 
 
 @app.route(
-    "/passkit/v1/devices/<device_library_identifier>/registrations/<pass_type_identifier>"
+    "/passkit/v1/devices/<device_library_identifier>/registrations/<pass_type_identifier>", methods=["DELETE"]
 )
-def destroy(device_library_identifier, pass_type_identifier, methods=["DELETE"]):
+def destroy(device_library_identifier, pass_type_identifier):
     """
     Unregistering a device
     Keyword arguments:
