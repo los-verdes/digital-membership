@@ -25,13 +25,13 @@ def show(pass_type_identifier, serial_number):
     pass_type_identifier -- The pass’s type, as specified in the pass
     serial_number -- The unique pass identifier, as specified in the pass
     """
-    logging.debug(
+    logging.info(
         f"passkit::show() => {list(request.headers.keys())=} ==> {request.headers.get('ApplePass', 'EMPTY!')[-4:]=}"
     )
-    logging.debug(
+    logging.info(
         f"passkit::show() => {list(request.headers.keys())=} ==> {request.headers.get('Authorization', 'EMPTY!')[-4:]=}"
     )
-    logging.debug(
+    logging.info(
         f"passkit::show() => {list(request.headers.keys())=} ==> {request.headers.get('if-modified-since', 'EMPTY!')[-4:]=}"
     )
     # We store a card's serial number as a UUID in our database, but represent it as a
