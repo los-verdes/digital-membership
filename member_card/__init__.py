@@ -158,7 +158,6 @@ def home():
         membership_card = get_or_create_membership_card(current_user)
         return render_template(
             "member_card_and_history.html.j2",
-            # member=g.user,
             membership_card=membership_card,
             membership_orders=g.user.annual_memberships,
             membership_table_keys=list(AnnualMembership().to_dict().keys()),
@@ -166,10 +165,7 @@ def home():
     else:
         return render_template(
             "no_membership_landing_page.html.j2",
-            # member=g.user,
-            membership_card=g.user.latest_membership_card,
-            membership_orders=g.user.annual_memberships,
-            membership_table_keys=list(AnnualMembership().to_dict().keys()),
+            user=current_user,
         )
 
 

@@ -69,17 +69,19 @@
           <li class="mdl-menu__item">Contact</li> -->
           <!-- <li class="mdl-menu__item">Legal information</li> -->
           <a class="mdl-menu__item" href="https://losverdesatx.org" target="_blank">
+            LV Site
+            &nbsp;&nbsp;&nbsp;
             <span class="material-icons">
               open_in_new
             </span>
-            LV Site
             <!-- losverdesatx.org -->
           </a>
 
           {% if current_user.is_authenticated %}
           <a id="logout" class="mdl-menu__item" href="{{ url_for('logout') }}">
-            <i class="material-icons">logout</i>
             Logout
+            &nbsp;&nbsp;&nbsp;
+            <i class="material-icons">logout</i>
           </a>
           {% endif %}
 
