@@ -68,7 +68,7 @@ class MembershipCard(db.Model):
     qr_code_message = db.Column(db.String)
 
     # Display related attributes:
-    logo_text = db.Column(db.String, default="LV Membership")
+    logo_text = db.Column(db.String, default="Los Verdes Member")
 
     passfile_files = {
         "icon.png": "LV_Tee_Crest_onVerde_rgb_filled_icon.png",
