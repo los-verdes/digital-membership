@@ -119,8 +119,8 @@ remote-psql:
   #!/bin/bash
   PGHOST='127.0.0.1'
   PGPORT='5432'
-  gcloud_user="website@lv-digital-membership.iam"
-  gcloud_access_token="$(gcloud auth print-access-token --impersonate-service-account="$gcloud_user.gserviceaccount.com")"
+  gcloud_user=`gcloud auth list 2>/dev/null | grep -E '^\*' | awk '{print $2;}'`
+  gcloud_access_token="$(gcloud auth print-access-token)"
   PGUSER="${PGUSER-"$gcloud_user"}"
   PGPASSWORD="${PGPASSWORD-"$gcloud_access_token"}"
   PGDATABASE='lv-digital-membership'
