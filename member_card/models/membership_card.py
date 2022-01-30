@@ -1,3 +1,5 @@
+# from logzero import logger
+import logging
 import uuid
 from base64 import b64encode as b64e
 from datetime import datetime, timezone
@@ -5,10 +7,8 @@ from io import BytesIO, StringIO
 from os.path import abspath, dirname, join
 
 import qrcode
-
-# from logzero import logger
-import logging
 from member_card.db import db
+from member_card.utils import sign
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -63,6 +63,12 @@ class MembershipCard(db.Model):
     apple_pass_type_identifier = db.Column(db.String)
     apple_organization_name = db.Column(db.String)
     apple_team_identifier = db.Column(db.String)
+
+    apple_device_registrations = relationship(
+        "AppleDeviceRegistration",
+        back_populates="membership_card",
+        lazy="dynamic",
+    )
 
     # Passkit bits:
     web_service_url = db.Column(db.String)
@@ -157,7 +163,7 @@ class MembershipCard(db.Model):
             logoText=self.logo_text,
             barcode=qr_code,
             webServiceURL=self.web_service_url,
-            authenticationToken=self.authentication_token_hex,
+            authenticationToken=sign(self.authentication_token_hex),
             expirationDate=self.apple_pass_expiry_timestamp,
             voided=self.is_voided,
             userInfo=self.user.to_dict(),

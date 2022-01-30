@@ -4,8 +4,17 @@ import logging
 
 import click
 
+from member_card import create_app
 
 from logging.config import dictConfig
+
+
+try:
+    import googleclouddebugger
+
+    googleclouddebugger.enable(breakpoint_enable_canary=True)
+except ImportError:
+    pass
 
 
 class RemoveColorFilter(logging.Filter):
@@ -50,15 +59,6 @@ dictConfig(
         },
     }
 )
-
-try:
-    import googleclouddebugger
-
-    googleclouddebugger.enable(breakpoint_enable_canary=True)
-except ImportError:
-    pass
-
-from member_card import create_app
 
 # import logging
 

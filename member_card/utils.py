@@ -55,6 +55,8 @@ def sign(data: str, algorithm=hashlib.sha256) -> str:
 
 def verify(signature: str, data: str, algorithm=hashlib.sha256) -> bool:
     expected = sign(data, algorithm)
+    logging.debug(f"{signature=}")
+    logging.debug(f"{expected=}")
     return hmac.compare_digest(expected, signature)
 
 

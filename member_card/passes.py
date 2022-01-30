@@ -1,15 +1,15 @@
 import functools
+import logging
+import os
 import tempfile
 from typing import Callable
+
 import flask
 
-# from logzero import logger
-import logging
 from member_card import get_base_url
 from member_card.db import db, get_or_create
 from member_card.models import MembershipCard
 from member_card.utils import sign
-import os
 
 DEFAULT_APPLE_KEY_FILEPATH = "/secrets/apple-private.key"
 
