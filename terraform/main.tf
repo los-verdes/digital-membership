@@ -42,7 +42,7 @@ resource "google_project_iam_member" "digital_membership_cloudsql_client" {
 resource "google_project_iam_member" "db_task_runner_cloudsql_client" {
   project = google_project.digital_membership.id
   role    = "roles/cloudsql.client"
-  member  = "serviceAccount:${google_service_account.digital_membership.email}"
+  member  = "serviceAccount:${google_service_account.db_task_runner.email}"
 }
 
 resource "google_project_iam_member" "digital_membership_debugger_agent" {
