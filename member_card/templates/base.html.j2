@@ -62,9 +62,6 @@
           <i class="material-icons">more_vert</i>
         </button>
         <ul class="mdl-menu mdl-js-menu mdl-js-ripple-effect mdl-menu--bottom-right" for="hdrbtn">
-          <a class="mdl-menu__item" href="{{ url_for('privacy_policy') }}">
-            Privacy Policy
-          </a>
           <!-- <li class="mdl-menu__item">About</li>
           <li class="mdl-menu__item">Contact</li> -->
           <!-- <li class="mdl-menu__item">Legal information</li> -->
@@ -84,6 +81,10 @@
             <i class="material-icons">logout</i>
           </a>
           {% endif %}
+<!-- 
+          <a class="mdl-menu__item" href="{{ url_for('privacy_policy') }}">
+            Privacy Policy
+          </a> -->
 
         </ul>
       </div>
@@ -165,17 +166,17 @@
       <div class="page-content">{% block content required %}{% endblock %}</div>
     </main>
 
-    <!-- {% block footer %}
-    <footer class="mdl-mini-footer">
-      <div class="mdl-mini-footer__left-section">
-        <div class="mdl-logo">Title</div>
+    {% block footer %}
+    <footer class="mdl-mini-footer mdl-color--grey-600">
+      <div class="mdl-mini-footer__left-section mdl-color-text--green">
+        <div class="mdl-logo">{{ title_str }}</div>
         <ul class="mdl-mini-footer__link-list">
           <li><a href="#">Help</a></li>
-          <li><a href="#">Privacy & Terms</a></li>
+          <li><a href="{{ url_for('privacy_policy') }}">Privacy & Terms</a></li>
         </ul>
       </div>
     </footer>
-    {% endblock %} -->
+    {% endblock %}
 
     <!-- End of "outer" div that holds our entire layout -->
   </div>
