@@ -38,9 +38,7 @@ jobs:
           token_format: 'access_token'
           workload_identity_provider: "projects/567739286055/locations/global/workloadIdentityPools/los-verdes-digital-membership/providers/los-verdes-digital-membership"
           service_account: "db-task-runner@lv-digital-membership.iam.gserviceaccount.com"
-          access_token_scopes:
-            - "https://www.googleapis.com/auth/sqlservice.admin"
-            - "https://www.googleapis.com/auth/cloud-platform"
+          access_token_scopes: "https://www.googleapis.com/auth/cloud-platform,https://www.googleapis.com/auth/sqlservice.admin"
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v0
