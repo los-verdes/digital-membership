@@ -87,6 +87,7 @@ sync-subscriptions: ci-install-python-reqs
   echo "DIGITAL_MEMBERSHIP_DB_DATABASE_NAME: $DIGITAL_MEMBERSHIP_DB_DATABASE_NAME"
   echo "DIGITAL_MEMBERSHIP_DB_USERNAME: $DIGITAL_MEMBERSHIP_DB_USERNAME"
   echo "DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME: $DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME"
+  gcloud auth list 2>/dev/null | grep -E '^\*' | awk '{print $2;}'
   just flask sync-subscriptions
 
 lint:

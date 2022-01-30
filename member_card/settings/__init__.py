@@ -121,7 +121,7 @@ class Settings(object):
                 user=db_user,
                 db=db_name,
                 password=os.getenv('DIGITAL_MEMBERSHIP_DB_ACCESS_TOKEN'),  # TODO: surface this env var higher up in the class??
-                enable_iam_auth=True,
+                enable_iam_auth=False,
             )
             return conn
 
