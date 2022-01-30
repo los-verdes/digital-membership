@@ -37,6 +37,9 @@ jobs:
           workload_identity_provider: "projects/567739286055/locations/global/workloadIdentityPools/los-verdes-digital-membership/providers/los-verdes-digital-membership"
           service_account: "db-task-runner@lv-digital-membership.iam.gserviceaccount.com"
 
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0
+
       # - name: Create Google application creds secret
       #   id: google-app-creds
       #   run: |
