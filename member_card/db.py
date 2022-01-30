@@ -78,6 +78,7 @@ def squarespace_orders_etl(squarespace_client, db_session, membership_sku, load_
         .first()
     )
     # modified_before_dt = datetime.now(tz=ZoneInfo("UTC"))
+    total_num_memberships_start = db_session.query(models.AnnualMembership.id).count()
 
     if instance and not load_all:
         logger.debug(f"{instance=}")
@@ -179,13 +180,24 @@ def squarespace_orders_etl(squarespace_client, db_session, membership_sku, load_
     active_memberships = [m for m in memberships if m.is_active]
     inactive_memberships = [m for m in memberships if not m.is_active]
     logger.info(
-        f"Sync subscription stats: {len(memberships)=} / {len(active_memberships)=} / {len(inactive_memberships)=}"
+        f"Sync subscription sync run stats: {len(memberships)=} / {len(active_memberships)=} / {len(inactive_memberships)=}"
+    )
+
+    total_num_memberships_end = db_session.query(models.AnnualMembership.id).count()
+    total_num_memberships_added = (
+        total_num_memberships_end - total_num_memberships_start
+    )
+    logger.info(
+        f"Sync subscription aggregate stats: {total_num_memberships_end=} - {total_num_memberships_start=} => {total_num_memberships_added=}"
     )
     return {
         "stats": dict(
             num_membership=len(memberships),
             num_active_membership=len(active_memberships),
             num_inactive_membership=len(inactive_memberships),
+            total_num_memberships_start=total_num_memberships_start,
+            total_num_memberships_end=total_num_memberships_end,
+            total_num_memberships_added=total_num_memberships_added,
         )
     }
 
