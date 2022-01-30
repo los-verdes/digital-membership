@@ -40,8 +40,6 @@ jobs:
       - name: Sync Subscriptions
         run: just sync-subscriptions
         env:
-          # get these from TF outputs or such eventually?
           DIGITAL_MEMBERSHIP_DB_USERNAME: "db-task-runner@lv-digital-membership.iam"
-          # DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME: "lv-digital-membership:us-central1:lv-digital-membership"
-          # DIGITAL_MEMBERSHIP_DB_DATABASE_NAME: "lv-digital-membership"
           FLASK_ENV: "remote-sql"
+          LOG_LEVEL: "info"
