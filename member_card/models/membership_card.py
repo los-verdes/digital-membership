@@ -11,6 +11,9 @@ from member_card.db import db
 from member_card.models.apple_device_registration import (
     membership_card_to_apple_device_assoc_table,
 )
+from member_card.models.annual_membership import (
+    membership_card_to_membership_assoc_table,
+)
 from member_card.utils import sign
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -54,6 +57,13 @@ class MembershipCard(db.Model):
         back_populates="membership_cards",
         cascade="all, delete",
         passive_deletes=True,
+    )
+
+    annual_memberships = relationship(
+        "AnnualMembership",
+        secondary=membership_card_to_membership_assoc_table,
+        back_populates="membership_cards",
+        lazy="dynamic",
     )
 
     # Card metadata:

@@ -35,9 +35,8 @@ class AnnualMembership(db.Model):
         "MembershipCard",
         secondary=membership_card_to_membership_assoc_table,
         lazy="subquery",
-        backref=backref("annual_memberships", lazy=True),
+        back_populates="annual_memberships",
     )
-
     order_id = db.Column(db.String(32), unique=True)
     order_number = db.Column(db.String, unique=True)
     channel = db.Column(db.String(32))
