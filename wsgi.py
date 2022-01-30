@@ -24,41 +24,40 @@ class RemoveColorFilter(logging.Filter):
         return True
 
 
-remove_color_filter = RemoveColorFilter()
-
-dictConfig(
-    {
-        "version": 1,
-        "filters": {
-            "no_color": {
-                "()": RemoveColorFilter,
-            }
-        },
-        "formatters": {
-            "json": {
-                "()": "google_cloud_logger.GoogleCloudFormatter",
-                "application_info": {
-                    "type": "python-application",
-                    "name": "digital-membership",
-                },
-                "format": "[%(asctime)s] %(levelname)s in %(module)s: %(message)s",
-            }
-        },
-        "handlers": {
-            "json": {
-                "class": "logging.StreamHandler",
-                "formatter": "json",
-                "filters": ["no_color"],
-            }
-        },
-        "loggers": {
-            "root": {
-                "level": os.getenv("LOG_LEVEL", "INFO").upper(),
-                "handlers": ["json"],
-            }
-        },
-    }
-)
+if running_on_cloud_run := "K_SERVICE" in os.environ:
+    dictConfig(
+        {
+            "version": 1,
+            "filters": {
+                "no_color": {
+                    "()": RemoveColorFilter,
+                }
+            },
+            "formatters": {
+                "json": {
+                    "()": "google_cloud_logger.GoogleCloudFormatter",
+                    "application_info": {
+                        "type": "python-application",
+                        "name": "digital-membership",
+                    },
+                    "format": "[%(asctime)s] %(levelname)s in %(module)s: %(message)s",
+                }
+            },
+            "handlers": {
+                "json": {
+                    "class": "logging.StreamHandler",
+                    "formatter": "json",
+                    "filters": ["no_color"],
+                }
+            },
+            "loggers": {
+                "root": {
+                    "level": os.getenv("LOG_LEVEL", "INFO").upper(),
+                    "handlers": ["json"],
+                }
+            },
+        }
+    )
 
 # import logging
 
