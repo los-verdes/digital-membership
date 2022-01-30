@@ -24,7 +24,7 @@ class RemoveColorFilter(logging.Filter):
         return True
 
 
-# if running_on_cloud_run := "K_SERVICE" in os.environ:
+running_on_cloud_run = "K_SERVICE" in os.environ
 dictConfig(
     {
         "version": 1,
@@ -41,33 +41,35 @@ dictConfig(
                     "name": "digital-membership",
                 },
                 "format": "[%(asctime)s] %(levelname)s in %(module)s: %(message)s",
-            }
+            },
+            "standard": {"format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"},
         },
         "handlers": {
+            "default": {
+                "level": "INFO",
+                "formatter": "standard",
+                "class": "logging.StreamHandler",
+                "stream": "ext://sys.stdout",
+            },
             "json": {
                 "class": "logging.StreamHandler",
                 "formatter": "json",
                 "filters": ["no_color"],
-            }
+            },
         },
         "loggers": {
-            "root": {
+            "": {
                 "level": os.getenv("LOG_LEVEL", "INFO").upper(),
-                "handlers": ["json"],
-            }
+                "handlers": ["json"] if running_on_cloud_run else ["default"],
+                "propagate": False,
+            },
+            "member_card": {
+                "level": os.getenv("LOG_LEVEL", "INFO").upper(),
+                "handlers": ["json"] if running_on_cloud_run else ["default"],
+            },
         },
     }
 )
-
-# import logging
-
-# import logzero
-# from google_cloud_logger import GoogleCloudFormatter
-
-# Start out with a quiet log level when invoking things this way...
-# logzero.loglevel(logging.INFO)
-# logzero.formatter(GoogleCloudFormatter)
-# logzero.json()
 
 if __name__ == "__main__":
     app = create_app()
