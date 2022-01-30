@@ -47,6 +47,8 @@ def get_base_url():
 def create_app():
     if "K_SERVICE" in os.environ:  # AKA running_on_cloud_run
         app.logger.removeHandler(default_handler)
+    else:
+        logging.basicConfig()
 
     load_settings(app)
     # configure_logging()
@@ -275,7 +277,7 @@ def sync_subscriptions(membership_sku, load_all):
         membership_sku=membership_sku,
         load_all=load_all,
     )
-    logging.debug(f"{etl_results=}")
+    logging.info(f"sync_subscriptions() => {etl_results=}")
 
 
 @app.cli.command("query-db")

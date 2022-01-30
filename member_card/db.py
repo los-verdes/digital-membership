@@ -81,9 +81,11 @@ def squarespace_orders_etl(squarespace_client, db_session, membership_sku, load_
 
     if instance and not load_all:
         logging.debug(f"{instance=}")
-        modified_after_dt = datetime.fromtimestamp(
+        last_run_start_time = datetime.fromtimestamp(
             float(instance.attribute_value)
-        ) - timedelta(days=1)
+        )
+        modified_after_dt = last_run_start_time - timedelta(days=1)
+        logging.info(f"Starting sync from {last_run_start_time=}")
         # modified_after_dt = start_time - timedelta(days=3)
         modified_after = modified_after_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
         modified_before = start_time.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -102,6 +104,7 @@ def squarespace_orders_etl(squarespace_client, db_session, membership_sku, load_
     subscription_orders.reverse()
     member_user_ids_by_email = {}
     memberships = []
+    logging.info(f"{len(subscription_orders)=} retrieved from Squarespace...")
     for subscription_order in subscription_orders:
         line_items = subscription_order.get("lineItems", [])
         subscription_line_items = [i for i in line_items if i["sku"] == membership_sku]
@@ -178,7 +181,7 @@ def squarespace_orders_etl(squarespace_client, db_session, membership_sku, load_
     active_memberships = [m for m in memberships if m.is_active]
     inactive_memberships = [m for m in memberships if not m.is_active]
     logging.info(
-        f"Stats: {len(memberships)=} / {len(active_memberships)=} / {len(inactive_memberships)=}"
+        f"Sync subscription stats: {len(memberships)=} / {len(active_memberships)=} / {len(inactive_memberships)=}"
     )
     return {
         "stats": dict(
