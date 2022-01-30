@@ -28,6 +28,7 @@ class Settings(object):
     DB_CONNECTION_NAME: str = os.environ["DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME"]
     DB_USERNAME: str = os.environ["DIGITAL_MEMBERSHIP_DB_USERNAME"]
     DB_DATABASE_NAME: str = os.environ["DIGITAL_MEMBERSHIP_DB_DATABASE_NAME"]
+    DB_PASSWORD: str = os.getenv("DIGITAL_MEMBERSHIP_DB_ACCESS_TOKEN")
 
     DEBUG: bool = True
     # from: https://github.com/python-social-auth/social-examples
@@ -108,20 +109,26 @@ class Settings(object):
             instance_connection_string=self.DB_CONNECTION_NAME,
             db_user=self.DB_USERNAME,
             db_name=self.DB_DATABASE_NAME,
+            db_pass=self.DB_PASSWORD,
         )
 
         logging.debug(f"{db_connection_kwargs=}")
 
         def get_db_connector(
-            instance_connection_string: str, db_user: str, db_name: str
+            instance_connection_string: str, db_user: str, db_name: str, db_pass: str
         ) -> "dbapi.Connection":
+            conn_kwargs = dict(
+                user=db_user,
+                db=db_name,
+                enable_iam_auth=True,
+            )
+            if db_pass:
+                conn_kwargs["password"] = db_pass
+                conn_kwargs["enable_iam_auth"] = False
             conn: "dbapi.Connection" = connector.connect(
                 instance_connection_string,
                 "pg8000",
-                user=db_user,
-                db=db_name,
-                password=os.getenv('DIGITAL_MEMBERSHIP_DB_ACCESS_TOKEN'),  # TODO: surface this env var higher up in the class??
-                enable_iam_auth=False,
+                **conn_kwargs,
             )
             return conn
 
@@ -148,6 +155,7 @@ class ProductionSettings(Settings):
     DEBUG: bool = False
     SOCIAL_AUTH_REDIRECT_IS_HTTPS: bool = True
     SQLALCHEMY_DATABASE_URI: str = "postgresql+pg8000://"
+    SQLALCHEMY_ECHO: bool = False
 
     def __init__(self) -> None:
 
@@ -164,9 +172,11 @@ class ProductionSettings(Settings):
         logging.debug(f"{self.SQLALCHEMY_ENGINE_OPTIONS=}")
 
 
-class RemoteSqlProductionSettings(ProductionSettings):
-    SQLALCHEMY_ECHO: bool = True
+class DevelopementSettings(Settings):
+    SQLALCHEMY_ECHO: bool = False
 
+
+class RemoteSqlProductionSettings(ProductionSettings):
     def __init__(self) -> None:
         if secret_name := os.getenv("DIGITAL_MEMBERSHIP_GCP_SECRET_NAME"):
             logging.info(f"Loading secrets from {secret_name=}")
