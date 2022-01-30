@@ -8,6 +8,9 @@ from os.path import abspath, dirname, join
 
 import qrcode
 from member_card.db import db
+from member_card.models.apple_device_registration import (
+    membership_card_to_apple_device_assoc_table,
+)
 from member_card.utils import sign
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -66,7 +69,8 @@ class MembershipCard(db.Model):
 
     apple_device_registrations = relationship(
         "AppleDeviceRegistration",
-        back_populates="membership_card",
+        secondary=membership_card_to_apple_device_assoc_table,
+        back_populates="membership_cards",
         lazy="dynamic",
     )
 

@@ -7,6 +7,24 @@ from sqlalchemy.sql import func
 BASE_DIR = abspath(join(dirname(abspath(__file__)), ".."))
 
 
+membership_card_to_apple_device_assoc_table = db.Table(
+    "membership_cards_to_apple_device",
+    db.Model.metadata,
+    db.Column(
+        "membership_card_id",
+        db.Integer,
+        db.ForeignKey("membership_cards.id"),
+        primary_key=True,
+    ),
+    db.Column(
+        "apple_device_registration_id",
+        db.Integer,
+        db.ForeignKey("apple_device_registration.id"),
+        primary_key=True,
+    ),
+)
+
+
 class AppleDeviceRegistration(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     device_library_identifier = db.Column(db.String(255), unique=True)
@@ -16,6 +34,12 @@ class AppleDeviceRegistration(db.Model):
     membership_card_id = db.Column(db.Integer, db.ForeignKey("membership_cards.id"))
     membership_card = relationship(
         "MembershipCard",
+        back_populates="apple_device_registrations",
+    )
+    membership_cards = relationship(
+        "MembershipCard",
+        secondary=membership_card_to_apple_device_assoc_table,
+        lazy="subquery",
         back_populates="apple_device_registrations",
     )
 

@@ -1,11 +1,10 @@
 import logging
 from uuid import UUID
 
-from flask import g, jsonify, request, send_file
+from flask import jsonify, request, send_file
 from member_card import app
 from member_card.db import db, get_or_create
 from member_card.models import AppleDeviceRegistration, MembershipCard
-
 from member_card.utils import verify
 
 # from functools import wraps
@@ -90,6 +89,10 @@ def passkit_register_device_for_pass_push_notifications(
     db.session.add(registration)
     db.session.commit()
 
+    logging.info(
+        "passkit_register_device_for_pass_push_notifications() request",
+        extra=dict(registration=registration),
+    )
     return ("created", 201)
 
 
