@@ -107,6 +107,22 @@ lint:
 sql-proxy:
   ~/bin/cloud_sql_proxy \
     -instances="$DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME=tcp:5432" \
+    -token="$(gcloud auth print-access-token --impersonate-service-account=website@lv-digital-membership.iam.gserviceaccount.com)" \
     -enable_iam_login \
     ;
-  # -token="$(gcloud auth print-access-token --impersonate-service-account=website@lv-digital-membership.iam.gserviceaccount.com)"
+
+remote-psql:
+  #!/bin/bash
+  PGHOST='127.0.0.1'
+  PGPORT='5432'
+  gcloud_user="website@lv-digital-membership.iam"
+  gcloud_access_token="$(gcloud auth print-access-token --impersonate-service-account="$gcloud_user.gserviceaccount.com")"
+  PGUSER="${PGUSER-"$gcloud_user"}"
+  PGPASSWORD="${PGPASSWORD-"$gcloud_access_token"}"
+  PGDATABASE='lv-digital-membership'
+  export PGHOST
+  export PGPORT
+  export PGUSER
+  export PGPASSWORD
+  export PGDATABASE
+  psql

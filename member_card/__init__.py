@@ -45,8 +45,9 @@ def get_base_url():
 
 
 def create_app():
+    if "K_SERVICE" in os.environ:  # AKA running_on_cloud_run
+        app.logger.removeHandler(default_handler)
 
-    app.logger.removeHandler(default_handler)
     load_settings(app)
     # configure_logging()
     # if app.config["LOG_LEVEL"].lower() == "debug":

@@ -184,7 +184,14 @@ class MembershipCard(db.Model):
         )
         # logging.debug(f"{passfile_attrs=}")
         for attr_name, attr_value in passfile_attrs.items():
-            logging.debug(f"Setting passfile attribute {attr_name} to: {attr_value}")
+            if type(attr_value) == str:
+                logging.debug(
+                    f"Setting passfile attribute {attr_name} to: {attr_value[:3]=}...{attr_value[-2:]=}"
+                )
+            else:
+                logging.debug(
+                    f"Setting passfile attribute {attr_name} to: {attr_value=}"
+                )
             setattr(
                 passfile,
                 attr_name,

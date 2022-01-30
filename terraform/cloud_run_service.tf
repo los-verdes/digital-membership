@@ -64,7 +64,7 @@ resource "google_cloud_run_service" "digital_membership" {
 
         env {
           name  = "LOG_LEVEL"
-          value = "INFO"
+          value = "DEBUG"
         }
 
         ports {

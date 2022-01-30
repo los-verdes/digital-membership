@@ -27,8 +27,7 @@ export PGDATABASE
 # PGPASSWORD="$(gcloud auth application-default print-access-token)"
 # export SQLALCHEMY_DATABASE_URI="postgresql://$GCLOUD_SQL_USERNAME:$GCLOUD_SQL_PASSWORD@127.0.0.1:5432/lv-digital-membership"
 # export DATABASE="lv-digital-membership"
-psql
-exit 0
+
 RO_USERS=""
 RW_USERS="tf-management db-task-runner@lv-digital-membership.iam website@lv-digital-membership.iam jeff.hogan1@gmail.com"
 
