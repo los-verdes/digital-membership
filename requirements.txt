@@ -79,6 +79,8 @@ google-cloud-core==2.2.1
     # via google-cloud-firestore
 google-cloud-firestore==2.3.4
     # via -r requirements.in
+google-cloud-logger==0.2.1
+    # via -r requirements.in
 google-cloud-secret-manager==2.8.0
     # via -r requirements.in
 googleapis-common-protos[grpc]==1.54.0
@@ -115,8 +117,6 @@ jinja2==3.0.3
 libcst==0.4.0
     # via google-cloud-secret-manager
 libsass==0.21.0
-    # via -r requirements.in
-logzero==1.7.0
     # via -r requirements.in
 m2crypto==0.38.0
     # via -r requirements.in
@@ -168,6 +168,8 @@ pyparsing==3.0.6
     #   packaging
 python-dateutil==2.8.2
     # via -r requirements.in
+python-json-logger==2.0.2
+    # via google-cloud-logger
 python3-openid==3.2.0
     # via social-auth-core
 pyyaml==6.0

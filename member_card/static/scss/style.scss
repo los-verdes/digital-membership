@@ -81,6 +81,12 @@ img.lv-horizontal-logo {
   max-height: 57px;
 }
 
+.troubleshooting-list {
+  > .mdl-list__item--three-line {
+    height: 125px;
+  }
+}
+
 .login-card > .mdl-card__title {
   justify-content: center;
 }

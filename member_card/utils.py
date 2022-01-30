@@ -6,7 +6,9 @@ from base64 import urlsafe_b64encode as b64e
 import flask
 from flask_assets import Bundle, Environment
 from flask_login import LoginManager
-from logzero import logger
+
+# from logzero import logger
+import logging
 from social_core.backends.google import GooglePlusAuth
 from social_core.backends.utils import load_backends
 from social_core.pipeline.user import get_username as social_get_username
@@ -45,7 +47,7 @@ def sign(data: str, algorithm=hashlib.sha256) -> str:
     assert len(key) >= algorithm().digest_size, (
         "Key must be at least as long as the digest size of the " "hashing algorithm"
     )
-    logger.debug(f"sign() => {data=} {algorithm=}")
+    logging.debug(f"sign() => {data=} {algorithm=}")
     signed_digest = hmac.new(key, data.encode(), algorithm).digest()
     b64_digest = b64e(signed_digest).decode()
     return b64_digest
@@ -53,23 +55,25 @@ def sign(data: str, algorithm=hashlib.sha256) -> str:
 
 def verify(signature: str, data: str, algorithm=hashlib.sha256) -> bool:
     expected = sign(data, algorithm)
+    logging.debug(f"{signature=}")
+    logging.debug(f"{expected=}")
     return hmac.compare_digest(expected, signature)
 
 
 def load_settings(app):
 
-    logger.debug(f"{app.config['ENV']=}")
+    logging.debug(f"{app.config['ENV']=}")
     settings_env = app.config["ENV"].lower().strip()
 
     settings_obj = get_settings_obj_for_env(settings_env)
-    # logger.debug(
+    # logging.debug(
     #     f"app.config before loading settings from object {settings_obj}: {app.config=}"
     # )
     app.config.from_object(settings_obj())
-    # logger.debug(
+    # logging.debug(
     #     f"app.config after loading settings from object {settings_obj}: {app.config=}"
     # )
-    # logger.debug(app.config["SQLALCHEMY_DATABASE_URI"])
+    # logging.debug(app.config["SQLALCHEMY_DATABASE_URI"])
     # breakpoint()
     # DB
 
@@ -182,5 +186,5 @@ def social_url_for(name, **kwargs):
         url = "/disconnect/{backend}/{association_id}/"
     else:
         url = name
-    logger.debug(f"social_url_for() => {name=}: {kwargs=}")
+    logging.debug(f"social_url_for() => {name=}: {kwargs=}")
     return url.format(**kwargs)

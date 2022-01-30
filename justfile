@@ -5,11 +5,12 @@ gcr_name := "gcr.io/lv-digital-membership/member-card"
 gcr_tag := `git describe --tags --dirty --long --always`
 gcr_image_name := gcr_name + ":" + gcr_tag
 gcr_latest_image_name := gcr_name + ":latest"
-
+python_reqs_file := "requirements.txt"
 export GCLOUD_PROJECT := "lv-digital-membership"
 # TODO: dev as default after we get done setting this all up....
 export FLASK_ENV := "developement"
 export FLASK_DEBUG := "true"
+export LOG_LEVEL := "debug"
 export DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME := "lv-digital-membership:us-central1:lv-digital-membership-30c67c90"
 export DIGITAL_MEMBERSHIP_DB_USERNAME := `gcloud auth list 2>/dev/null | grep -E '^\*' | awk '{print $2;}'`
 export DIGITAL_MEMBERSHIP_DB_DATABASE_NAME := "lv-digital-membership"
@@ -28,8 +29,27 @@ tf-init:
 tf-auto-apply:
   just tf 'apply -auto-approve'
 
+ci-install-python-reqs:
+  #!/bin/bash
+  if [[ '{{ env_var_or_default("CI", "false") }}' == "true" ]]
+  then
+    echo 'Installing python requirements from {{ python_reqs_file }}...'
+    pip3 install \
+      --quiet \
+      --requirement='{{ python_reqs_file }}'
+  else
+    echo "skipping pip install outside of GitHub Actions..."
+  fi
+
+
 flask +CMD:
   flask {{ CMD }}
+
+ensure-db-schemas:
+  just flask ensure-db-schemas
+
+serve-wsgi:
+  ./wsgi.py
 
 serve:
   # export DB_SOCKET_DIR={{ justfile_directory() + "./cloudsql"}}
@@ -62,11 +82,8 @@ deploy: build push
   just tf init
   just tf apply -auto-approve -var='cloud_run_container_image={{ gcr_image_name }}'
 
-sync-subscriptions:
-  flask sync-subscriptions
-
-remote-sync-subscriptions:
-  echo "invoke cloudfunction..."
+sync-subscriptions: ci-install-python-reqs
+  just flask sync-subscriptions
 
 lint:
   # act \

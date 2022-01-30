@@ -4,7 +4,9 @@ from functools import partial
 from typing import TYPE_CHECKING, Tuple
 
 from google.cloud.sql.connector import connector
-from logzero import logger
+
+# from logzero import logger
+import logging
 
 if TYPE_CHECKING:
     from pg8000 import dbapi
@@ -92,11 +94,13 @@ class Settings(object):
     def export_dict_as_settings(self, dict_to_export: dict[str, str]) -> None:
         for key, value in dict_to_export.items():
             settings_key = key.upper()
-            logger.debug(f"Exporting {key} as settings key: {settings_key}")
+            logging.debug(f"Exporting {key} as settings key: {settings_key}")
             setattr(self, settings_key, value)
 
     def export_secrets_as_settings(self) -> None:
-        logger.debug(f"Exporting {list(self._secrets.keys())} as setting attributes...")
+        logging.debug(
+            f"Exporting {list(self._secrets.keys())} as setting attributes..."
+        )
         self.export_dict_as_settings(self._secrets)
 
     def use_gcp_sql_connector(self) -> None:
@@ -106,7 +110,7 @@ class Settings(object):
             db_name=self.DB_DATABASE_NAME,
         )
 
-        logger.debug(f"{db_connection_kwargs=}")
+        logging.debug(f"{db_connection_kwargs=}")
 
         def get_db_connector(
             instance_connection_string: str, db_user: str, db_name: str
@@ -126,7 +130,8 @@ class Settings(object):
         )
 
     def __init__(self) -> None:
-        logger.debug(f"Initializing settings class: {type(self)}...")
+        logging.debug(f"Initializing settings class: {type(self)}...")
+        logging.info("env var keys", extra=dict(env_var_keys=list(os.environ.keys())))
 
     def assert_required_settings_present(self) -> None:
         pass
@@ -155,7 +160,7 @@ class ProductionSettings(Settings):
 
         self.export_secrets_as_settings()
         self.use_gcp_sql_connector()
-        logger.debug(f"{self.SQLALCHEMY_ENGINE_OPTIONS=}")
+        logging.debug(f"{self.SQLALCHEMY_ENGINE_OPTIONS=}")
 
 
 class RemoteSqlProductionSettings(ProductionSettings):
@@ -163,7 +168,7 @@ class RemoteSqlProductionSettings(ProductionSettings):
 
     def __init__(self) -> None:
         if secret_name := os.getenv("DIGITAL_MEMBERSHIP_GCP_SECRET_NAME"):
-            logger.info(f"Loading secrets from {secret_name=}")
+            logging.info(f"Loading secrets from {secret_name=}")
             from member_card.secrets import retrieve_app_secrets
 
             if not self._secrets:

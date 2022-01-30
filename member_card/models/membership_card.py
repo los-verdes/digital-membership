@@ -1,3 +1,5 @@
+# from logzero import logger
+import logging
 import uuid
 from base64 import b64encode as b64e
 from datetime import datetime, timezone
@@ -5,8 +7,14 @@ from io import BytesIO, StringIO
 from os.path import abspath, dirname, join
 
 import qrcode
-from logzero import logger
 from member_card.db import db
+from member_card.models.apple_device_registration import (
+    membership_card_to_apple_device_assoc_table,
+)
+from member_card.models.annual_membership import (
+    membership_card_to_membership_assoc_table,
+)
+from member_card.utils import sign
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -23,7 +31,7 @@ def hex2rgb(hex, alpha=None):
     try:
         rgb = tuple(int(h[i : i + 2], 16) for i in (0, 2, 4))  # noqa
     except Exception as err:
-        logger.exception(f"unable to convert {hex=} to rgb: {err}")
+        logging.exception(f"unable to convert {hex=} to rgb: {err}")
         return h
     if alpha is None:
         return f"rgb({rgb[0]}, {rgb[1]}, {rgb[2]})"
@@ -51,6 +59,13 @@ class MembershipCard(db.Model):
         passive_deletes=True,
     )
 
+    annual_memberships = relationship(
+        "AnnualMembership",
+        secondary=membership_card_to_membership_assoc_table,
+        back_populates="membership_cards",
+        lazy="dynamic",
+    )
+
     # Card metadata:
     time_created = db.Column(db.DateTime(timezone=True), server_default=func.now())
     time_updated = db.Column(db.DateTime(timezone=True), onupdate=func.now())
@@ -61,6 +76,13 @@ class MembershipCard(db.Model):
     apple_pass_type_identifier = db.Column(db.String)
     apple_organization_name = db.Column(db.String)
     apple_team_identifier = db.Column(db.String)
+
+    apple_device_registrations = relationship(
+        "AppleDeviceRegistration",
+        secondary=membership_card_to_apple_device_assoc_table,
+        back_populates="membership_cards",
+        lazy="dynamic",
+    )
 
     # Passkit bits:
     web_service_url = db.Column(db.String)
@@ -142,7 +164,7 @@ class MembershipCard(db.Model):
             organizationName=self.apple_organization_name,
             teamIdentifier=self.apple_team_identifier,
         )
-        logger.debug(f"{pass_kwargs=}")
+        logging.debug(f"{pass_kwargs=}")
         passfile = Pass(**pass_kwargs)
 
         qr_code = Barcode(format=BarcodeFormat.QR, message=self.qr_code_message)
@@ -155,14 +177,14 @@ class MembershipCard(db.Model):
             logoText=self.logo_text,
             barcode=qr_code,
             webServiceURL=self.web_service_url,
-            authenticationToken=self.authentication_token_hex,
+            authenticationToken=sign(self.authentication_token_hex),
             expirationDate=self.apple_pass_expiry_timestamp,
             voided=self.is_voided,
             userInfo=self.user.to_dict(),
         )
-        # logger.debug(f"{passfile_attrs=}")
+        # logging.debug(f"{passfile_attrs=}")
         for attr_name, attr_value in passfile_attrs.items():
-            logger.debug(f"Setting passfile attribute {attr_name} to: {attr_value}")
+            logging.debug(f"Setting passfile attribute {attr_name} to: {attr_value}")
             setattr(
                 passfile,
                 attr_name,
@@ -173,7 +195,7 @@ class MembershipCard(db.Model):
         static_dir = join(BASE_DIR, "static")
         for passfile_filename, local_filename in self.passfile_files.items():
             file_path = join(static_dir, local_filename)
-            logger.debug(f"adding {file_path} as pass file: {passfile_filename}")
+            logging.debug(f"adding {file_path} as pass file: {passfile_filename}")
             passfile.addFile(passfile_filename, open(file_path, "rb"))
 
         return passfile
@@ -182,13 +204,13 @@ class MembershipCard(db.Model):
         serial_number = self.id
         cert_filepath = get_certificate_path("certificate.pem")
         wwdr_cert_filepath = get_certificate_path("wwdr.pem")
-        logger.debug(f"{cert_filepath=}")
-        logger.debug(
+        logging.debug(f"{cert_filepath=}")
+        logging.debug(
             f"Creating passfile with {self.apple_pass_type_identifier=} {serial_number=} (Signing details: {cert_filepath=} {key_filepath=} {wwdr_cert_filepath=}"
         )
         passfile = self.create_passfile()
         # breakpoint()
-        logger.debug(f"{passfile.json_dict()=}")
+        logging.debug(f"{passfile.json_dict()=}")
         pkpass_string_buffer = passfile.create(
             certificate=cert_filepath,
             key=key_filepath,

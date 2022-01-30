@@ -4,20 +4,21 @@ import os
 from urllib.parse import urlparse
 
 import click
-import logzero
 from flask import Flask, g, redirect, render_template, request, send_file, url_for
 from flask_gravatar import Gravatar
 from flask_login import current_user as current_login_user
 from flask_login import login_required, logout_user
-from logzero import logger, setup_logger
 from social_flask.template_filters import backends
 from social_flask.utils import load_strategy
+from flask.logging import default_handler
 
 from member_card.db import squarespace_orders_etl
 from member_card.models import User
+
+# from google_cloud_logger import GoogleCloudFormatter
 from member_card.squarespace import Squarespace
 from member_card.utils import (
-    MembershipLoginManager,
+    MembershipLoginManager,  # configure_logging,
     common_context,
     load_settings,
     register_asset_bundles,
@@ -29,9 +30,11 @@ BASE_DIR = os.path.dirname(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "member_card")
 )
 
-setup_logger(name=__name__)
+
+# setup_logger(name=__name__, formatter=GoogleCloudFormatter, json=True)
 
 app = Flask(__name__)
+logger = app.logger
 login_manager = MembershipLoginManager()
 
 
@@ -42,11 +45,14 @@ def get_base_url():
 
 
 def create_app():
+
+    app.logger.removeHandler(default_handler)
     load_settings(app)
-    if app.config["LOG_LEVEL"].lower() == "debug":
-        logzero.loglevel(logging.DEBUG)
-    else:
-        logzero.loglevel(logging.INFO)
+    # configure_logging()
+    # if app.config["LOG_LEVEL"].lower() == "debug":
+    #     logzero.loglevel(logging.DEBUG)
+    # else:
+    #     logzero.loglevel(logging.INFO)
 
     register_asset_bundles(app)
     login_manager.init_app(app)
@@ -208,7 +214,7 @@ def verify_pass(serial_number):
     verified_card = (
         db.session.query(MembershipCard).filter_by(serial_number=serial_number).one()
     )
-    logger.debug(f"{verified_card=}")
+    logging.debug(f"{verified_card=}")
 
     return render_template(
         "apple_pass_validation.html.j2",
@@ -249,7 +255,7 @@ def logout():
 @app.cli.command("ensure-db-schemas")
 @click.option("-D", "--drop-first", default=False)
 def ensure_db_schemas(drop_first):
-    logger.debug("ensure-db-schemas: calling `db.create_all()`")
+    logging.debug("ensure-db-schemas: calling `db.create_all()`")
     from member_card.db import ensure_db_schemas
 
     ensure_db_schemas(drop_first)
@@ -268,7 +274,7 @@ def sync_subscriptions(membership_sku, load_all):
         membership_sku=membership_sku,
         load_all=load_all,
     )
-    logger.debug(f"{etl_results=}")
+    logging.debug(f"{etl_results=}")
 
 
 @app.cli.command("query-db")
@@ -286,8 +292,8 @@ def query_db(email):
     if memberships:
         member_since_dt = memberships[-1].created_on
         member_name = memberships[-1].full_name
-    logger.debug(f"{member_name=} => {member_since_dt=}")
-    logger.debug(f"{memberships=}")
+    logging.debug(f"{member_name=} => {member_since_dt=}")
+    logging.debug(f"{memberships=}")
 
 
 @app.cli.command("create-apple-pass")

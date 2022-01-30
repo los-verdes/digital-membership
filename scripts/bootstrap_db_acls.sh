@@ -10,10 +10,10 @@ set -eou pipefail
 # export SQLALCHEMY_DATABASE_URI="$1"
 PGHOST='127.0.0.1'
 PGPORT='5432'
-# gcloud_user="$(gcloud auth list 2>/dev/null | grep -E '^\*' | awk '{print $2;}')" # | sed 's/@/%40/')"
-# gcloud_access_token="$(gcloud auth print-access-token)"
-gcloud_user="website@lv-digital-membership.iam"
-gcloud_access_token="$(gcloud auth print-access-token --impersonate-service-account=website@lv-digital-membership.iam.gserviceaccount.com)"
+gcloud_user="$(gcloud auth list 2>/dev/null | grep -E '^\*' | awk '{print $2;}')" # | sed 's/@/%40/')"
+gcloud_access_token="$(gcloud auth print-access-token)"
+# gcloud_user="website@lv-digital-membership.iam"
+# gcloud_access_token="$(gcloud auth print-access-token --impersonate-service-account=website@lv-digital-membership.iam.gserviceaccount.com)"
 PGUSER="${PGUSER-"$gcloud_user"}"
 PGPASSWORD="${PGPASSWORD-"$gcloud_access_token"}"
 PGDATABASE='lv-digital-membership'
@@ -27,8 +27,8 @@ export PGDATABASE
 # PGPASSWORD="$(gcloud auth application-default print-access-token)"
 # export SQLALCHEMY_DATABASE_URI="postgresql://$GCLOUD_SQL_USERNAME:$GCLOUD_SQL_PASSWORD@127.0.0.1:5432/lv-digital-membership"
 # export DATABASE="lv-digital-membership"
-# psql
-# exit 0
+psql
+exit 0
 RO_USERS=""
 RW_USERS="tf-management db-task-runner@lv-digital-membership.iam website@lv-digital-membership.iam jeff.hogan1@gmail.com"
 

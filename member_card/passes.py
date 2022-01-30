@@ -1,13 +1,15 @@
 import functools
+import logging
+import os
 import tempfile
 from typing import Callable
+
 import flask
-from logzero import logger
+
 from member_card import get_base_url
 from member_card.db import db, get_or_create
 from member_card.models import MembershipCard
 from member_card.utils import sign
-import os
 
 DEFAULT_APPLE_KEY_FILEPATH = "/secrets/apple-private.key"
 
@@ -27,21 +29,21 @@ def with_apple_developer_key() -> Callable:
                 and os.path.isfile(key_filepath)
                 and os.access(key_filepath, os.R_OK)
             ):
-                logger.debug(f"Using {key_filepath=}")
+                logging.debug(f"Using {key_filepath=}")
                 kwargs["key_filepath"] = key_filepath
                 return method(*args, **kwargs)
 
             if "APPLE_DEVELOPER_PRIVATE_KEY" not in flask.current_app.config:
                 error_msg = f"File {key_filepath} doesn't exist or isn't readable _and_ no key found under APPLE_DEVELOPER_PRIVATE_KEY env var!"
-                logger.error(error_msg)
+                logging.error(error_msg)
                 raise Exception(error_msg)
 
             unformatted_key = flask.current_app.config["APPLE_DEVELOPER_PRIVATE_KEY"]
-            logger.warning(
+            logging.warning(
                 f"File {key_filepath} doesn't exist or isn't readable, pulling key from environment and stashing in temp file...."
             )
             with tempfile.NamedTemporaryFile(mode="w", suffix=".key") as key_fp:
-                logger.info(
+                logging.info(
                     f"Stashing Apple developer key under a temporary file {key_fp.name=}"
                 )
                 formatted_key = "\n".join(unformatted_key.split("\\n"))
@@ -74,11 +76,11 @@ def get_or_create_membership_card(user):
 
     # TODO: do this more efficient like:
     if not membership_card.qr_code_message:
-        logger.debug("generating QR code for message")
+        logging.debug("generating QR code for message")
         serial_number = str(membership_card.serial_number)
         qr_code_signature = sign(serial_number)
         qr_code_message = f"Content: {get_base_url()}{flask.url_for('verify_pass', serial_number=serial_number)}?signature={qr_code_signature}"
-        logger.debug(f"{qr_code_message=}")
+        logging.debug(f"{qr_code_message=}")
         setattr(membership_card, "qr_code_message", qr_code_message)
         db.session.add(membership_card)
         db.session.commit()

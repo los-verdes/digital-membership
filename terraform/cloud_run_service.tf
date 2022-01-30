@@ -62,6 +62,11 @@ resource "google_cloud_run_service" "digital_membership" {
           value = var.flask_env
         }
 
+        env {
+          name  = "LOG_LEVEL"
+          value = "INFO"
+        }
+
         ports {
           name = "http1"
           # protocol       = "TCP"
