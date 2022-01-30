@@ -60,6 +60,6 @@ jobs:
         env:
           DIGITAL_MEMBERSHIP_GCP_SECRET_NAME: "projects/567739286055/secrets/digital-membership/versions/latest"
           DIGITAL_MEMBERSHIP_DB_USERNAME: "db-task-runner@lv-digital-membership.iam"
-          # DIGITAL_MEMBERSHIP_DB_ACCESS_TOKEN: "${{ steps.auth.outputs.access_token }}"
+          DIGITAL_MEMBERSHIP_DB_ACCESS_TOKEN: "${{ steps.auth.outputs.access_token }}"
           FLASK_ENV: "remote-sql"
           LOG_LEVEL: "info"
