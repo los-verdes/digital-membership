@@ -8,7 +8,7 @@ gcr_latest_image_name := gcr_name + ":latest"
 python_reqs_file := "requirements.txt"
 export GCLOUD_PROJECT := "lv-digital-membership"
 # TODO: dev as default after we get done setting this all up....
-export FLASK_ENV := "developement"
+export FLASK_ENV := env_var_or_default("FLASK_ENV", "developement")
 export FLASK_DEBUG := "true"
 export LOG_LEVEL := "debug"
 export DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME := "lv-digital-membership:us-central1:lv-digital-membership-30c67c90"
@@ -83,6 +83,7 @@ deploy: build push
   just tf apply -auto-approve -var='cloud_run_container_image={{ gcr_image_name }}'
 
 sync-subscriptions: ci-install-python-reqs
+  echo $FLASK_ENV
   just flask sync-subscriptions
 
 lint:
