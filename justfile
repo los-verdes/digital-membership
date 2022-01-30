@@ -87,7 +87,7 @@ sync-subscriptions: ci-install-python-reqs
   echo "DIGITAL_MEMBERSHIP_DB_DATABASE_NAME: $DIGITAL_MEMBERSHIP_DB_DATABASE_NAME"
   echo "DIGITAL_MEMBERSHIP_DB_USERNAME: $DIGITAL_MEMBERSHIP_DB_USERNAME"
   echo "DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME: $DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME"
-  just flask sync-subscriptions
+  # just flask sync-subscriptions
 
 lint:
   # act \
