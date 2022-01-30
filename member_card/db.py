@@ -81,9 +81,7 @@ def squarespace_orders_etl(squarespace_client, db_session, membership_sku, load_
 
     if instance and not load_all:
         logging.debug(f"{instance=}")
-        last_run_start_time = datetime.fromtimestamp(
-            float(instance.attribute_value)
-        )
+        last_run_start_time = datetime.fromtimestamp(float(instance.attribute_value))
         modified_after_dt = last_run_start_time - timedelta(days=1)
         logging.info(f"Starting sync from {last_run_start_time=}")
         # modified_after_dt = start_time - timedelta(days=3)
