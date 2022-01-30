@@ -42,18 +42,18 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v0
 
-      # - name: Create Google application creds secret
-      #   id: google-app-creds
-      #   run: |
-      #     creds="$(cat '${{ env.GOOGLE_APPLICATION_CREDENTIALS }}')"
-      #     echo "::add-mask::$creds"
-      #     echo "::set-output name=creds::$creds"
+      - name: Create Google application creds secret
+        id: google-app-creds
+        run: |
+          creds="$(cat '${{ env.GOOGLE_APPLICATION_CREDENTIALS }}')"
+          echo "::add-mask::$creds"
+          echo "::set-output name=creds::$creds"
 
-      # - name: Start Google Cloud SQL Proxy
-      #   uses: mattes/gce-cloudsql-proxy-action@v1
-      #   with:
-      #     creds: ${{ steps.google-app-creds.outputs.creds }}
-      #     instance: lv-digital-membership:us-central1:lv-digital-membership-30c67c90
+      - name: Start Google Cloud SQL Proxy
+        uses: mattes/gce-cloudsql-proxy-action@v1
+        with:
+          creds: ${{ steps.google-app-creds.outputs.creds }}
+          instance: lv-digital-membership:us-central1:lv-digital-membership-30c67c90
 
       - name: Sync Subscriptions
         run: just sync-subscriptions
