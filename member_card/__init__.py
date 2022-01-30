@@ -45,10 +45,14 @@ def get_base_url():
 
 
 def create_app():
-    if "K_SERVICE" in os.environ:  # AKA running_on_cloud_run
-        app.logger.removeHandler(default_handler)
-    else:
-        logging.basicConfig(level=getattr(logging, os.getenv("LOG_LEVEL", "INFO").upper()))
+    app.logger.removeHandler(default_handler)
+    # if "K_SERVICE" in os.environ:  # AKA running_on_cloud_run
+    #     app.logger.removeHandler(default_handler)
+    # else:
+    #     import logzero
+    #     logzero.loglevel(logging.INFO)
+
+        # logging.basicConfig(level=getattr(logging, os.getenv("LOG_LEVEL", "INFO").upper()))
 
     load_settings(app)
     # configure_logging()
