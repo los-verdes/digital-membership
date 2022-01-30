@@ -3,7 +3,7 @@ from collections import OrderedDict
 from datetime import datetime, timedelta
 
 from member_card.db import db
-from sqlalchemy.orm import backref, relationship
+from sqlalchemy.orm import relationship
 
 membership_card_to_membership_assoc_table = db.Table(
     "membership_cards_to_memberships",

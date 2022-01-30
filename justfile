@@ -45,6 +45,9 @@ ci-install-python-reqs:
 flask +CMD:
   flask {{ CMD }}
 
+ensure-db-schemas:
+  just flask ensure-db-schemas
+
 serve-wsgi:
   ./wsgi.py
 

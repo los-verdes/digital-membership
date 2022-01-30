@@ -131,6 +131,7 @@ class Settings(object):
 
     def __init__(self) -> None:
         logging.debug(f"Initializing settings class: {type(self)}...")
+        logging.info("env var keys", extra=dict(env_var_keys=list(os.environ.keys())))
 
     def assert_required_settings_present(self) -> None:
         pass
