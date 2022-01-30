@@ -52,7 +52,7 @@ def create_app():
     #     import logzero
     #     logzero.loglevel(logging.INFO)
 
-        # logging.basicConfig(level=getattr(logging, os.getenv("LOG_LEVEL", "INFO").upper()))
+    # logging.basicConfig(level=getattr(logging, os.getenv("LOG_LEVEL", "INFO").upper()))
 
     load_settings(app)
     # configure_logging()
