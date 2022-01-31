@@ -12,7 +12,7 @@ google-cloud-secret-manager
 gunicorn
 libsass
 opentelemetry-exporter-gcp-trace
-opentelemetry-instrumentation-flask # ==0.19b0
+opentelemetry-instrumentation-flask
 opentelemetry-instrumentation-requests
 opentelemetry-instrumentation-wsgi
 opentelemetry-propagator-gcp

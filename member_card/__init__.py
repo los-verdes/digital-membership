@@ -35,11 +35,14 @@ def get_base_url():
 
 
 def create_app():
-    app.logger.removeHandler(default_handler)
-    utils.load_settings(app)
-
-    if "K_SERVICE" in os.environ:  # AKA running on GCP cloud run
+    running_in_cloudrun = "K_SERVICE" in os.environ
+    if running_in_cloudrun:
         utils.initialize_tracer()
+    utils.configure_logging(running_in_cloudrun=running_in_cloudrun)
+    app.logger.removeHandler(default_handler)
+    app.logger.propagate = True
+
+    utils.load_settings(app)
 
     FlaskInstrumentor().instrument_app(app)
 

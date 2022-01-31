@@ -9,7 +9,7 @@ from google.cloud.sql.connector import connector
 if TYPE_CHECKING:
     from pg8000 import dbapi
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("member_card")
 
 
 class Settings(object):

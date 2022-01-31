@@ -1,12 +1,15 @@
 import hashlib
 import hmac
 import logging
+import os
 import uuid
 from base64 import urlsafe_b64encode as b64e
 
 import flask
+import google.cloud.logging
 from flask_assets import Bundle, Environment
 from flask_login import LoginManager
+from google.cloud.logging.handlers import CloudLoggingHandler, setup_logging
 from opentelemetry import trace
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
 from opentelemetry.propagate import set_global_textmap
@@ -21,6 +24,38 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from webassets.filter import get_filter
 
 from member_card.settings import get_settings_obj_for_env
+
+
+def configure_logging(running_in_cloudrun):
+    log_level_str = os.getenv("LOG_LEVEL", "INFO").upper()
+    log_level = getattr(logging, log_level_str)
+
+    excluded_loggers = (
+        "google.cloud",
+        "google.auth",
+        "google_auth_httplib2",
+        "google.api_core.bidi",
+        "urllib3",
+        "werkzeug",
+    )
+    if running_in_cloudrun:
+        logging.info(
+            f"{running_in_cloudrun=} => using CloudLoggingHandler() for logging"
+        )
+        setup_logging(
+            handler=CloudLoggingHandler(google.cloud.logging.Client()),
+            log_level=log_level,
+            excluded_loggers=excluded_loggers,
+        )
+    else:
+        logging.basicConfig(level=log_level)
+        logging.info(f"{running_in_cloudrun=} => using stock python logging")
+        for logger_name in excluded_loggers:
+            # prevent excluded loggers from propagating logs to handler
+            logger = logging.getLogger(logger_name)
+            logger.propagate = False
+
+    # logging.getLogger().propagate = True
 
 
 def initialize_tracer():
