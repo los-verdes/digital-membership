@@ -2,8 +2,12 @@
 import logging
 import os
 
-import google.cloud.logging  # Don't conflict with standard logging
-from google.cloud.logging.handlers import CloudLoggingHandler, setup_logging
+import google.cloud.logging
+from google.cloud.logging.handlers import (
+    CloudLoggingHandler,
+    setup_logging,
+    EXCLUDED_LOGGER_DEFAULTS,
+)
 
 from member_card import create_app
 
@@ -15,9 +19,18 @@ except ImportError:
     pass
 
 
-log_level = os.getenv("LOG_LEVEL", "INFO").upper()
-logging.getLogger().setLevel(getattr(logging, log_level))
-setup_logging(CloudLoggingHandler(google.cloud.logging.Client()))
+log_level_str = os.getenv("LOG_LEVEL", "INFO").upper()
+log_level = getattr(logging, log_level_str)
+
+excluded_loggers = EXCLUDED_LOGGER_DEFAULTS[:]
+excluded_loggers += [
+    "urllib3",
+]
+setup_logging(
+    handler=CloudLoggingHandler(google.cloud.logging.Client()),
+    log_level=log_level,
+    excluded_loggers=excluded_loggers,
+)
 
 if __name__ == "__main__":
     app = create_app()

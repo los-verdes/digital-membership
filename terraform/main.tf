@@ -45,6 +45,18 @@ resource "google_project_iam_member" "db_task_runner_cloudsql_client" {
   member  = "serviceAccount:${google_service_account.db_task_runner.email}"
 }
 
+resource "google_project_iam_member" "digital_membership_log_writer" {
+  project = google_project.digital_membership.id
+  role    = "roles/logging.logWriter"
+  member  = "serviceAccount:${google_service_account.digital_membership.email}"
+}
+
+resource "google_project_iam_member" "db_task_runner_log_writer" {
+  project = google_project.digital_membership.id
+  role    = "roles/logging.logWriter"
+  member  = "serviceAccount:${google_service_account.db_task_runner.email}"
+}
+
 resource "google_project_iam_member" "digital_membership_debugger_agent" {
   project = google_project.digital_membership.id
   role    = "roles/clouddebugger.agent"

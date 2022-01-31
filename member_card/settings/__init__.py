@@ -1,15 +1,15 @@
 import json
+import logging
 import os
 from functools import partial
 from typing import TYPE_CHECKING, Tuple
 
 from google.cloud.sql.connector import connector
 
-# from logzero import logger
-import logging
-
 if TYPE_CHECKING:
     from pg8000 import dbapi
+
+logger = logging.getLogger(__name__)
 
 
 class Settings(object):
@@ -96,13 +96,11 @@ class Settings(object):
     def export_dict_as_settings(self, dict_to_export: dict[str, str]) -> None:
         for key, value in dict_to_export.items():
             settings_key = key.upper()
-            logging.debug(f"Exporting {key} as settings key: {settings_key}")
+            logger.debug(f"Exporting {key} as settings key: {settings_key}")
             setattr(self, settings_key, value)
 
     def export_secrets_as_settings(self) -> None:
-        logging.debug(
-            f"Exporting {list(self._secrets.keys())} as setting attributes..."
-        )
+        logger.debug(f"Exporting {list(self._secrets.keys())} as setting attributes...")
         self.export_dict_as_settings(self._secrets)
 
     def use_gcp_sql_connector(self) -> None:
@@ -113,7 +111,7 @@ class Settings(object):
             db_pass=self.DB_PASSWORD,
         )
 
-        logging.debug(f"{db_connection_kwargs=}")
+        logger.debug(f"{db_connection_kwargs=}")
 
         def get_db_connector(
             instance_connection_string: str, db_user: str, db_name: str, db_pass: str
@@ -139,8 +137,8 @@ class Settings(object):
         )
 
     def __init__(self) -> None:
-        logging.debug(f"Initializing settings class: {type(self)}...")
-        logging.info("env var keys", extra=dict(env_var_keys=list(os.environ.keys())))
+        logger.debug(f"Initializing settings class: {type(self)}...")
+        logger.info("env var keys", extra=dict(env_var_keys=list(os.environ.keys())))
 
     def assert_required_settings_present(self) -> None:
         pass
@@ -170,7 +168,7 @@ class ProductionSettings(Settings):
 
         self.export_secrets_as_settings()
         self.use_gcp_sql_connector()
-        logging.debug(f"{self.SQLALCHEMY_ENGINE_OPTIONS=}")
+        logger.debug(f"{self.SQLALCHEMY_ENGINE_OPTIONS=}")
 
 
 class DevelopementSettings(Settings):
@@ -180,7 +178,7 @@ class DevelopementSettings(Settings):
 class RemoteSqlProductionSettings(ProductionSettings):
     def __init__(self) -> None:
         if secret_name := os.getenv("DIGITAL_MEMBERSHIP_GCP_SECRET_NAME"):
-            logging.info(f"Loading secrets from {secret_name=}")
+            logger.info(f"Loading secrets from {secret_name=}")
             from member_card.secrets import retrieve_app_secrets
 
             if not self._secrets:
