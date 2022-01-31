@@ -178,11 +178,12 @@ def passkit_get_latest_version_of_pass(membership_card_pass, device_library_iden
     """
 
     if modified_since_header := request.headers.get("If-Modified-Since"):
+        logger.debug(f"parsing modified since header: {modified_since_header}")
         if_modified_since = parse(modified_since_header).replace(tzinfo=timezone.utc)
         logger.debug(
-            f"filtering {membership_card_pass=} ({device_library_identifier=}) with {if_modified_since=}"
+            f"filtering {membership_card_pass=} ({membership_card_pass.time_updated=}) with {if_modified_since=}"
         )
-        if membership_card_pass.time_updated >= if_modified_since:
+        if membership_card_pass.time_updated <= if_modified_since:
             logger.debug(
                 f"{membership_card_pass=}'s {membership_card_pass.time_updated=} ({device_library_identifier=}) >= {if_modified_since=}"
             )

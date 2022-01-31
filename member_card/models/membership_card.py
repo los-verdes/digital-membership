@@ -217,8 +217,6 @@ class MembershipCard(db.Model):
             f"Creating passfile with {self.apple_pass_type_identifier=} {serial_number=} (Signing details: {cert_filepath=} {key_filepath=} {wwdr_cert_filepath=}"
         )
         passfile = self.create_passfile()
-        # breakpoint()
-        logger.debug(f"{passfile.json_dict()=}")
         pkpass_string_buffer = passfile.create(
             certificate=cert_filepath,
             key=key_filepath,
