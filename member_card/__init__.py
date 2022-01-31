@@ -269,6 +269,44 @@ def sync_subscriptions(membership_sku, load_all):
     logger.info(f"sync_subscriptions() => {etl_results=}")
 
 
+@app.cli.command("recreate-user")
+@click.argument("email")
+def recreate_user(email):
+    from social_core.actions import do_disconnect
+    from social_flask.utils import load_strategy
+
+    from member_card.db import db, get_or_create
+    from member_card.models import User
+    from member_card.utils import associations
+
+    user = User.query.filter_by(email=email).one()
+    memberships = list(user.annual_memberships)
+    user_associations = associations(user=user, strategy=load_strategy())
+    for association in user_associations:
+        with app.app_context():
+            disconnect_resp = do_disconnect(
+                backend=association.get_backend_instance(load_strategy()),
+                user=user,
+                association_id=association.id,
+            )
+            logger.info(f"{disconnect_resp=}")
+    # for membership_card in user.membership_cards:
+    #     for apple_device_registration in membership_card.apple_device_registrations:
+    #         db.session.delete(apple_device_registration)
+    #     db.session.delete(membership_card)
+    db.session.delete(user)
+    db.session.commit()
+    member_user = get_or_create(
+        session=db.session,
+        model=User,
+        email=email,
+    )
+    member_user.memberships = memberships
+    db.session.add(member_user)
+    db.session.commit()
+    logger.debug(f"{memberships=}")
+
+
 @app.cli.command("query-db")
 @click.argument("email")
 def query_db(email):
