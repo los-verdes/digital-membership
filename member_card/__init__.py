@@ -38,6 +38,7 @@ def create_app():
     app.logger.removeHandler(default_handler)
     utils.load_settings(app)
 
+    utils.initialize_tracer()
     FlaskInstrumentor().instrument_app(app)
 
     utils.register_asset_bundles(app)
