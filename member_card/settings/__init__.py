@@ -37,6 +37,7 @@ class Settings(object):
     GOOGLE_DISCOVERY_URL: str = (
         "https://accounts.google.com/.well-known/openid-configuration"
     )
+    GCLOUD_PROJECT: str = os.getenv("GCLOUD_PROJECT", "")
 
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "info")
 

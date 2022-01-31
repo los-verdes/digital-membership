@@ -8,20 +8,14 @@ from flask.logging import default_handler
 from flask_gravatar import Gravatar
 from flask_login import current_user as current_login_user
 from flask_login import login_required, logout_user
+from flask_opentracing import FlaskTracing
 from social_flask.template_filters import backends
 from social_flask.utils import load_strategy
 
+from member_card import utils
 from member_card.db import squarespace_orders_etl
 from member_card.models import User
 from member_card.squarespace import Squarespace
-from member_card.utils import MembershipLoginManager  # configure_logging,
-from member_card.utils import (
-    common_context,
-    load_settings,
-    register_asset_bundles,
-    social_url_for,
-    verify,
-)
 
 BASE_DIR = os.path.dirname(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "member_card")
@@ -33,7 +27,7 @@ BASE_DIR = os.path.dirname(
 app = Flask(__name__)
 logger = app.logger
 logger.propagate = False
-login_manager = MembershipLoginManager()
+login_manager = utils.MembershipLoginManager()
 
 
 def get_base_url():
@@ -44,9 +38,15 @@ def get_base_url():
 
 def create_app():
     app.logger.removeHandler(default_handler)
-    load_settings(app)
+    utils.load_settings(app)
 
-    register_asset_bundles(app)
+    FlaskTracing(
+        tracer=utils.initialize_tracer(project_id=app.config["GCLOUD_PROJECT"]),
+        trace_all_requests=True,
+        app=app,
+    )
+
+    utils.register_asset_bundles(app)
     login_manager.init_app(app)
 
     from member_card.db import db
@@ -128,7 +128,7 @@ def inject_user():
 def load_common_context():
     from member_card.db import get_membership_table_last_sync
 
-    return common_context(
+    return utils.common_context(
         app.config["SOCIAL_AUTH_AUTHENTICATION_BACKENDS"],
         load_strategy(),
         getattr(g, "user", None),
@@ -138,7 +138,7 @@ def load_common_context():
 
 
 app.context_processor(backends)
-app.jinja_env.globals["url"] = social_url_for
+app.jinja_env.globals["url"] = utils.social_url_for
 
 
 @app.route("/")
@@ -198,7 +198,7 @@ def verify_pass(serial_number):
     if not signature:
         return "Unable to verify signature!", 401
 
-    signature_verified = verify(signature=signature, data=serial_number)
+    signature_verified = utils.verify(signature=signature, data=serial_number)
     if not signature_verified:
         return "Unable to verify signature!", 401
     # current_user = g.user

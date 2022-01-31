@@ -1,6 +1,6 @@
-# logzero
 Flask-Assets
 Flask-Gravatar
+Flask-Opentracing
 Flask-SQLAlchemy
 M2Crypto
 cloud-sql-python-connector[pg8000]
@@ -12,6 +12,8 @@ google-cloud-secret-manager
 google_cloud_logger
 gunicorn
 libsass
+opentelemetry-exporter-gcp-trace
+opentelemetry-propagator-gcp
 psycopg2
 python-dateutil
 qrcode[pil]
