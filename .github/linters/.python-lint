@@ -262,6 +262,7 @@ ignored-modules=flask,
                 google_cloud_logger,
                 dateutil,
                 opentelemetry,
+                pythonjsonlogger,
                 click
 
 # Show a hint with possible names when a member name was not found. The aspect

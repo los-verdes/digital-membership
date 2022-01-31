@@ -1,12 +1,13 @@
 #!/usr/bin/env python
-import os
 import logging
+import os
+from logging.config import dictConfig
 
+from google.cloud.logging_v2.handlers._helpers import get_request_data
+from google_cloud_logger import GoogleCloudFormatter
+from pythonjsonlogger.jsonlogger import JsonFormatter
 
 from member_card import create_app
-from google.cloud.logging_v2.handlers._helpers import get_request_data
-from logging.config import dictConfig
-from google_cloud_logger import GoogleCloudFormatter
 
 try:
     import googleclouddebugger
@@ -14,6 +15,21 @@ try:
     googleclouddebugger.enable(breakpoint_enable_canary=True)
 except ImportError:
     pass
+
+
+class GunicornJsonFormatter(JsonFormatter):
+    rename_fields = {
+        "levelname": "severity",
+    }
+
+    def add_fields(self, log_record, record, message_dict):
+        super(GunicornJsonFormatter, self).add_fields(log_record, record, message_dict)
+        for (
+            rename_field_from,
+            rename_field_to,
+        ) in GunicornJsonFormatter.rename_fields.items():
+            log_record[rename_field_to] = log_record[rename_field_from]
+            del log_record[rename_field_from]
 
 
 class MemberCardFormatter(GoogleCloudFormatter):
