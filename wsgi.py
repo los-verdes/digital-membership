@@ -34,6 +34,10 @@ if running_on_cloud_run := "K_SERVICE" in os.environ:
     )
 else:
     logging.basicConfig(level=log_level)
+    for logger_name in excluded_loggers:
+        # prevent excluded loggers from propagating logs to handler
+        logger = logging.getLogger(logger_name)
+        logger.propagate = False
 
 if __name__ == "__main__":
     app = create_app()

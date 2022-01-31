@@ -81,7 +81,7 @@
             <i class="material-icons">logout</i>
           </a>
           {% endif %}
-<!-- 
+<!--
           <a class="mdl-menu__item" href="{{ url_for('privacy_policy') }}">
             Privacy Policy
           </a> -->
@@ -168,8 +168,7 @@
 
     {% block footer %}
     <footer class="mdl-mini-footer mdl-color--grey-600">
-      <div class="mdl-mini-footer__left-section mdl-color-text--green">
-        <div class="mdl-logo">{{ title_str }}</div>
+      <div class="mdl-mini-footer__right-section mdl-color-text--green">
         <ul class="mdl-mini-footer__link-list">
           <li><a href="#">Help</a></li>
           <li><a href="{{ url_for('privacy_policy') }}">Privacy & Terms</a></li>
