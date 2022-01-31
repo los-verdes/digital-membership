@@ -19,7 +19,14 @@ RUN pip install \
         --requirement requirements.txt \
         google-python-cloud-debugger==2.18
 
+COPY ./config/ ./config
 COPY ./member_card/ ./member_card
 COPY ./*.py ./
 
-ENTRYPOINT ["gunicorn", "-b", "0.0.0.0:8080", "wsgi:create_app()", "--log-file", "-", "--log-level", "info"]
+ENTRYPOINT [
+    "gunicorn",
+    "--bind=0.0.0.0:8080",
+    "--log-file=-",
+    "--log-level=info",
+    "--log-config=config/gunicron_logging.ini",
+]
