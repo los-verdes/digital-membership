@@ -90,6 +90,8 @@ google-cloud-core==2.2.1
     #   google-cloud-logging
 google-cloud-firestore==2.3.4
     # via -r requirements.in
+google-cloud-logger==0.2.1
+    # via -r requirements.in
 google-cloud-logging==2.7.0
     # via -r requirements.in
 google-cloud-secret-manager==2.8.0
@@ -229,6 +231,8 @@ pyparsing==3.0.6
     #   packaging
 python-dateutil==2.8.2
     # via -r requirements.in
+python-json-logger==2.0.2
+    # via google-cloud-logger
 python3-openid==3.2.0
     # via social-auth-core
 pyyaml==6.0

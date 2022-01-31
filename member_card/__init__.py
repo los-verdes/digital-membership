@@ -35,14 +35,17 @@ def get_base_url():
 
 
 def create_app():
-    running_in_cloudrun = "K_SERVICE" in os.environ
-    if running_in_cloudrun:
-        utils.initialize_tracer()
-    utils.configure_logging(running_in_cloudrun=running_in_cloudrun)
-    app.logger.removeHandler(default_handler)
-    app.logger.propagate = True
-
     utils.load_settings(app)
+
+    if app.config["TRACING_ENABLED"]:
+        utils.initialize_tracer()
+
+    # utils.configure_logging(
+    #     project_id=app.config["GCLOUD_PROJECT"],
+    #     # running_in_cloudrun=running_in_cloudrun
+    # )
+    app.logger.removeHandler(default_handler)
+    # app.logger.propagate = True
 
     FlaskInstrumentor().instrument_app(app)
 

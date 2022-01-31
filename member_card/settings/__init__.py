@@ -25,6 +25,12 @@ class Settings(object):
         "APPLE_PASS_PRIVATE_KEY_PASSWORD", ""
     )
 
+    CLOUD_RUN_SERVICE: str = os.getenv("K_SERVICE", "N/A")
+    CLOUD_RUN_REVISION: str = os.getenv("K_REVISION", "N/A")
+    CLOUD_RUN_CONFIGURATION: str = os.getenv("K_SERVICE", "N/A")
+    RUNNING_ON_CLOUD_RUN: bool = CLOUD_RUN_SERVICE != "N/A"
+    TRACING_ENABLED: bool = RUNNING_ON_CLOUD_RUN
+
     DB_CONNECTION_NAME: str = os.environ["DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME"]
     DB_USERNAME: str = os.environ["DIGITAL_MEMBERSHIP_DB_USERNAME"]
     DB_DATABASE_NAME: str = os.environ["DIGITAL_MEMBERSHIP_DB_DATABASE_NAME"]

@@ -260,6 +260,7 @@ ignored-modules=flask,
                 flask_gravatar,
                 social_flask_sqlalchemy,
                 dateutil,
+                opentelemetry,
                 click
 
 # Show a hint with possible names when a member name was not found. The aspect
