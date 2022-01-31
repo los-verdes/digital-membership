@@ -1,6 +1,5 @@
 Flask-Assets
 Flask-Gravatar
-Flask-Opentracing
 Flask-SQLAlchemy
 M2Crypto
 cloud-sql-python-connector[pg8000]
@@ -13,6 +12,9 @@ google_cloud_logger
 gunicorn
 libsass
 opentelemetry-exporter-gcp-trace
+opentelemetry-instrumentation-flask # ==0.19b0
+opentelemetry-instrumentation-requests
+opentelemetry-instrumentation-wsgi
 opentelemetry-propagator-gcp
 psycopg2
 python-dateutil

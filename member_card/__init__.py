@@ -8,7 +8,7 @@ from flask.logging import default_handler
 from flask_gravatar import Gravatar
 from flask_login import current_user as current_login_user
 from flask_login import login_required, logout_user
-from flask_opentracing import FlaskTracing
+from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from social_flask.template_filters import backends
 from social_flask.utils import load_strategy
 
@@ -21,8 +21,6 @@ BASE_DIR = os.path.dirname(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "member_card")
 )
 
-
-# setup_logger(name=__name__, formatter=GoogleCloudFormatter, json=True)
 
 app = Flask(__name__)
 logger = app.logger
@@ -40,11 +38,7 @@ def create_app():
     app.logger.removeHandler(default_handler)
     utils.load_settings(app)
 
-    FlaskTracing(
-        tracer=utils.initialize_tracer(project_id=app.config["GCLOUD_PROJECT"]),
-        trace_all_requests=True,
-        app=app,
-    )
+    FlaskInstrumentor().instrument_app(app)
 
     utils.register_asset_bundles(app)
     login_manager.init_app(app)
