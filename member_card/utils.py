@@ -31,6 +31,8 @@ def configure_logging(running_in_cloudrun):
     log_level = getattr(logging, log_level_str)
 
     excluded_loggers = (
+        "asyncio",
+        "googleapiclient",
         "google.cloud",
         "google.auth",
         "google_auth_httplib2",
