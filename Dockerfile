@@ -22,5 +22,6 @@ RUN pip install \
 COPY ./config/ ./config
 COPY ./member_card/ ./member_card
 COPY ./*.py ./
+COPY ./scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
 
-ENTRYPOINT ["gunicorn", "--bind=0.0.0.0:8080", "--log-file=-", "--log-level=info", "--log-config=config/gunicron_logging.ini", "wsgi:create_app()"]
+ENTRYPOINT ["./scripts/docker-entrypoint.sh"]

@@ -20,7 +20,7 @@ def applepass_auth_token_required(f):
             f"{f.__name__} => {list(request.headers.keys())=} ==> {request.headers.get('Authorization', 'EMPTY!')[-4:]=}"
         )
         logger.info(
-            f"{f.__name__} ==> {request.headers.get('If-Modified-Since', 'EMPTY!')[-4:]=}"
+            f"{f.__name__} ==> {request.headers.get('If-Modified-Since', 'EMPTY!')=}"
         )
 
         pass_type_identifier = kwargs["pass_type_identifier"]
