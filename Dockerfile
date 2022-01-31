@@ -23,10 +23,4 @@ COPY ./config/ ./config
 COPY ./member_card/ ./member_card
 COPY ./*.py ./
 
-ENTRYPOINT [
-    "gunicorn",
-    "--bind=0.0.0.0:8080",
-    "--log-file=-",
-    "--log-level=info",
-    "--log-config=config/gunicron_logging.ini",
-]
+ENTRYPOINT ["gunicorn", "--bind=0.0.0.0:8080", "--log-file=-", "--log-level=info", "--log-config=config/gunicron_logging.ini", "wsgi:create_app()"]
