@@ -176,39 +176,36 @@ def passkit_get_latest_version_of_pass(membership_card_pass, device_library_iden
     pass_type_identifier -- The pass’s type, as specified in the pass
     serial_number -- The unique pass identifier, as specified in the pass
     """
-    if_modified_since = parse(request.headers.get("If-Modified-Since")).replace(
-        tzinfo=timezone.utc
-    )
-    logger.debug(
-        f"filtering {membership_card_pass=} ({device_library_identifier=}) with {if_modified_since=}"
-    )
 
-    if membership_card_pass.time_updated >= if_modified_since:
+    if modified_since_header := request.headers.get("If-Modified-Since"):
+        if_modified_since = parse(modified_since_header).replace(tzinfo=timezone.utc)
         logger.debug(
-            f"{membership_card_pass=}'s {membership_card_pass.time_updated=} ({device_library_identifier=}) >= {if_modified_since=}"
+            f"filtering {membership_card_pass=} ({device_library_identifier=}) with {if_modified_since=}"
         )
-        return "not modified since", 304
-    else:
-        logger.debug(
-            f"found in {membership_card_pass=} ({device_library_identifier=}) with {if_modified_since=}."
-        )
+        if membership_card_pass.time_updated >= if_modified_since:
+            logger.debug(
+                f"{membership_card_pass=}'s {membership_card_pass.time_updated=} ({device_library_identifier=}) >= {if_modified_since=}"
+            )
+            return "not modified since", 304
 
-        from member_card.passes import get_apple_pass_for_user
+    logger.debug(f"found in {membership_card_pass=} ({device_library_identifier=}).")
 
-        attachment_filename = (
-            f"lv_apple_pass-{membership_card_pass.user.last_name.lower()}.pkpass"
-        )
-        logger.info(f"generating updated pass for {membership_card_pass.user=}")
-        pkpass_out_path = get_apple_pass_for_user(
-            user=membership_card_pass.user,
-        )
-        logger.info(f"sending out updated pass with {attachment_filename=}")
-        return send_file(
-            pkpass_out_path,
-            attachment_filename=attachment_filename,
-            mimetype="application/vnd.apple.pkpass",
-            as_attachment=True,
-        )
+    from member_card.passes import get_apple_pass_for_user
+
+    attachment_filename = (
+        f"lv_apple_pass-{membership_card_pass.user.last_name.lower()}.pkpass"
+    )
+    logger.info(f"generating updated pass for {membership_card_pass.user=}")
+    pkpass_out_path = get_apple_pass_for_user(
+        user=membership_card_pass.user,
+    )
+    logger.info(f"sending out updated pass with {attachment_filename=}")
+    return send_file(
+        pkpass_out_path,
+        attachment_filename=attachment_filename,
+        mimetype="application/vnd.apple.pkpass",
+        as_attachment=True,
+    )
 
 
 @app.route(
