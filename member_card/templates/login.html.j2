@@ -20,7 +20,7 @@
         <div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
           <div class="mdl-tabs__tab-bar">
             <a href="#login-panel" class="mdl-tabs__tab is-active">Login</a>
-            <!-- <a href="#register-panel" class="mdl-tabs__tab">Register</a> -->
+            <a href="#about-panel" class="mdl-tabs__tab">About</a>
           </div>
 
           <div class="mdl-tabs__panel is-active" id="login-panel">
@@ -35,6 +35,14 @@
             <div class="mdl-typography--text-bottom	mdl-typography--text-center">
               {{ macros.sign_in_button() }}
             </div>
+          </div>
+
+          <div class="mdl-tabs__panel" id="about-panel">
+            <h4>About</h4>
+            <hr>
+            <h5>Troubleshooting</h5>
+            If you have issues retrieving your members card:
+            {{ macros.troubleshooting_list() }}
           </div>
         </div>
       </div>

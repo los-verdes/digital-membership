@@ -1,4 +1,3 @@
-# logzero
 Flask-Assets
 Flask-Gravatar
 Flask-SQLAlchemy
@@ -8,10 +7,16 @@ flask
 flask-login
 google-auth
 google-cloud-firestore
+google-cloud-logging
 google-cloud-secret-manager
 google_cloud_logger
 gunicorn
 libsass
+opentelemetry-exporter-gcp-trace
+opentelemetry-instrumentation-flask
+opentelemetry-instrumentation-requests
+opentelemetry-instrumentation-wsgi
+opentelemetry-propagator-gcp
 psycopg2
 python-dateutil
 qrcode[pil]

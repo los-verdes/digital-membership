@@ -21,6 +21,7 @@ from sqlalchemy.sql import func
 from wallet.models import Barcode, BarcodeFormat, Generic, Pass
 
 BASE_DIR = abspath(join(dirname(abspath(__file__)), ".."))
+logger = logging.getLogger("member_card")
 
 
 def hex2rgb(hex, alpha=None):
@@ -31,7 +32,7 @@ def hex2rgb(hex, alpha=None):
     try:
         rgb = tuple(int(h[i : i + 2], 16) for i in (0, 2, 4))  # noqa
     except Exception as err:
-        logging.exception(f"unable to convert {hex=} to rgb: {err}")
+        logger.exception(f"unable to convert {hex=} to rgb: {err}")
         return h
     if alpha is None:
         return f"rgb({rgb[0]}, {rgb[1]}, {rgb[2]})"
@@ -90,7 +91,7 @@ class MembershipCard(db.Model):
     qr_code_message = db.Column(db.String)
 
     # Display related attributes:
-    logo_text = db.Column(db.String, default="Los Verdes Member")
+    logo_text = db.Column(db.String, default="Los Verdes")
 
     passfile_files = {
         "icon.png": "LV_Tee_Crest_onVerde_rgb_filled_icon.png",
@@ -164,7 +165,7 @@ class MembershipCard(db.Model):
             organizationName=self.apple_organization_name,
             teamIdentifier=self.apple_team_identifier,
         )
-        logging.debug(f"{pass_kwargs=}")
+        logger.debug(f"{pass_kwargs=}")
         passfile = Pass(**pass_kwargs)
 
         qr_code = Barcode(format=BarcodeFormat.QR, message=self.qr_code_message)
@@ -182,14 +183,14 @@ class MembershipCard(db.Model):
             voided=self.is_voided,
             userInfo=self.user.to_dict(),
         )
-        # logging.debug(f"{passfile_attrs=}")
+        # logger.debug(f"{passfile_attrs=}")
         for attr_name, attr_value in passfile_attrs.items():
             if type(attr_value) == str:
-                logging.debug(
+                logger.debug(
                     f"Setting passfile attribute {attr_name} to: {attr_value[:3]=}...{attr_value[-2:]=}"
                 )
             else:
-                logging.debug(
+                logger.debug(
                     f"Setting passfile attribute {attr_name} to: {attr_value=}"
                 )
             setattr(
@@ -202,7 +203,7 @@ class MembershipCard(db.Model):
         static_dir = join(BASE_DIR, "static")
         for passfile_filename, local_filename in self.passfile_files.items():
             file_path = join(static_dir, local_filename)
-            logging.debug(f"adding {file_path} as pass file: {passfile_filename}")
+            logger.debug(f"adding {file_path} as pass file: {passfile_filename}")
             passfile.addFile(passfile_filename, open(file_path, "rb"))
 
         return passfile
@@ -211,13 +212,11 @@ class MembershipCard(db.Model):
         serial_number = self.id
         cert_filepath = get_certificate_path("certificate.pem")
         wwdr_cert_filepath = get_certificate_path("wwdr.pem")
-        logging.debug(f"{cert_filepath=}")
-        logging.debug(
+        logger.debug(f"{cert_filepath=}")
+        logger.debug(
             f"Creating passfile with {self.apple_pass_type_identifier=} {serial_number=} (Signing details: {cert_filepath=} {key_filepath=} {wwdr_cert_filepath=}"
         )
         passfile = self.create_passfile()
-        # breakpoint()
-        logging.debug(f"{passfile.json_dict()=}")
         pkpass_string_buffer = passfile.create(
             certificate=cert_filepath,
             key=key_filepath,

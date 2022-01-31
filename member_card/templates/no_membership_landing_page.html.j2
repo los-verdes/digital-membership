@@ -26,55 +26,7 @@
       If you believe this information is incorrect:
     </h6>
     <hr>
-    <ul class="mdl-list troubleshooting-list">
-      <li class="mdl-list__item mdl-list__item--three-line">
-        <span class="mdl-list__item-primary-content">
-          <i class="material-icons">email</i>
-          <span>Validate Email Address</span>
-          <span class="mdl-list__item-text-body">
-            Check that the email address you signed in with matches the email used to purchase your membership.
-          </span>
-        </span>
-        <span class="mdl-list__item-secondary-content">
-          <a class="mdl-list__item-secondary-action mdl-button mdl-js-button mdl-button--icon mdl-button--colored"
-             href="{{ url_for('logout') }}"
-             title="If needed, logout now and log back in with an account whose email address matches the one used on our LV membership purchase."><i
-               class="material-icons">logout</i></a>
-        </span>
-      </li>
-      <hr>
-      <li class="mdl-list__item mdl-list__item--three-line">
-        <span class="mdl-list__item-primary-content">
-          <i class="material-icons">contact_support</i>
-          <span>Contact Support</span>
-          <span class="mdl-list__item-text-body">
-            Otherwise, please feel free to contact <a href="mailto:los-verdes-tech-support@googlegroups.com">tech
-              support</a>, with any relevant details, for assistance.
-          </span>
-        </span>
-        <span class="mdl-list__item-secondary-content">
-          <a class="mdl-list__item-secondary-action mdl-button mdl-js-button mdl-button--icon mdl-button--colored"
-             href="mailto:los-verdes-tech-support@googlegroups.com"
-             title="Email los-verdes-tech-support@googlegroups.com"><i class="material-icons">support_agent</i></a>
-        </span>
-      </li>
-      <hr>
-      <li class="mdl-list__item mdl-list__item--three-line">
-        <span class="mdl-list__item-primary-content">
-          <i class="material-icons">store</i>
-          <span>Purchase a Membership</span>
-          <span class="mdl-list__item-text-body">
-            Or! If you're legit not a member, but would like to be, go grab a membership over at the Los Verdes store!
-          </span>
-        </span>
-        <span class="mdl-list__item-secondary-content">
-          <a class="mdl-list__item-secondary-action mdl-button mdl-js-button mdl-button--icon mdl-button--colored"
-             href="https://www.losverdesatx.org/lv-store/membership" target="_black"
-             title="Click here to open the membership store in a new tab"><i class="material-icons">storefront</i></a>
-        </span>
-      </li>
-    </ul>
-
+    {{ macros.troubleshooting_list() }}
   </div>
 </div>
 {% endcall %}

@@ -1,14 +1,18 @@
 import hashlib
 import hmac
+import logging
 import uuid
 from base64 import urlsafe_b64encode as b64e
 
 import flask
 from flask_assets import Bundle, Environment
 from flask_login import LoginManager
-
-# from logzero import logger
-import logging
+from opentelemetry import trace
+from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
+from opentelemetry.propagate import set_global_textmap
+from opentelemetry.propagators.cloud_trace_propagator import CloudTraceFormatPropagator
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from social_core.backends.google import GooglePlusAuth
 from social_core.backends.utils import load_backends
 from social_core.pipeline.user import get_username as social_get_username
@@ -18,9 +22,59 @@ from webassets.filter import get_filter
 
 from member_card.settings import get_settings_obj_for_env
 
-# import pg8000
-# import sqlalchemy
-# from google.cloud.sql.connector import connector
+
+# def configure_logging(project_id=None):
+# import google.cloud.logging
+# from google.cloud.logging.handlers import (
+#     StructuredLogHandler,
+#     setup_logging,
+#     CloudLoggingHandler,
+# )
+#     log_level_str = os.getenv("LOG_LEVEL", "INFO").upper()
+#     log_level = getattr(logging, log_level_str)
+
+#     excluded_loggers = (
+#         "asyncio",
+#         "googleapiclient",
+#         "google.cloud",
+#         "google.auth",
+#         "google_auth_httplib2",
+#         "google.api_core.bidi",
+#         "urllib3",
+#         "werkzeug",
+#     )
+#     # if running_in_cloudrun:
+#     logging.info(f"{project_id=} => using StructuredLogHandler() for logging")
+#     setup_logging(
+#         handler=CloudLoggingHandler(project_id=project_id),
+#         log_level=log_level,
+#         excluded_loggers=excluded_loggers,
+#     )
+#     # else:
+#     #     logging.basicConfig(level=log_level)
+#     #     logging.info(f"{running_in_cloudrun=} => using stock python logging")
+#     #     for logger_name in excluded_loggers:
+#     #         # prevent excluded loggers from propagating logs to handler
+#     #         logger = logging.getLogger(logger_name)
+#     #         logger.propagate = False
+
+#     logging.getLogger().propagate = True
+#     logging.info(
+#         f"Logging configuration completed (using {project_id=} => using StructuredLogHandler)"
+#     )
+
+
+def initialize_tracer():
+    set_global_textmap(CloudTraceFormatPropagator())
+    tracer_provider = TracerProvider()
+    cloud_trace_exporter = CloudTraceSpanExporter()
+    tracer_provider.add_span_processor(
+        # BatchSpanProcessor buffers spans and sends them in batches in a
+        # background thread. The default parameters are sensible, but can be
+        # tweaked to optimize your performance
+        BatchSpanProcessor(cloud_trace_exporter)
+    )
+    trace.set_tracer_provider(tracer_provider)
 
 
 class MembershipLoginManager(LoginManager):

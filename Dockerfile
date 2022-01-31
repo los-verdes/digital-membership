@@ -19,7 +19,9 @@ RUN pip install \
         --requirement requirements.txt \
         google-python-cloud-debugger==2.18
 
+COPY ./config/ ./config
 COPY ./member_card/ ./member_card
 COPY ./*.py ./
+COPY ./scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
 
-ENTRYPOINT ["gunicorn", "-b", "0.0.0.0:8080", "wsgi:create_app()", "--log-file", "-", "--log-level", "info"]
+ENTRYPOINT ["./scripts/docker-entrypoint.sh"]

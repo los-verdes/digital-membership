@@ -57,6 +57,12 @@ resource "google_cloud_run_service" "digital_membership" {
           name  = "DIGITAL_MEMBERSHIP_DB_DATABASE_NAME"
           value = google_sql_database.database.name
         }
+
+        env {
+          name  = "GCLOUD_PROJECT"
+          value = var.gcp_project_id
+        }
+
         env {
           name  = "FLASK_ENV"
           value = var.flask_env
