@@ -7,8 +7,8 @@ flask
 flask-login
 google-auth
 google-cloud-firestore
+google-cloud-logging
 google-cloud-secret-manager
-google_cloud_logger
 gunicorn
 libsass
 opentelemetry-exporter-gcp-trace
