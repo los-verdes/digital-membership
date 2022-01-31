@@ -259,6 +259,7 @@ ignored-modules=flask,
                 click,
                 flask_gravatar,
                 social_flask_sqlalchemy,
+                google_cloud_logger,
                 dateutil,
                 opentelemetry,
                 click
