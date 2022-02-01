@@ -40,6 +40,8 @@ resource "google_secret_manager_secret_version" "digital_membership" {
     # Flask's secret key: https://flask.palletsprojects.com/en/2.0.x/config/#SECRET_KEY
     secret_key = random_password.flask_secret_key.result
 
+    sendgrid_api_key = var.sendgrid_api_key
+
     # For configuring python-social-auth / Google OAuth 2 bits:
     social_auth_google_oauth2_key    = var.oauth_client_id
     social_auth_google_oauth2_secret = var.oauth_client_secret

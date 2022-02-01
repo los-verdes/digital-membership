@@ -47,6 +47,8 @@ class Settings(object):
 
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "info")
 
+    SENDGRID_API_KEY: str = os.getenv("SENDGRID_API_KEY", "")
+
     SOCIAL_AUTH_DISCONNECT_REDIRECT_URL: str = "/logout"
     SOCIAL_AUTH_GOOGLE_OAUTH2_KEY: str = os.environ.get("GOOGLE_CLIENT_ID", "")
     SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: str = os.environ.get("GOOGLE_CLIENT_SECRET", "")

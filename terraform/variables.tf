@@ -67,6 +67,10 @@ variable "squarespace_api_key" {
   sensitive = true
 }
 
+variable "sendgrid_api_key" {
+  sensitive = true
+}
+
 variable "oauth_client_id" {
   sensitive = true
 }
