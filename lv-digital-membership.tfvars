@@ -1,4 +1,4 @@
-base_domain = "card.losverd.es"
+base_domain            = "losverd.es"
 gcp_billing_account_id = "019767-2A54C9-AE07C6"
 # gcp_billing_account_name = "Los Verdes"
 gcp_project_editors = []

@@ -47,11 +47,23 @@ output "secret_name" {
   value = google_secret_manager_secret_version.digital_membership.name
 }
 
+output "statics_bucket_id" {
+  value = google_storage_bucket.statics.id
+}
+
+output "website_domain_name" {
+  value = local.cloud_run_domain_name
+}
+
 output "website_service_account_email" {
   value = google_service_account.digital_membership.email
 }
 
+output "worker_service_account_email" {
+  value = google_service_account.digital_membership_worker.email
+}
+
 output "website_service_account_key" {
   sensitive = true
-  value = google_service_account_key.digital_membership.private_key
+  value     = google_service_account_key.digital_membership.private_key
 }

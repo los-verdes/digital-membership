@@ -29,7 +29,7 @@ resource "google_cloud_run_service" "digital_membership" {
     spec {
       service_account_name = google_service_account.digital_membership.email
       containers {
-        image = var.cloud_run_container_image
+        image = var.website_image
 
         env {
           name = "DIGITAL_MEMBERSHIP_SECRETS_JSON"
@@ -114,9 +114,13 @@ resource "google_cloud_run_service" "digital_membership" {
   }
 }
 
+locals {
+  cloud_run_domain_name = "${var.cloud_run_subdomain}.${var.base_domain}"
+}
+
 resource "google_cloud_run_domain_mapping" "digital_membership" {
   location = var.gcp_region
-  name     = var.cloud_run_domain_name
+  name     = local.cloud_run_domain_name
 
   metadata {
     namespace = var.gcp_project_id

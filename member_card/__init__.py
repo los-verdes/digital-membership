@@ -3,7 +3,7 @@ import json
 import logging
 import os
 from urllib.parse import urlparse
-
+from flask_recaptcha import ReCaptcha
 import click
 from flask import Flask, g, redirect, render_template, request, send_file, url_for
 from flask.logging import default_handler
@@ -28,6 +28,10 @@ app = Flask(__name__)
 logger = app.logger
 logger.propagate = False
 login_manager = utils.MembershipLoginManager()
+
+# TODO: add invisible support
+# Ref: https://developers.google.com/recaptcha/docs/invisible
+recaptcha = ReCaptcha()
 
 
 def get_base_url():
@@ -87,6 +91,8 @@ def create_app():
         base_url=None,
     )
     assert gravatar
+
+    recaptcha.init_app(app)
 
     # with app.app_context():
     #     app.config.update(
@@ -176,6 +182,55 @@ def home():
         )
 
 
+@app.route("/email-distribution-request", methods=["POST"])
+def email_distribution_request():
+
+    email_form_message = None
+    request_accepted = False
+    if not recaptcha.verify():
+        email_form_error_message = "Request not verified via ReCaptcha! Please try again or contact support@losverd.es for assistance."
+        logger.error(
+            "Unable to verify recaptcha, redirecting to login", extra=dict(request.form)
+        )
+        return redirect(
+            f"{url_for('login')}?emailFormErrorMessage={email_form_error_message}"
+        )
+
+    email_form_message = "Email distribution request received!"
+    request_accepted = True
+    submitted_email = request.form["email"]
+    log_extra = dict(submitted_email=submitted_email)
+    try:
+        user = User.query.filter_by(email=submitted_email).one()
+        log_extra.update(dict(user=user))
+    except Exception as err:
+        log_extra.update(dict(user_query_err=err))
+        logger.warning(
+            f"no matching user found for {submitted_email=}",
+            extra=log_extra,
+        )
+        user = None
+
+    if user and user.has_active_memberships:
+        logger.info(f"Found {user=} for {submitted_email=}", extra=log_extra)
+        from member_card.pubsub import publish_message
+
+        publish_message(
+            project_id=app.config["GCLOUD_PROJECT"],
+            topic_id=app.config["GCLOUD_PUBSUB_TOPIC_ID"],
+            message_data=dict(
+                type="email_distribution_request",
+                submitted_email=submitted_email,
+            ),
+        )
+
+    return render_template(
+        "email_request_landing_page.html.j2",
+        request_accepted=request_accepted,
+        email_form_message=email_form_message,
+    )
+
+
 @login_required
 @app.route("/passes/apple-pay")
 def passes_apple_pay():
@@ -231,7 +286,7 @@ def verify_pass(serial_number):
 @app.route("/show-pass-image/<serial_number>")
 def show_pass_image(serial_number):
     from member_card.db import db
-    from member_card.models import AnnualMembership, MembershipCard
+    from member_card.models import MembershipCard
 
     signature = request.args.get("signature")
     if not signature:
@@ -262,7 +317,6 @@ def show_pass_image(serial_number):
         BytesIO(image_bytes),
         mimetype="image/png",
         as_attachment=True,
-        as_attachment=True,
         attachment_filename=card_image_filename,
     )
 
@@ -285,7 +339,12 @@ def privacy_policy():
 @app.route("/login")
 def login():
     """Logout view"""
-    return render_template("login.html.j2")
+    email_form_error_message = request.args.get("emailFormErrorMessage", "")
+    return render_template(
+        "login.html.j2",
+        email_form_error_message=email_form_error_message,
+        recaptcha_site_key=app.config["RECAPTCHA_SITE_KEY"],
+    )
 
 
 @login_required
@@ -358,11 +417,55 @@ def recreate_user(email):
     logger.debug(f"{memberships=}")
 
 
+@app.cli.command("update-sendgrid-template")
+def update_sendgrid_template():
+    from sendgrid import SendGridAPIClient
+
+    sg = SendGridAPIClient(app.config["SENDGRID_API_KEY"])
+    template_id = app.config["SENDGRID_TEMPLATE_ID"]
+    get_template_resp = sg.client.templates._(template_id).get()
+    template = json.loads(get_template_resp.body.decode())
+    version = template["versions"][0]
+    version_id = version["id"]
+    from jinja2 import Environment, PackageLoader, select_autoescape
+
+    env = Environment(
+        loader=PackageLoader(__name__),
+        autoescape=select_autoescape(),
+        variable_start_string="{~~ ",
+        variable_end_string=" ~~}",
+        comment_start_string="{#~",
+        comment_end_string="~#}",
+    )
+    template = env.get_template("sendgrid_email.html.j2")
+    updated_html_content = template.render(
+        preview_text="TODO",
+        view_online_href="https://card.losverd.es",
+        logo_src="card.losverd.es/static/LosVerdes_Logo_RGB_300_Horizontal_VerdeOnTransparent_CityYear.png",
+        downloads_img_src="card.losverd.es/static/small_lv_hands.png",
+        footer_logo_src="card.losverd.es/static/lv_hands.png",
+        card_img_src="{{cardImageUrl}}",
+    )
+    version["html_content"] = updated_html_content.strip()
+
+    # PATCH Response: 400 b'{"error":"You cannot switch editors once a dynamic template version has been created."}\n'
+    del version["editor"]
+    # breakpoint()
+    patch_version_resp = (
+        sg.client.templates._(template_id)
+        .versions._(version_id)
+        .patch(request_body=version)
+    )
+
+    logger.debug(f"{patch_version_resp.status_code=}:: {patch_version_resp.headers=}")
+    logger.info(f"{json.loads(patch_version_resp.body.decode())}")
+
+
 @app.cli.command("send-test-email")
 @click.argument("email")
 @click.argument("base_url", default="https://card.losverd.es")
 def send_test_email(email, base_url):
-    from sendgrid import SendGridAPIClient
+    from sendgrid import SendGridAPIClient, Asm
     from sendgrid.helpers.mail import Mail
     from datetime import timedelta, datetime
     from member_card.models import User
@@ -372,7 +475,7 @@ def send_test_email(email, base_url):
     from base64 import b64encode as b64e
     from tempfile import TemporaryDirectory
     from html2image import Html2Image
-    from PIL import Image
+    from PIL import Image, ImageChops
     from textwrap import dedent
 
     gcs_client = get_client()
@@ -408,6 +511,15 @@ def send_test_email(email, base_url):
     # compressed_img_height = 100
     # compressed_img_width = int(compressed_img_height * img_aspect_ratio)
     card_image_filename = f"{membership_card.serial_number.hex}.png"
+
+    def trim(im):
+        bg = Image.new(im.mode, im.size, im.getpixel((0, 0)))
+        diff = ImageChops.difference(im, bg)
+        diff = ImageChops.add(diff, diff, 2.0, -100)
+        bbox = diff.getbbox()
+        if bbox:
+            return im.crop(bbox)
+
     with TemporaryDirectory() as td:
         output_path = td
         output_path = "/Users/jeffwecan/workspace/los-verdes/digital-membership"
@@ -424,19 +536,23 @@ def send_test_email(email, base_url):
         image_path = os.path.join(output_path, card_image_filename)
 
         # compressed_image_path = image_path.replace(".png", "_compressed.png")
-        # img = Image.open(image_path)
+        img = Image.open(image_path)
+        # img = img.convert("RGBA")
+        img = trim(img)
         # img = img.resize(size=(compressed_img_width, compressed_img_height))
-        # img.save(compressed_image_path, compress_level=9)
+        img.save(image_path)  # , transparency=0) #, compress_level=9)
         # with open(compressed_image_path, mode="rb") as f:
         #     image_bytes = f.read()
         #     membership_card_png_b64 = b64e(image_bytes).decode()
-
+        print(image_path)
+        # breakpoint()
         remote_card_image_path = f"membership-cards/images/{card_image_filename}"
         blob = upload_file_to_gcs(
             bucket=bucket,
             local_file=image_path,
             remote_path=remote_card_image_path,
         )
+        card_image_url = f"{app.config['GCS_BUCKET_ID']}/{remote_card_image_path}"
         # signed_url = get_presigned_url(blob, attachment_ttl)
     from member_card.passes import get_apple_pass_for_user
 
@@ -449,8 +565,10 @@ def send_test_email(email, base_url):
         remote_path=remote_apple_pass_path,
         content_type="application/vnd.apple.pkpass",
     )
-    apple_pass_signed_url = get_presigned_url(apple_pass_blob, attachment_ttl)
-    subject = f"{app.config['EMAIL_SUBJECT_TEXT']} (generated on: {datetime.utcnow().isoformat()})"
+    apple_pass_url = f"{app.config['GCS_BUCKET_ID']}/{remote_apple_pass_path}"
+    # apple_pass_signed_url = get_presigned_url(apple_pass_blob, attachment_ttl)
+    generated_on = datetime.utcnow().isoformat()
+    subject = f"{app.config['EMAIL_SUBJECT_TEXT']} (generated on: {generated_on})"
     serial_number = str(membership_card.serial_number)
     show_pass_signature = utils.sign(serial_number)
     template_data = {
@@ -471,7 +589,10 @@ def send_test_email(email, base_url):
             qr_code_ascii=membership_card.qr_code_ascii,
         ),
         # "membershipCardBase64Png": membership_card_png_b64,
-        "applePassSignedUrl": apple_pass_signed_url,
+        # "applePassSignedUrl": apple_pass_signed_url,
+        "cardImageUrl": card_image_url,
+        "applePassUrl": apple_pass_url,
+        "generated_on": generated_on,
     }
 
     # TODO: tmp testing dump here...
@@ -485,7 +606,8 @@ def send_test_email(email, base_url):
     )
     message.dynamic_template_data = template_data
     message.template_id = app.config["SENDGRID_TEMPLATE_ID"]
-
+    group_id = 29631  # TODO: move this to a lookup or constant elsewhere
+    message.asm = Asm(group_id)
     logger.info(
         f"sending '{subject}' email to: {user.email}",
         extra=dict(

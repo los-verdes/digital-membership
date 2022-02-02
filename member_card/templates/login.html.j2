@@ -1,5 +1,16 @@
 {% extends "base.html.j2" %}
 
+{% block head %}
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<script>
+  function onSubmit(token) {
+    document.getElementById("submit-button").setAttribute("disabled", "");
+    document.getElementById("submit-progress").style.display = "block";
+    document.getElementById("emailDistributionRequest").submit();
+  }
+</script>
+{% endblock %}
+
 {% block content %}
 {% call macros.content_grid(middle_column_size=8) %}
 <div class="mdl-grid mdl-grid--no-spacing login">
@@ -27,14 +38,49 @@
             <h4>
               Welcome Verdes!
             </h4>
-            Please login to access the Los Verdes membership portal:
-            <br>
-            <br>
-            <br>
+            This website provides access to a digital membership card for any current member of <a
+               href="https://losverdesatx.org" target="_black">Los Verdes</a>.
+            To grab your membership card, either:
+            <ol>
+              <li>
+                <strong>Send links to your card over email:</strong>
+                <form id="emailDistributionRequest" action="{{ url_for('email_distribution_request') }}" method="post">
+                  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                    <input id="email" name="email" class="mdl-textfield__input" type="email">
+                    <label class="mdl-textfield__label" for="email">E-mail</label>
+                    <span class="mdl-textfield__error">Enter a valid email!</span>
+                  </div>
+                  <div class="error-messages mdl-color-text--red">{{ email_form_error_message }}</div>
+                  <div id="submit-progress" class="mdl-progress mdl-js-progress mdl-progress__indeterminate"
+                       style="display:none;"></div>
+                  <div class="mdl-typography--text-bottom	mdl-typography--text-right">
+                    <!-- <button class="mdl-button mdl-js-button mdl-button--raised" type="submit">
+                      Submit Email Request
+                    </button> -->
 
-            <div class="mdl-typography--text-bottom	mdl-typography--text-center">
-              {{ macros.sign_in_button() }}
-            </div>
+                    <button id="submit-button" class="mdl-button mdl-js-button mdl-button--raised g-recaptcha"
+                            data-sitekey="{{ recaptcha_site_key }}" data-callback='onSubmit'>Submit Email
+                      Request</button>
+                  </div>
+                </form>
+              </li>
+
+              <br>
+              <hr>
+              <br>
+
+              <li>
+                <strong>Login to access the Los Verdes membership portal:</strong>
+                <br>
+                <br>
+                <div class="mdl-typography--text-bottom	mdl-typography--text-right">
+                  {{ macros.sign_in_button() }}
+                </div>
+              </li>
+            </ol>
+            <br>
+            <br>
+            <br>
           </div>
 
           <div class="mdl-tabs__panel" id="about-panel">

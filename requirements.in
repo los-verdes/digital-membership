@@ -1,6 +1,7 @@
 Flask-Assets
 Flask-Gravatar
 Flask-SQLAlchemy
+Flask-reCaptcha
 M2Crypto
 cloud-sql-python-connector[pg8000]
 flask
@@ -8,6 +9,7 @@ flask-login
 google-auth
 google-cloud-firestore
 google-cloud-logging
+google-cloud-pubsub
 google-cloud-secret-manager
 google-cloud-storage
 google_cloud_logger

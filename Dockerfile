@@ -3,7 +3,8 @@ FROM python:3.9 AS base
 WORKDIR /app
 
 # Various pre-requisites for getting m2crypto install (which in turn is used by passkit)
-RUN apt-get update \
+RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
+    && apt-get update \
     && apt-get install --no-install-recommends -y \
         build-essential=12.9 \
         python3-dev=3.9.2-3 \
@@ -21,15 +22,34 @@ RUN pip install \
         --requirement requirements.txt \
         google-python-cloud-debugger==2.18
 
-FROM python:3.9-slim AS website
-
-COPY --from=base /opt/venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-
 COPY ./config/ ./config
 COPY ./member_card/ ./member_card
 COPY ./*.py ./
 COPY ./scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
-ENTRYPOINT ["./scripts/docker-entrypoint.sh"]
 
-# FROM website AS worker
+FROM python:3.9-slim AS website
+
+WORKDIR /app
+
+COPY --from=base /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+COPY --from=base /app /app
+
+ENTRYPOINT ["/app/scripts/docker-entrypoint.sh"]
+
+FROM base AS worker
+
+WORKDIR /app
+
+RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
+    && apt-get update \
+    && apt-get install --no-install-recommends -y \
+        fonts-liberation=1:1.07.4-11 \
+        google-chrome-stable=98.0.4758.80-1 \
+    && rm -rf /var/lib/apt/lists/*
+
+
+ENV PATH="/opt/venv/bin:$PATH"
+
+ENTRYPOINT ["/app/scripts/docker-entrypoint.sh"]

@@ -18,14 +18,9 @@ variable "base_domain" {
   type = string
 }
 
-variable "cloud_run_container_image" {
+variable "cloud_run_subdomain" {
   type    = string
-  default = "gcr.io/lv-digital-membership/member-card:latest"
-}
-
-variable "cloud_run_domain_name" {
-  type    = string
-  default = "card.losverd.es"
+  default = "card"
 }
 
 variable "flask_env" {
@@ -71,6 +66,10 @@ variable "squarespace_api_key" {
   sensitive = true
 }
 
+variable "recaptcha_secret_key" {
+  sensitive = true
+}
+
 variable "sendgrid_api_key" {
   sensitive = true
 }
@@ -81,4 +80,14 @@ variable "oauth_client_id" {
 
 variable "oauth_client_secret" {
   sensitive = true
+}
+
+variable "website_image" {
+  type    = string
+  default = "gcr.io/lv-digital-membership/website:latest"
+}
+
+variable "worker_image" {
+  type    = string
+  default = "gcr.io/lv-digital-membership/worker:latest"
 }

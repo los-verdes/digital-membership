@@ -54,8 +54,13 @@ class Settings(object):
     SERVICE_ACCOUNT_KEY: str = os.getenv("SERVICE_ACCOUNT_KEY", "")
     GCS_BUCKET_ID: str = os.getenv("GCS_BUCKET_ID", "")
     GCLOUD_PROJECT: str = os.getenv("GCLOUD_PROJECT", "")
+    GCLOUD_PUBSUB_TOPIC_ID: str = os.getenv("GCLOUD_PUBSUB_TOPIC_ID", "digital-membership")
 
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "info")
+
+    RECAPTCHA_SITE_KEY: str = os.getenv("RECAPTCHA_SITE_KEY", "6LdAblIeAAAAADLSJxAgNOhI2vSnZTG8rurt7Pnt")
+    RECAPTCHA_SECRET_KEY: str = os.getenv("RECAPTCHA_SECRET_KEY", "")
+    RECAPTCHA_SIZE = "compact"
 
     SENDGRID_API_KEY: str = os.getenv("SENDGRID_API_KEY", "")
     SENDGRID_TEMPLATE_ID: str = os.getenv(

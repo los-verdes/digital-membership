@@ -60,3 +60,4 @@ jobs:
           TF_VAR_oauth_client_secret: ${{ secrets.oauth_client_secret }}
           TF_VAR_apple_pass_certificate: ${{ secrets.apple_pass_certificate }}
           TF_VAR_apple_pass_private_key_password: ${{ secrets.apple_pass_private_key_password }}
+          TF_VAR_recaptcha_secret_key: ${{ secrets.recaptcha_secret_key }}

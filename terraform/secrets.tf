@@ -37,6 +37,8 @@ resource "google_secret_manager_secret_version" "digital_membership" {
     # db_database_name   = google_sql_database.database.name
     # db_username        = google_sql_user.service_account.name
 
+    recaptcha_secret_key = var.recaptcha_secret_key
+
     # Flask's secret key: https://flask.palletsprojects.com/en/2.0.x/config/#SECRET_KEY
     secret_key = random_password.flask_secret_key.result
 

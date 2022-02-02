@@ -1,20 +1,20 @@
 resource "google_storage_bucket" "statics" {
-  name          = "static.${var.base_domain}"
+  name          = "cstatic.${var.base_domain}"
   location      = "US"
   force_destroy = true
 
   uniform_bucket_level_access = false
 
-  # website {
-  #   main_page_suffix = "index.html"
-  # }
+  website {
+    main_page_suffix = "index.html"
+  }
 }
 
-# resource "google_storage_bucket_iam_member" "all_users_viewers" {
-#   bucket = google_storage_bucket.static_site.name
-#   role   = "roles/storage.legacyObjectReader"
-#   member = "allUsers"
-# }
+resource "google_storage_bucket_iam_member" "all_users_viewers" {
+  bucket = google_storage_bucket.statics.name
+  role   = "roles/storage.legacyObjectReader"
+  member = "allUsers"
+}
 
 resource "google_storage_bucket_iam_member" "digital_membership_sa_obj_admin" {
   bucket = google_storage_bucket.statics.name
@@ -25,7 +25,7 @@ resource "google_storage_bucket_iam_member" "digital_membership_sa_obj_admin" {
 # resource "google_storage_bucket_iam_member" "test_site_publisher_sa_obj_admin" {
 #   bucket = google_storage_bucket.static_site.name
 #   role   = "roles/storage.objectAdmin"
-#   member = "serviceAccount:${google_service_account.test_site_publisher.email}"
+#   member = "serviceAccount:${google_service_account.test_site_publisher.email}"w
 
 #   # condition {
 #   #   title       = "tests-prefix-only"

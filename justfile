@@ -1,10 +1,13 @@
 tf_subdir      := "./terraform"
 tfvars_file    := "lv-digital-membership.tfvars"
-local_image_name := 'member-card:latest'
-gcr_name := "gcr.io/lv-digital-membership/member-card"
-gcr_tag := `git describe --tags --dirty --long --always`
-gcr_image_name := gcr_name + ":" + gcr_tag
-gcr_latest_image_name := gcr_name + ":latest"
+
+gcr_repo := "gcr.io/lv-digital-membership"
+image_tag := `git describe --tags --dirty --long --always`
+website_image_name := "website"
+website_gcr_image_name := gcr_repo + "/" + website_image_name
+worker_image_name := "worker"
+worker_gcr_image_name := gcr_repo + "/" + worker_image_name
+
 python_reqs_file := "requirements.txt"
 export GCLOUD_PROJECT := "lv-digital-membership"
 # TODO: dev as default after we get done setting this all up....
@@ -15,7 +18,7 @@ export LOG_LEVEL := env_var_or_default("LOG_LEVEL", "debug")
 export DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME := "lv-digital-membership:us-central1:lv-digital-membership-30c67c90"
 export DIGITAL_MEMBERSHIP_DB_USERNAME := env_var_or_default("DIGITAL_MEMBERSHIP_DB_USERNAME", `gcloud auth list 2>/dev/null | grep -E '^\*' | awk '{print $2;}'`)
 export DIGITAL_MEMBERSHIP_DB_DATABASE_NAME := "lv-digital-membership"
-export GCS_BUCKET_ID := "static.card.losverd.es"
+export GCS_BUCKET_ID := "cstatic.losverd.es"
 
 set-tf-ver-output:
   echo "::set-output name=terraform_version::$(cat {{ tf_subdir }}/.terraform-version)"
@@ -68,7 +71,7 @@ docker-flask +CMD: build
     --env=SQUARESPACE_API_KEY \
     --entrypoint='' \
     -v=$HOME/.config/gcloud:/root/.config/gcloud \
-    '{{ local_image_name }}' \
+    '{{ website_image_name }}' \
     flask {{ CMD }}
 
 
@@ -93,28 +96,46 @@ serve:
   # => export GOOGLE_CLIENT_SECRET="$(op get item --vault="Los Verdes" 'Local Dev  (Google OAuth Credentials) - Los Verdes Digital Membership' | jq -r '.details.sections | .[] | select(.title == "credentials").fields | .[] | select(.n == "credential").v')"
   # => export APPLE_PASS_PRIVATE_KEY_PASSWORD="$(op get item --vault="Los Verdes" 'private.key password - Apple Developer Certificate - v0prod - pass.es.losverd.card' | jq -r '.details.password')"
   # => export SENDGRID_API_KEY="$(op get item --vault="Los Verdes" 'SendGrid - API Key' | jq -r '.details.sections | .[] | select(.title == "credentials").fields | .[] | select(.n == "credential").v')"
+  # => export RECAPTCHA_SECRET_KEY="$(op get item --vault="Los Verdes" 'card.losverd.es - reCAPTCHA' | jq -r '.details.sections | .[] | select(.title == "credentials").fields | .[] | select(.n == "credential").v')"
   # export DIGITAL_MEMBERSHIP_GCP_SECRET_NAME="projects/567739286055/secrets/digital-membership/versions/latest"
   # ~/bin/cloud_sql_proxy -instances='lv-digital-membership:us-central1:lv-digital-membership=tcp:5432'  -enable_iam_login
   # export DIGITAL_MEMBERSHIP_DB_USERNAME="$(gcloud auth list 2>/dev/null | egrep '^\*' | awk '{print $2;}')"
   flask run --cert=tmp-certs/cert.pem --key=tmp-certs/key.pem
 
-build:
-  docker build . --tag '{{ local_image_name }}'
+build-website:
+  docker build . --target website --tag '{{ website_image_name }}:{{ image_tag }}'
 
-shell: build
-  docker run -it --rm --entrypoint='' '{{ local_image_name }}' bash
+build-worker:
+  docker build . --target worker --tag '{{ worker_image_name }}:{{ image_tag }}'
+
+build: build-website build-worker
+
+shell-worker: build-worker
+  docker run -it --rm --entrypoint='' '{{ worker_image_name }}:{{ image_tag }}'  bash
+
+shell-website: build-website
+  docker run -it --rm --entrypoint='' '{{ website_image_name }}:{{ image_tag }}'  bash
+
+shell: shell-website
 
 push: build
-  docker tag '{{ local_image_name }}' '{{ gcr_image_name }}'
-  docker tag '{{ local_image_name }}' '{{ gcr_latest_image_name }}'
-  docker push '{{ gcr_image_name }}'
-  docker push '{{ gcr_latest_image_name }}'
+  echo "Pushing website image..."
+  docker tag '{{ website_image_name }}:{{ image_tag }}' '{{ website_gcr_image_name }}:{{ image_tag }}'
+  docker tag '{{ website_image_name }}:{{ image_tag }}' '{{ website_gcr_image_name }}:latest'
+  docker push '{{ website_gcr_image_name }}:{{ image_tag }}'
+  docker push '{{ website_gcr_image_name }}:latest'
+
+  echo "Pushing worker image..."
+  docker tag '{{ worker_image_name }}:{{ image_tag }}' '{{ worker_gcr_image_name }}:{{ image_tag }}'
+  docker tag '{{ worker_image_name }}:{{ image_tag }}' '{{ worker_gcr_image_name }}:latest'
+  docker push '{{ worker_gcr_image_name }}:{{ image_tag }}'
+  docker push '{{ worker_gcr_image_name }}:latest'
 
 deploy: build push
-  echo "{{ gcr_image_name }}"
-  # sed -i'' 's~cloud_run_container_image = .*~cloud_run_container_image = "{{ gcr_image_name }}"~g' lv-digital-membership.tfvars
-  just tf init
-  just tf apply -auto-approve -var='cloud_run_container_image={{ gcr_image_name }}'
+  # just tf init -auto-approve
+  just tf apply \
+    -var='website_image={{ website_gcr_image_name }}:{{ image_tag }}' \
+    -var='worker_image={{ worker_gcr_image_name }}:{{ image_tag }}'
 
 sync-subscriptions: ci-install-python-reqs
   @echo "DIGITAL_MEMBERSHIP_DB_DATABASE_NAME: $DIGITAL_MEMBERSHIP_DB_DATABASE_NAME"
