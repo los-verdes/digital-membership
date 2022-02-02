@@ -227,6 +227,48 @@ def verify_pass(serial_number):
     # return redirect(url_for("home"))
 
 
+@login_required
+@app.route("/show-pass-image/<serial_number>")
+def show_pass_image(serial_number):
+    from member_card.db import db
+    from member_card.models import AnnualMembership, MembershipCard
+
+    signature = request.args.get("signature")
+    if not signature:
+        return "Unable to verify signature!", 401
+
+    signature_verified = utils.verify(signature=signature, data=serial_number)
+    if not signature_verified:
+        return "Unable to verify signature!", 401
+    # current_user = g.user
+    # if current_user.is_authenticated:
+    verified_card = (
+        db.session.query(MembershipCard).filter_by(serial_number=serial_number).one()
+    )
+    logger.debug(f"{verified_card=}")
+
+    card_image_filename = f"{verified_card.serial_number.hex}.png"
+    remote_card_image_path = f"membership-cards/images/{card_image_filename}"
+    from member_card.storage import get_client
+
+    gcs_client = get_client()
+    remote_blob = gcs_client.get_bucket(app.config["GCS_BUCKET_ID"]).blob(
+        remote_card_image_path
+    )
+    image_bytes = remote_blob.download_as_bytes()
+    from io import BytesIO
+
+    return send_file(
+        BytesIO(image_bytes),
+        mimetype="image/png",
+        as_attachment=True,
+        as_attachment=True,
+        attachment_filename=card_image_filename,
+    )
+
+    # return redirect(url_for("home"))
+
+
 @app.route("/privacy-policy")
 def privacy_policy():
     return render_template(
@@ -327,11 +369,11 @@ def send_test_email(email, base_url):
     from member_card.passes import get_or_create_membership_card
     from member_card.storage import get_client, upload_file_to_gcs, get_presigned_url
 
-    # from base64 import b64encode as b64e
-    # from tempfile import TemporaryDirectory
-    # from html2image import Html2Image
-    # from PIL import Image
-    # from textwrap import dedent
+    from base64 import b64encode as b64e
+    from tempfile import TemporaryDirectory
+    from html2image import Html2Image
+    from PIL import Image
+    from textwrap import dedent
 
     gcs_client = get_client()
     bucket = gcs_client.get_bucket(app.config["GCS_BUCKET_ID"])
@@ -343,89 +385,64 @@ def send_test_email(email, base_url):
     if not user.has_active_memberships:
         raise NotImplementedError
 
-    # img_aspect_ratio = 1.586
-    # img_height = 500
-    # img_width = int(img_height * img_aspect_ratio)
+    img_aspect_ratio = 1.586
+    img_height = 500
+    img_width = int(img_height * img_aspect_ratio)
     membership_card = get_or_create_membership_card(
         user=user,
         base_url=base_url,
     )
-    # with app.test_request_context("/"):
+    with app.test_request_context("/"):
 
-    #     login_user(user=user)
-    #     g.user = user
-    #     html_content = render_template(
-    #         "card_image.html.j2",
-    #         membership_card=membership_card,
-    #         card_height=img_height,
-    #         card_width=img_width,
-    #     )
+        login_user(user=user)
+        g.user = user
+        html_content = render_template(
+            "card_image.html.j2",
+            membership_card=membership_card,
+            card_height=img_height,
+            card_width=img_width,
+        )
 
-    # with open("tmp_card_image.html", "w") as fp:
-    #     fp.write(html_content)
-    # # return
-    # css_str = dedent(
-    #     f"""\
-    #     body {{
-    #         background-color: transparent;
-    #     }}
-    #     .mdl-card {{
-    #         width: 100%;
-    #         box-shadow: none;
-    #     }}
-    #     div.qr-code>img {{
-    #         display: block;
-    #     }}
-    #     div.membership-card {{
-    #         position: relative;
-    #         width: 100%;
-    #     }}
-    #     div.membership-card>.membership-card-inner {{
-    #         padding-bottom: 0px;
-    #     }}
+    with open("tmp_card_image.html", "w") as fp:
+        fp.write(html_content)
+    # compressed_img_height = 100
+    # compressed_img_width = int(compressed_img_height * img_aspect_ratio)
+    card_image_filename = f"{membership_card.serial_number.hex}.png"
+    with TemporaryDirectory() as td:
+        output_path = td
+        output_path = "/Users/jeffwecan/workspace/los-verdes/digital-membership"
+        hti = Html2Image(
+            output_path=output_path,
+            temp_path=td,
+            size=(img_width, img_height),
+        )
+        hti.screenshot(
+            html_str=html_content,
+            save_as=card_image_filename,
+            # css_str=css_str,
+        )
+        image_path = os.path.join(output_path, card_image_filename)
 
-    #     """
-    # )
+        # compressed_image_path = image_path.replace(".png", "_compressed.png")
+        # img = Image.open(image_path)
+        # img = img.resize(size=(compressed_img_width, compressed_img_height))
+        # img.save(compressed_image_path, compress_level=9)
+        # with open(compressed_image_path, mode="rb") as f:
+        #     image_bytes = f.read()
+        #     membership_card_png_b64 = b64e(image_bytes).decode()
 
-    # # compressed_img_height = 100
-    # # compressed_img_width = int(compressed_img_height * img_aspect_ratio)
-    # card_image_filename = f"{membership_card.serial_number.hex}.png"
-    # with TemporaryDirectory() as td:
-    #     output_path = td
-    #     output_path = "/Users/jeffwecan/workspace/los-verdes/digital-membership"
-    #     hti = Html2Image(
-    #         output_path=output_path,
-    #         temp_path=td,
-    #         size=(img_width, img_height),
-    #     )
-    #     hti.screenshot(
-    #         html_str=html_content,
-    #         save_as=card_image_filename,
-    #         # css_str=css_str,
-    #     )
-    #     image_path = os.path.join(output_path, card_image_filename)
-
-    #     # compressed_image_path = image_path.replace(".png", "_compressed.png")
-    #     # img = Image.open(image_path)
-    #     # img = img.resize(size=(compressed_img_width, compressed_img_height))
-    #     # img.save(compressed_image_path, compress_level=9)
-    #     # with open(compressed_image_path, mode="rb") as f:
-    #     #     image_bytes = f.read()
-    #     #     membership_card_png_b64 = b64e(image_bytes).decode()
-
-    #     remote_card_image_path = f"membership-cards/images/{card_image_filename}"
-    #     blob = upload_file_to_gcs(
-    #         bucket=bucket,
-    #         local_file=image_path,
-    #         remote_path=remote_card_image_path,
-    #     )
-    #     signed_url = get_presigned_url(blob, attachment_ttl)
+        remote_card_image_path = f"membership-cards/images/{card_image_filename}"
+        blob = upload_file_to_gcs(
+            bucket=bucket,
+            local_file=image_path,
+            remote_path=remote_card_image_path,
+        )
+        # signed_url = get_presigned_url(blob, attachment_ttl)
     from member_card.passes import get_apple_pass_for_user
+
     with app.test_request_context("/"):
         local_apple_pass_path = get_apple_pass_for_user(user=user)
-    remote_apple_pass_path = (
-        f"membership-cards/apple-passes/{membership_card.apple_pass_serial_number}.pkpass"
-    )
+    remote_apple_pass_path = f"membership-cards/apple-passes/{membership_card.apple_pass_serial_number}.pkpass"
     apple_pass_blob = upload_file_to_gcs(
         bucket=bucket,
         local_file=local_apple_pass_path,
@@ -434,8 +451,11 @@ def send_test_email(email, base_url):
     )
     apple_pass_signed_url = get_presigned_url(apple_pass_blob, attachment_ttl)
     subject = f"{app.config['EMAIL_SUBJECT_TEXT']} (generated on: {datetime.utcnow().isoformat()})"
+    serial_number = str(membership_card.serial_number)
+    show_pass_signature = utils.sign(serial_number)
     template_data = {
         "subject": subject,
+        "showPassSignature": show_pass_signature,
         # "applePassLink": "coming soon!",
         "membershipHistory": sorted(
             [m.to_dict() for m in user.annual_memberships],
