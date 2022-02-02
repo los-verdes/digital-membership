@@ -174,9 +174,21 @@ show_card_actions_bar=True
     </span>
     <span class="mdl-list__item-secondary-content">
       <a class="mdl-list__item-secondary-action mdl-button mdl-js-button mdl-button--icon mdl-button--colored"
-         href="https://www.losverdesatx.org/lv-store/membership" target="_black"
+         href="https://www.losverdesatx.org/lv-store/membership" target="_blank"
          title="Click here to open the membership store in a new tab"><i class="material-icons">storefront</i></a>
     </span>
   </li>
 </ul>
+{% endmacro %}
+
+{% macro help_content() %}
+<h4>About</h4>
+This website provides access to a digital membership card for any current members of the <a
+   href="https://losverdesatx.org" target="_blank">Los Verdes</a> futbol supporters group.
+<hr>
+<h5>Troubleshooting</h5>
+If you have issues retrieving your members card:
+{{ troubleshooting_list() }}
+<h5>Website Policies</h5>
+This site's privacy policy can be view here: <a href="{{ url_for('privacy_policy') }}">Privacy Policy</a>
 {% endmacro %}

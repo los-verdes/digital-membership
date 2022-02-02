@@ -1,5 +1,4 @@
 {% extends "base.html.j2" %}
-
 {% block head %}
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <script>
@@ -13,7 +12,7 @@
 
 {% block content %}
 {% call macros.content_grid(middle_column_size=8) %}
-<div class="mdl-grid mdl-grid--no-spacing login">
+<div class="mdl-grid login">
   <div class="mdl-cell mdl-cell--6-col mdl-cell--hide-tablet mdl-cell--hide-phone">
 
     <div class="mdl-card mdl-shadow--2dp login-side-cover">
@@ -30,20 +29,20 @@
       <div class="mdl-card__supporting-text">
         <div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
           <div class="mdl-tabs__tab-bar">
-            <a href="#login-panel" class="mdl-tabs__tab is-active">Login</a>
+            <a href="#email-login-panel" class="mdl-tabs__tab is-active">Email / Login</a>
             <a href="#about-panel" class="mdl-tabs__tab">About</a>
           </div>
 
-          <div class="mdl-tabs__panel is-active" id="login-panel">
+          <div class="mdl-tabs__panel is-active" id="email-login-panel">
             <h4>
               Welcome Verdes!
             </h4>
-            This website provides access to a digital membership card for any current member of <a
-               href="https://losverdesatx.org" target="_black">Los Verdes</a>.
-            To grab your membership card, either:
+            Digital membership cards can be obtained by either:
             <ol>
               <li>
-                <strong>Send links to your card over email:</strong>
+                <strong>Email</strong>:
+                <br>
+                Have a image and Google Pay / Apple wallet passes links for your membership card sent via email:
                 <form id="emailDistributionRequest" action="{{ url_for('email_distribution_request') }}" method="post">
                   <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
                     <input id="email" name="email" class="mdl-textfield__input" type="email">
@@ -51,16 +50,12 @@
                     <span class="mdl-textfield__error">Enter a valid email!</span>
                   </div>
                   <div class="error-messages mdl-color-text--red">{{ email_form_error_message }}</div>
-                  <div id="submit-progress" class="mdl-progress mdl-js-progress mdl-progress__indeterminate"
-                       style="display:none;"></div>
                   <div class="mdl-typography--text-bottom	mdl-typography--text-right">
-                    <!-- <button class="mdl-button mdl-js-button mdl-button--raised" type="submit">
-                      Submit Email Request
-                    </button> -->
-
-                    <button id="submit-button" class="mdl-button mdl-js-button mdl-button--raised g-recaptcha"
+                    <button id="submit-button" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored g-recaptcha"
                             data-sitekey="{{ recaptcha_site_key }}" data-callback='onSubmit'>Submit Email
                       Request</button>
+                    <div id="submit-progress" class="mdl-progress mdl-js-progress mdl-progress__indeterminate"
+                         style="display:none;"></div>
                   </div>
                 </form>
               </li>
@@ -70,7 +65,9 @@
               <br>
 
               <li>
-                <strong>Login to access the Los Verdes membership portal:</strong>
+                <strong>Website</strong>:
+                <br>
+                Login to access the Los Verdes membership portal and retrieve your membership card:
                 <br>
                 <br>
                 <div class="mdl-typography--text-bottom	mdl-typography--text-right">
@@ -84,11 +81,9 @@
           </div>
 
           <div class="mdl-tabs__panel" id="about-panel">
-            <h4>About</h4>
-            <hr>
-            <h5>Troubleshooting</h5>
-            If you have issues retrieving your members card:
-            {{ macros.troubleshooting_list() }}
+            <div id="about-panel-content" style="display: none;">
+              {{ macros.help_content() }}
+            </div>
           </div>
         </div>
       </div>
@@ -101,4 +96,10 @@
 
 </div>
 {% endcall %}
+{% endblock %}
+
+{% block before_body_close %}
+<script>
+  document.getElementById("about-panel-content").style.display = "block";
+</script>
 {% endblock %}

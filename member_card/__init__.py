@@ -196,7 +196,8 @@ def email_distribution_request():
             f"{url_for('login')}?emailFormErrorMessage={email_form_error_message}"
         )
 
-    email_form_message = "Email distribution request received!"
+    email_form_message = "Request received"
+    redirect_home_delay_seconds = "45"
     request_accepted = True
     submitted_email = request.form["email"]
     log_extra = dict(submitted_email=submitted_email)
@@ -226,8 +227,10 @@ def email_distribution_request():
 
     return render_template(
         "email_request_landing_page.html.j2",
+        submitted_email=submitted_email,
         request_accepted=request_accepted,
         email_form_message=email_form_message,
+        redirect_home_delay_seconds=redirect_home_delay_seconds,
     )
 
 
@@ -279,61 +282,7 @@ def verify_pass(serial_number):
         membership_table_keys=list(AnnualMembership().to_dict().keys()),
     )
 
-    # return redirect(url_for("home"))
 
-
-@login_required
-@app.route("/show-pass-image/<serial_number>")
-def show_pass_image(serial_number):
-    from member_card.db import db
-    from member_card.models import MembershipCard
-
-    signature = request.args.get("signature")
-    if not signature:
-        return "Unable to verify signature!", 401
-
-    signature_verified = utils.verify(signature=signature, data=serial_number)
-    if not signature_verified:
-        return "Unable to verify signature!", 401
-    # current_user = g.user
-    # if current_user.is_authenticated:
-    verified_card = (
-        db.session.query(MembershipCard).filter_by(serial_number=serial_number).one()
-    )
-    logger.debug(f"{verified_card=}")
-
-    card_image_filename = f"{verified_card.serial_number.hex}.png"
-    remote_card_image_path = f"membership-cards/images/{card_image_filename}"
-    from member_card.storage import get_client
-
-    gcs_client = get_client()
-    remote_blob = gcs_client.get_bucket(app.config["GCS_BUCKET_ID"]).blob(
-        remote_card_image_path
-    )
-    image_bytes = remote_blob.download_as_bytes()
-    from io import BytesIO
-
-    return send_file(
-        BytesIO(image_bytes),
-        mimetype="image/png",
-        as_attachment=True,
-        attachment_filename=card_image_filename,
-    )
-
-    # return redirect(url_for("home"))
-
-
-@app.route("/privacy-policy")
-def privacy_policy():
-    return render_template(
-        "privacy_policy.html.j2",
-    )
-
-
-# @login_required
-# @app.route("/done/")
-# def done():
-#     return render_template("home2.html.j2")
 
 
 @app.route("/login")
@@ -352,6 +301,20 @@ def login():
 def logout():
     logout_user()
     return redirect("/")
+
+
+@app.route("/privacy-policy")
+def privacy_policy():
+    return render_template(
+        "privacy_policy.html.j2",
+    )
+
+
+@app.route("/about")
+def about():
+    return render_template(
+        "about.html.j2",
+    )
 
 
 @app.cli.command("ensure-db-schemas")
@@ -439,7 +402,7 @@ def update_sendgrid_template():
     )
     template = env.get_template("sendgrid_email.html.j2")
     updated_html_content = template.render(
-        preview_text="TODO",
+        preview_text="Your requested Los Verdes membership card details are attached!",
         view_online_href="https://card.losverd.es",
         logo_src="card.losverd.es/static/LosVerdes_Logo_RGB_300_Horizontal_VerdeOnTransparent_CityYear.png",
         downloads_img_src="card.losverd.es/static/small_lv_hands.png",
@@ -593,6 +556,7 @@ def send_test_email(email, base_url):
         "cardImageUrl": card_image_url,
         "applePassUrl": apple_pass_url,
         "generated_on": generated_on,
+        "generating_ip_address": False,
     }
 
     # TODO: tmp testing dump here...

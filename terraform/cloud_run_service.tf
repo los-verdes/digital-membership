@@ -69,6 +69,11 @@ resource "google_cloud_run_service" "digital_membership" {
         }
 
         env {
+          name  = "GCLOUD_PUBSUB_TOPIC_ID"
+          value = google_pubsub_topic.digital_membership.name
+        }
+
+        env {
           name  = "FLASK_ENV"
           value = var.flask_env
         }

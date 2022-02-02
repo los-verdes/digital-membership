@@ -199,7 +199,7 @@
 <!-- START TITLE -->
 <tr>
   <td class="td-padding" align="left"
-      style="font-family: 'Bungee', cursive; border-bottom: 2px solid #00b140; color: #212121!important; font-size: 24px; line-height: 30px; padding-top: 18px; padding-left: 18px!important; padding-right: 18px!important; padding-bottom: 0px!important; mso-line-height-rule: exactly; mso-padding-alt: 18px 18px 0px 13px;">
+      style="font-family: 'Impact', sans-serif; border-bottom: 2px solid #00b140; background-color: #00b140!important; color: #212121!important; font-size: 24px; line-height: 30px; padding-top: 18px; padding-left: 18px!important; padding-right: 18px!important; padding-bottom: 0px!important; mso-line-height-rule: exactly; mso-padding-alt: 18px 18px 0px 13px;">
     <h2>{~~ title ~~}</h2>
   </td>
 </tr>
@@ -209,8 +209,8 @@
 <!-- START HEADER IMAGE -->
 <tr>
   <td align="center" class="hund ripplelink" width="600" style="padding: 10px;">
-    <img align="center" width="600" style="width: 100%; max-width: 600px!important"
-         class="hund" src="https://{~~ img_src ~~}">
+    <img align="center" width="600" style="width: 100%; max-width: 600px!important" class="hund"
+         src="https://{~~ img_src ~~}">
   </td>
 </tr>
 <!-- END HEADER IMAGE -->
@@ -225,18 +225,27 @@
 <!-- END BODY COPY -->
 <!-- BUTTON -->
 <tr>
-  <td bgcolor="#ffffff" align="left"
+  <td bgcolor="#00b140" align="right"
       style="padding: 18px 18px 18px 18px; mso-alt-padding: 18px 18px 18px 18px!important;">
     <table width="100%" border="0" cellspacing="0" cellpadding="0">
       <tr>
         <td>
           <table border="0" cellspacing="0" cellpadding="0">
             <tr>
-              <td align="left" style="border-radius: 3px;" bgcolor="#fc3f1e">
-                {% if button %}
-                <a class="button raised" href="http://paulgoddarddesign.com/email-marketing" target="_blank"
-                   style="font-size: 14px; line-height: 14px; font-weight: 500; font-family: 'Roboto', sans-serif; color: #ffffff; text-decoration: none; border-radius: 3px; padding: 10px 25px; border: 1px solid #fc3f1e; display: inline-block;">BUTTON</a>
+              <td align="right" style="border-radius: 3px; display: flex; text-align: right;">
+                {% for button in buttons %}
+                {% if button.img_src %}
+                <a href="{~~ button.href ~~}" target="_blank" alt="{~~ button.text ~~}">
+                  <img src="{~~ button.img_src ~~}">
+                  {% else %}
+                </a>
+                <a href="{~~ button.href ~~}" target="_blank" alt="{~~ button.text ~~}"
+                   style="background-color:#000000; border-radius:10px; border-width:0px; color:#ffffff; display:inline-block; font-size:12px; font-weight:normal; letter-spacing:0px; line-height:normal; padding: 5px; padding-bottom: 2px; max-height: 25px; text-align:center; text-decoration:none; border: 2px outset #00b140; font-family:verdana,geneva,sans-serif;">
+                  {~~ button.text ~~}
+                </a>
                 {% endif %}
+                &nbsp;&nbsp;&nbsp;
+                {% endfor %}
               </td>
             </tr>
           </table>
@@ -266,9 +275,7 @@
                   <tr>
                     <td class="td-padding" align="center"
                         style="font-family: 'Roboto', sans-serif; color: #212121!important; font-size: 16px; line-height: 24px; padding-top: 0px; padding-left: 0px!important; padding-right: 0px!important; padding-bottom: 0px!important; mso-line-height-rule: exactly; mso-padding-alt: 0px 0px 0px 0px;">
-                      &copy; 2022 Los Verdes
-                      <br>
-                      #VHLM
+                      {~~ caller() ~~}
                     </td>
                   </tr>
                   <tr>
@@ -301,16 +308,12 @@
   <meta content="width=device-width, initial-scale=1.0" name="viewport" />
   <link rel="apple-touch-icon" sizes="76x76" href="http://paulgoddarddesign.com/images/apple-icon.jpg">
   <link rel="icon" type="image/png" sizes="96x96" href="http://paulgoddarddesign.com/images/favicon.jpg">
-  <title>Material Email Template</title>
+  <title>{{subject}}</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto+Mono" rel="stylesheet">
   <script src='http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
-  <script src="http://paulgoddarddesign.com/js/ripple.js"></script>
-  <!-- @import url(https://fonts.googleapis.com/css?family=Roboto:500); -->
-  <!-- @import url(https://fonts.googleapis.com/icon?family=Material+Icons); -->
-  <!-- @import url(https://fonts.googleapis.com/css2?family=Almendra+Display&display=swap); -->
-  <!-- @import url(https://fonts.googleapis.com/css2?family=Bungie&display=swap); -->
+  <!-- <script src="http://paulgoddarddesign.com/js/ripple.js"></script> -->
   <style type="text/css">
-    @import url('https://fonts.googleapis.com/css2?family=Bungee&display=swap');
+    @import url(https://fonts.googleapis.com/css?family=Roboto:500);
 
     .ExternalClass {
       width: 100%;
@@ -761,13 +764,13 @@
     }
 
     .live-laugh-love-large {
-      font-family: "Bungee";
+      font-family: "Impact";
       color: white;
       font-size: calc(8px + 2.5vh)
     }
 
     .live-laugh-love {
-      font-family: "Bungee";
+      font-family: "Impact";
       color: white;
       font-size: calc(8px + 1vh)
     }
@@ -835,34 +838,49 @@
 {~~ spacer() ~~}
 
 {% call single_column_card() %}
-{% call card_contents(title="Digital Membership Card", img_src=card_img_src) %}
-This is the Los Verdes digital membership card for {{card.primary_info_text}}. It was requested through a form
-submission at {{generated_on}} from <a href="https://card.losverd.es/">https://card.losverd.es/</a>.
+{% call card_contents(
+title="Digital Membership Card",
+img_src=card_img_src,
+buttons=[
+{"href": card_img_src, "text": "📇 Download (.png)"},
+{"href": "{{applePassUrl}}", "img_src": "https://card.losverd.es/static/Add_to_Apple_Wallet_rgb_US-UK.svg"},
+]
+) %}
+Your requested membership card is attached.
+<br>
+<br>
+Thank you and Enjoy! :)
+<h3 style="font-family: 'Impact', sans-serif; border-bottom: 1px dashed #00b140;">
+  Downloads
+</h3>
+Offline copies of this membership card can be downloaded using the links below.
 <br><br>
-Enjoy! :)
 {% endcall %}
 {% endcall %}
 
-{~~ spacer() ~~}
-
-{% call single_column_card() %}
-{% call card_contents(title="Downloads", img_src=downloads_img_src) %}
-Offline copies of this membership card can be downloaded in the follow formats:
-<ul>
-  <li>
-    <a href="https://{{applePassUrl}}">
-      <img src="https://card.losverd.es/static/Add_to_Apple_Wallet_rgb_US-UK.svg">
-    </a>
-  </li>
-  <br>
-</ul>
-{% endcall %}
-{% endcall %}
-{~~ spacer(height=36) ~~}
 {~~ view_online(href=view_online_href) ~~}
+
 {~~ spacer() ~~}
-{~~ footer() ~~}
-{~~ spacer() ~~}
+
+{% call footer() %}
+<span style="font-size: 10px; line-height: 14px; font-weight: 100; font-family: 'Roboto', sans-serif; color: #393939;">
+  This Los Verdes digital membership card is intended for {{card.primary_info_text}}.
+  <br>
+  If you are not {{card.primary_info_text}}, please feel free to delete this email or contact <a
+     href="mailto:support@losverd.es">support@losverd.es</a> for assistance.
+  <br>
+  This email was requested via a form submission made at <a
+  href="https://card.losverd.es/">https://card.losverd.es/</a>{{#if generating_ip_address}}, from requesting IP address `{{generating_ip_address}}`,{{/if}} at: {{generated_on}}.
+</span>
+<br>
+<br>
+#VHLM &copy; 2022 Los Verdes
+
+
+{% endcall %}
+
+{~~ spacer(height=24) ~~}
+
 {% endcall %}
 
 

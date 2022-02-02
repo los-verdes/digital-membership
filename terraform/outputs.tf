@@ -43,6 +43,10 @@ output "project_number" {
   value = google_project.digital_membership.number
 }
 
+output "pubsub_topic_id" {
+  value = google_pubsub_topic.digital_membership.id
+}
+
 output "secret_name" {
   value = google_secret_manager_secret_version.digital_membership.name
 }

@@ -6,15 +6,14 @@ import os
 import uuid
 from base64 import urlsafe_b64encode as b64e
 
-# from typing import Any
-import typing as t
 import flask
 from flask_assets import Bundle, Environment
 from flask_login import LoginManager
 from opentelemetry import trace
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
 from opentelemetry.propagate import set_global_textmap
-from opentelemetry.propagators.cloud_trace_propagator import CloudTraceFormatPropagator
+from opentelemetry.propagators.cloud_trace_propagator import \
+    CloudTraceFormatPropagator
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from social_core.backends.google import GooglePlusAuth
@@ -253,20 +252,18 @@ def social_url_for(name, **kwargs):
         url = "/disconnect/{backend}/{association_id}/"
     else:
         url = name
-    logging.debug(f"social_url_for() => {name=}: {kwargs=}")
+    # logging.debug(f"social_url_for() => {name=}: {kwargs=}")
     return url.format(**kwargs)
 
 
-def url_for(endpoint: str, **values: t.Any) -> str:
-    prepend_base_dir = values.pop('prepend_base_dir', False)
-    url_for_result = flask.url_for(endpoint=endpoint, **values)
-    if prepend_base_dir:
-        base_dir = flask.current_app.config["BASE_DIR"]
-        logging.warning(
-            f"`url_for_prepend_base_dir` set in global context, prepending {base_dir} to {url_for_result=} "
-        )
-        url_for_result = os.path.join(base_dir, url_for_result.lstrip("/"))
+# def url_for(endpoint: str, **values: t.Any) -> str:
+#     prepend_base_dir = values.pop('prepend_base_dir', False)
+#     url_for_result = flask.url_for(endpoint=endpoint, **values)
+#     if prepend_base_dir:
+#         base_dir = flask.current_app.config["BASE_DIR"]
+#         logging.warning(
+#             f"`url_for_prepend_base_dir` set in global context, prepending {base_dir} to {url_for_result=} "
+#         )
+#         url_for_result = os.path.join(base_dir, url_for_result.lstrip("/"))
 
-    return url_for_result
-
-
+#     return url_for_result

@@ -1,8 +1,11 @@
 {% extends "base.html.j2" %}
 
+{% block head %}
+<meta http-equiv="refresh" content="{{ redirect_home_delay_seconds }}; url = {{ url_for('home') }}" />
+{% endblock %}
 {% block content %}
 {% call macros.content_grid(middle_column_size=8) %}
-<div class="mdl-grid mdl-grid--no-spacing login">
+<div class="mdl-grid login">
   <div class="mdl-cell mdl-cell--6-col mdl-cell--hide-tablet mdl-cell--hide-phone">
 
     <div class="mdl-card mdl-shadow--2dp email-request-landing-side-cover">
@@ -16,26 +19,59 @@
                src="{{ url_for('static', filename='LosVerdes_Logo_RGB_300_Horizontal_VerdeOnTransparent_CityYear.png') }}">
         </h2>
       </div>
+      {% if request_accepted %}
+      {% else %}
+      {% endif %}
       <div class="mdl-card__supporting-text">
-
         <h4>
-          {{ email_form_message }}
+          Email Submission Result
         </h4>
-        {% if request_accepted %}
 
-        <span class="mdl-list__item-primary-content">
-          <i class="material-icons mdl-list__item-icon">email</i>
-
-        {% else %}
-        REQUEST REJECTED NAY
-        {% endif %}
+        Your membership card request for <strong>{{submitted_email}}</strong> has
+        been received!
         <br>
+        <hr>
+        <br>
+        <ul class="mdl-list">
+          <li class="mdl-list__item mdl-list__item--two-line">
+            <span class="mdl-list__item-primary-content">
+              <span class="mdl-list__item-sub-title"><strong><i
+                     class="material-icons mdl-list__item-icon">add_task</i>Requested</strong></span>
+              <span>Los Verdes membership card</span>
+            </span>
+          </li>
+          <li class="mdl-list__item mdl-list__item--two-line">
+            <span class="mdl-list__item-primary-content">
+              <span class="mdl-list__item-sub-title"><strong><i class="material-icons mdl-list__item-icon">email</i>
+                  Sent to</strong></span>
+              <span>{{ submitted_email }}</span>
+            </span>
+          </li>
+          <li class="mdl-list__item mdl-list__item--two-line">
+            <span class="mdl-list__item-primary-content">
+              <span class="mdl-list__item-sub-title"><strong><i class="material-icons mdl-list__item-icon">comment</i>
+                  Response</strong></span>
+              <span>{{ email_form_message }}</span>
+            </span>
+          </li>
+        </ul>
+        <hr>
+        <h6>
+        Redirecting you <a href="{{ url_for('home') }}">back home</a> in {{ redirect_home_delay_seconds }} seconds...
+      </h6>
+        <div id="submit-progress" class="mdl-progress mdl-js-progress mdl-progress__indeterminate"></div>
         <br>
         <br>
       </div>
-      <!-- <div class="mdl-card__actions mdla-card--border mdl-typography--text-right">
-        <span class="vhlm">Verde Hast La Muerte</span>
-      </div> -->
+      <hr>
+      <div class="mdl-card__actions mdla-card--border mdl-typography--text-right">
+
+        <a class="mdl-button mdl-js-button mdl-button--colored" href="{{ url_for('home') }}"
+           title="Click here to open the membership store in a new tab">
+          Back Home
+          <i class="material-icons">home</i>
+        </a>
+      </div>
     </div>
 
   </div>

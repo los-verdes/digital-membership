@@ -82,7 +82,7 @@
             <i class="material-icons">logout</i>
           </a>
           {% endif %}
-<!--
+          <!--
           <a class="mdl-menu__item" href="{{ url_for('privacy_policy') }}">
             Privacy Policy
           </a> -->
@@ -131,12 +131,15 @@
       <nav class="lv-navigation mdl-navigation mdl-color--green-50">
         {% set navigation_bar = [
         ('home', 'home', 'Home'),
+        ('about', 'help_outline', 'Help & About'),
+        ('privacy_policy', 'policy', 'Privacy Policy'),
         ] -%}
         {% set active_page = active_page|default('home') -%}
 
         {% if current_user.is_authenticated %}
         {% for route, icon, caption in navigation_bar %}
-        <a class="mdl-navigation__link" href="{{ url_for(route) }}">
+        <a class="mdl-navigation__link{% if active_page == route %} mdl-navigation__link-active{% endif %}"
+           href="{{ url_for(route) }}">
           <i class="mdl-color-text--green material-icons" role="presentation">
             {{ icon }}
           </i>
@@ -151,15 +154,16 @@
 
         {% endif %}
         <div class="mdl-layout-spacer"></div>
-        <!-- TODO: actually implement some sort of "help" / documentation content here?
-        <a class="mdl-navigation__link" href="#">
+        {% if current_user.is_authenticated %}
+        <a class="mdl-navigation__link" href="{{ url_for('logout') }}">
           <i class="mdl-color-text--green material-icons" role="presentation">
-            help_outline
+            logout
           </i>
           <span class="visuallyhidden">
-            Help
+            Logout
           </span>
-        </a> -->
+        </a>
+        {% endif %}
       </nav>
     </div>
 
@@ -168,18 +172,19 @@
     </main>
 
     {% block footer %}
-    <footer class="mdl-mini-footer mdl-color--grey-600">
+    <!-- <footer class="mdl-mini-footer mdl-color--grey-600">
       <div class="mdl-mini-footer__right-section mdl-color-text--green">
         <ul class="mdl-mini-footer__link-list">
           <li><a href="#">Help</a></li>
           <li><a href="{{ url_for('privacy_policy') }}">Privacy & Terms</a></li>
         </ul>
       </div>
-    </footer>
+    </footer> -->
     {% endblock %}
 
     <!-- End of "outer" div that holds our entire layout -->
   </div>
+  {% block before_body_close %}{% endblock %}
 </body>
 
 </html>

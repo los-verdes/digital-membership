@@ -32,7 +32,6 @@ a {
   background-image: url("lv_onverde.png");
   background-size: contain;
   background-repeat: no-repeat;
-
 }
 
 .mdl-tabs__tab-bar {
@@ -46,7 +45,7 @@ a {
 }
 .login-side-cover {
   // background: url("login_side_cover.png") center / cover;
-  background: url("lv_hands.png") top / 100%;
+  background: url("small_lv_hands.png") center / 75%;
   background-repeat: no-repeat;
   // min-height: calc(300px);
   height: 100%;
@@ -115,6 +114,10 @@ div.membership-card {
   background: url("sangramos_pattern_small_clip.png") center / cover;
   border: 3mm outset rgba($bright-verde, 0.6);
   border-radius: 20px;
+}
+
+.mdl-navigation__link-active {
+  background-color: #00b1416d;
 }
 
 div.membership-card > .membership-card-inner {
