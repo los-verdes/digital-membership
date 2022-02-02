@@ -59,6 +59,11 @@ resource "google_cloud_run_service" "digital_membership" {
         }
 
         env {
+          name  = "GCS_BUCKET_ID"
+          value = google_storage_bucket.statics.name
+        }
+
+        env {
           name  = "GCLOUD_PROJECT"
           value = var.gcp_project_id
         }

@@ -1,9 +1,13 @@
+import contextlib
 import hashlib
 import hmac
 import logging
+import os
 import uuid
 from base64 import urlsafe_b64encode as b64e
 
+# from typing import Any
+import typing as t
 import flask
 from flask_assets import Bundle, Environment
 from flask_login import LoginManager
@@ -21,6 +25,15 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from webassets.filter import get_filter
 
 from member_card.settings import get_settings_obj_for_env
+
+
+@contextlib.contextmanager
+def remember_cwd():
+    curdir = os.getcwd()
+    try:
+        yield
+    finally:
+        os.chdir(curdir)
 
 
 # def configure_logging(project_id=None):
@@ -242,3 +255,18 @@ def social_url_for(name, **kwargs):
         url = name
     logging.debug(f"social_url_for() => {name=}: {kwargs=}")
     return url.format(**kwargs)
+
+
+def url_for(endpoint: str, **values: t.Any) -> str:
+    prepend_base_dir = values.pop('prepend_base_dir', False)
+    url_for_result = flask.url_for(endpoint=endpoint, **values)
+    if prepend_base_dir:
+        base_dir = flask.current_app.config["BASE_DIR"]
+        logging.warning(
+            f"`url_for_prepend_base_dir` set in global context, prepending {base_dir} to {url_for_result=} "
+        )
+        url_for_result = os.path.join(base_dir, url_for_result.lstrip("/"))
+
+    return url_for_result
+
+

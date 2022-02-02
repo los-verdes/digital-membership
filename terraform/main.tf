@@ -28,6 +28,18 @@ resource "google_service_account" "digital_membership" {
   display_name = "website"
 }
 
+resource "time_rotating" "digital_membership_key_rotation" {
+  rotation_days = 30
+}
+
+resource "google_service_account_key" "digital_membership" {
+  service_account_id = google_service_account.digital_membership.name
+
+  keepers = {
+    rotation_time = time_rotating.digital_membership_key_rotation.rotation_rfc3339
+  }
+}
+
 resource "google_service_account" "db_task_runner" {
   account_id   = "db-task-runner"
   display_name = "Database task runner"

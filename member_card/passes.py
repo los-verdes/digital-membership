@@ -57,9 +57,12 @@ def with_apple_developer_key() -> Callable:
     return decorator
 
 
-def get_or_create_membership_card(user):
+def get_or_create_membership_card(user, base_url=None):
     app = flask.current_app
-    web_service_url = f"{get_base_url()}/passkit"
+    if base_url is None:
+        base_url = get_base_url()
+
+    web_service_url = f"{base_url}/passkit"
     membership_card = get_or_create(
         session=db.session,
         model=MembershipCard,
@@ -79,7 +82,7 @@ def get_or_create_membership_card(user):
         logging.debug("generating QR code for message")
         serial_number = str(membership_card.serial_number)
         qr_code_signature = sign(serial_number)
-        qr_code_message = f"Content: {get_base_url()}{flask.url_for('verify_pass', serial_number=serial_number)}?signature={qr_code_signature}"
+        qr_code_message = f"Content: {base_url}{flask.url_for('verify_pass', serial_number=serial_number)}?signature={qr_code_signature}"
         logging.debug(f"{qr_code_message=}")
         setattr(membership_card, "qr_code_message", qr_code_message)
         db.session.add(membership_card)

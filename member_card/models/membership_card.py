@@ -139,6 +139,15 @@ class MembershipCard(db.Model):
             return b64e(f.read()).decode()
 
     @property
+    def qr_code_ascii(self):
+        qr = qrcode.QRCode()
+        qr.add_data(self.qr_code_message)
+        f = StringIO()
+        qr.print_ascii(out=f)
+        f.seek(0)
+        return f.read()
+
+    @property
     def authentication_token_hex(self):
         return str(getattr(self.authentication_token, "hex"))
 

@@ -50,3 +50,8 @@ output "secret_name" {
 output "website_service_account_email" {
   value = google_service_account.digital_membership.email
 }
+
+output "website_service_account_key" {
+  sensitive = true
+  value = google_service_account_key.digital_membership.private_key
+}

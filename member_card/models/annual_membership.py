@@ -68,13 +68,13 @@ class AnnualMembership(db.Model):
     def to_dict(self):
         return OrderedDict(
             order_number=self.order_number,
-            created_on=self.created_on,
+            created_on=None if not self.created_on else self.created_on.strftime('%c'),
             email=self.customer_email,
             product_name=self.product_name,
-            fulfilled_on=self.fulfilled_on,
-            fulfillment_status=self.fulfillment_status,
+            fulfilled_on=None if not self.fulfilled_on else self.fulfilled_on.strftime('%c'),
+            fulfillment_status=str(self.fulfillment_status),
             is_active=self.is_active,
-            valid_until=self.expiry_date,
+            valid_until=None if not self.expiry_date else self.expiry_date.strftime('%c'),
         )
 
     def __repr__(self):

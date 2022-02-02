@@ -8,12 +8,14 @@ gcr_latest_image_name := gcr_name + ":latest"
 python_reqs_file := "requirements.txt"
 export GCLOUD_PROJECT := "lv-digital-membership"
 # TODO: dev as default after we get done setting this all up....
+export FLASK_APP := env_var_or_default("FLASK_APP", "wsgi")
 export FLASK_ENV := env_var_or_default("FLASK_ENV", "developement")
 export FLASK_DEBUG := "true"
 export LOG_LEVEL := env_var_or_default("LOG_LEVEL", "debug")
 export DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME := "lv-digital-membership:us-central1:lv-digital-membership-30c67c90"
 export DIGITAL_MEMBERSHIP_DB_USERNAME := env_var_or_default("DIGITAL_MEMBERSHIP_DB_USERNAME", `gcloud auth list 2>/dev/null | grep -E '^\*' | awk '{print $2;}'`)
 export DIGITAL_MEMBERSHIP_DB_DATABASE_NAME := "lv-digital-membership"
+export GCS_BUCKET_ID := "static.card.losverd.es"
 
 set-tf-ver-output:
   echo "::set-output name=terraform_version::$(cat {{ tf_subdir }}/.terraform-version)"
@@ -42,7 +44,37 @@ ci-install-python-reqs:
   fi
 
 
+docker-flask +CMD: build
+  @echo "FLASK_APP: ${FLASK_APP-None}"
+  @echo "FLASK_ENV: ${FLASK_ENV-None}"
+  docker run \
+    --interactive \
+    --tty \
+    --rm \
+    --env=APPLE_DEVELOPER_CERTIFICATE \
+    --env=APPLE_DEVELOPER_PRIVATE_KEY \
+    --env=APPLE_PASS_PRIVATE_KEY_PASSWORD \
+    --env=GCS_BUCKET_ID \
+    --env=GCLOUD_PROJECT \
+    --env=DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME \
+    --env=DIGITAL_MEMBERSHIP_DB_USERNAME \
+    --env=DIGITAL_MEMBERSHIP_DB_DATABASE_NAME \
+    --env=DIGITAL_MEMBERSHIP_DB_ACCESS_TOKEN \
+    --env=DIGITAL_MEMBERSHIP_GCP_SECRET_NAME \
+    --env=FLASK_APP \
+    --env=FLASK_ENV \
+    --env=LOG_LEVEL \
+    --env=SENDGRID_API_KEY \
+    --env=SQUARESPACE_API_KEY \
+    --entrypoint='' \
+    -v=$HOME/.config/gcloud:/root/.config/gcloud \
+    '{{ local_image_name }}' \
+    flask {{ CMD }}
+
+
 flask +CMD:
+  @echo "FLASK_APP: ${FLASK_APP-None}"
+  @echo "FLASK_ENV: ${FLASK_ENV-None}"
   flask {{ CMD }}
 
 ensure-db-schemas:
@@ -61,6 +93,7 @@ serve:
   # => export GOOGLE_CLIENT_SECRET="$(op get item --vault="Los Verdes" 'Local Dev  (Google OAuth Credentials) - Los Verdes Digital Membership' | jq -r '.details.sections | .[] | select(.title == "credentials").fields | .[] | select(.n == "credential").v')"
   # => export APPLE_PASS_PRIVATE_KEY_PASSWORD="$(op get item --vault="Los Verdes" 'private.key password - Apple Developer Certificate - v0prod - pass.es.losverd.card' | jq -r '.details.password')"
   # => export SENDGRID_API_KEY="$(op get item --vault="Los Verdes" 'SendGrid - API Key' | jq -r '.details.sections | .[] | select(.title == "credentials").fields | .[] | select(.n == "credential").v')"
+  # export DIGITAL_MEMBERSHIP_GCP_SECRET_NAME="projects/567739286055/secrets/digital-membership/versions/latest"
   # ~/bin/cloud_sql_proxy -instances='lv-digital-membership:us-central1:lv-digital-membership=tcp:5432'  -enable_iam_login
   # export DIGITAL_MEMBERSHIP_DB_USERNAME="$(gcloud auth list 2>/dev/null | egrep '^\*' | awk '{print $2;}')"
   flask run --cert=tmp-certs/cert.pem --key=tmp-certs/key.pem
@@ -84,7 +117,6 @@ deploy: build push
   just tf apply -auto-approve -var='cloud_run_container_image={{ gcr_image_name }}'
 
 sync-subscriptions: ci-install-python-reqs
-  @echo "FLASK_ENV: $FLASK_ENV"
   @echo "DIGITAL_MEMBERSHIP_DB_DATABASE_NAME: $DIGITAL_MEMBERSHIP_DB_DATABASE_NAME"
   @echo "DIGITAL_MEMBERSHIP_DB_USERNAME: $DIGITAL_MEMBERSHIP_DB_USERNAME"
   @echo "DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME: $DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME"

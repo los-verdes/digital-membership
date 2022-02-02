@@ -29,9 +29,10 @@ a {
 // }
 
 .lv-crest {
-  background-image: url("lv_onverde.png");
+  background-image: url("https://card.losverd.es/static/lv_onverde.png");
   background-size: contain;
   background-repeat: no-repeat;
+
 }
 
 .mdl-tabs__tab-bar {
@@ -44,8 +45,8 @@ a {
   min-height: 50vh;
 }
 .login-side-cover {
-  // background: url("login_side_cover.png") center / cover;
-  background: url("lv_hands.png") center / cover;
+  // background: url("https://card.losverd.es/static/login_side_cover.png") center / cover;
+  background: url("https://card.losverd.es/static/lv_hands.png") center / cover;
   // min-height: calc(300px);
   height: 100%;
 }
@@ -102,7 +103,7 @@ div.membership-card {
   min-width: 300px;
   width: 50vh;
 
-  background: url("sangramos_pattern_small_clip.png") center / cover;
+  background: url("https://card.losverd.es/static/sangramos_pattern_small_clip.png") center / cover;
   border: 3mm outset rgba($bright-verde, 0.6);
   border-radius: 20px;
 }
@@ -324,7 +325,7 @@ _:-ms-input-placeholder,
 }
 .lv-updates .mdl-card__title {
   min-height: 200px;
-  background-image: url("images/dog.png");
+  background-image: url("https://card.losverd.es/static/images/dog.png");
   background-position: 90% 100%;
   background-repeat: no-repeat;
 }

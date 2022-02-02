@@ -1,4 +1,4 @@
-FROM python:3.9
+FROM python:3.9 AS base
 
 WORKDIR /app
 
@@ -10,18 +10,26 @@ RUN apt-get update \
         swig=4.0.2-1 \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-COPY requirements.in .
+COPY requirements.txt .
 RUN pip install \
         --no-cache-dir \
         --trusted-host pypi.python.org \
         --requirement requirements.txt \
         google-python-cloud-debugger==2.18
 
+FROM python:3.9-slim AS website
+
+COPY --from=base /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
 COPY ./config/ ./config
 COPY ./member_card/ ./member_card
 COPY ./*.py ./
 COPY ./scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
-
 ENTRYPOINT ["./scripts/docker-entrypoint.sh"]
+
+# FROM website AS worker

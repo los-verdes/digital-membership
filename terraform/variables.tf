@@ -14,6 +14,10 @@ variable "apple_pass_private_key_password" {
 }
 # variable "gcp_billing_account_name" {}
 
+variable "base_domain" {
+  type = string
+}
+
 variable "cloud_run_container_image" {
   type    = string
   default = "gcr.io/lv-digital-membership/member-card:latest"
