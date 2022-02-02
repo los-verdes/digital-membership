@@ -29,18 +29,18 @@
       <div class="mdl-card__supporting-text">
         <div class="mdl-tabs mdl-js-tabs mdl-js-ripple-effect">
           <div class="mdl-tabs__tab-bar">
-            <a href="#email-login-panel" class="mdl-tabs__tab is-active">Email / Login</a>
+            <a href="#membership-cards-panel" class="mdl-tabs__tab is-active">Membership Cards</a>
             <a href="#about-panel" class="mdl-tabs__tab">About</a>
           </div>
 
-          <div class="mdl-tabs__panel is-active" id="email-login-panel">
+          <div class="mdl-tabs__panel is-active" id="membership-cards-panel">
             <h4>
               Welcome Verdes!
             </h4>
             Digital membership cards can be obtained by either:
             <ol>
               <li>
-                <strong>Email</strong>:
+                <strong class="mdl-color-text--green">Email</strong>
                 <br>
                 Have a image and Google Pay / Apple wallet passes links for your membership card sent via email:
                 <form id="emailDistributionRequest" action="{{ url_for('email_distribution_request') }}" method="post">
@@ -65,7 +65,7 @@
               <br>
 
               <li>
-                <strong>Website</strong>:
+                <strong class="mdl-color-text--green">Website</strong>
                 <br>
                 Login to access the Los Verdes membership portal and retrieve your membership card:
                 <br>

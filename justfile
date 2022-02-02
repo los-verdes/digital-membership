@@ -132,8 +132,9 @@ push: build
   docker push '{{ worker_gcr_image_name }}:latest'
 
 deploy: build push
-  # just tf init -auto-approve
+  just tf init
   just tf apply \
+    -auto-approve \
     -var='website_image={{ website_gcr_image_name }}:{{ image_tag }}' \
     -var='worker_image={{ worker_gcr_image_name }}:{{ image_tag }}'
 
