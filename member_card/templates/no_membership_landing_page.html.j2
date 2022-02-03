@@ -1,5 +1,5 @@
 {% extends "base.html.j2" %}
-
+{% block title %}No Membership Found - Digital Membership Card - Los Verdes{% endblock %}
 {% block content %}
 
 
@@ -23,7 +23,7 @@
       No active membership found for {{ user.email }}
     </h5>
     <h6>
-      If you believe this information is incorrect:
+      If you believe is incorrect, please feel free to consult our troubleshooting list below:
     </h6>
     <hr>
     {{ macros.troubleshooting_list() }}

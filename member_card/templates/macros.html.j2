@@ -10,8 +10,7 @@
 {% endmacro %}
 
 {% macro sign_in_button() %}
-<a class="google-sign-in-button mdl-js-button" id="google-oauth2-button" name="google oauth2"
-   href="/login/google-oauth2/">
+<a class="google-sign-in-button mdl-js-button" id="google-oauth2-button" name="google oauth2" href="/login/google-oauth2/">
   <img src="{{ url_for('static', filename='btn_google_signin_dark_normal_web@2x.png') }}">
   <!-- <div class="google-icon-wrapper"> -->
   <!-- <img class="google-icon" src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" /> -->
@@ -62,8 +61,7 @@ show_card_actions_bar=True
           <!-- START BOTTOM-ROW -->
           <!-- Large bottom-left corner, contents justified to the bottom-left. User-specific details: name, join date, etc. -->
           <!-- class="mdl-cell mdl-cell--12-col mdl-cell--8-col-tablet mdl-cell--4-col-phone mdl-cell--bottom mdl-typography--text-left"> -->
-          <div
-               class="mdl-cell mdl-cell--8-col mdl-cell--6-col-tablet mdl-cell--3-col-phone mdl-typography--text-left mdl-cell--bottom">
+          <div class="mdl-cell mdl-cell--8-col mdl-cell--6-col-tablet mdl-cell--3-col-phone mdl-typography--text-left mdl-cell--bottom">
             <div class="live-laugh-love-large houschka">
               {{ primary_info_text }}
             </div>
@@ -78,11 +76,9 @@ show_card_actions_bar=True
           </div>
 
           <!-- Small bottom-left corner. Normally hidden, shows up when saving card as a screenshot -->
-          <div
-               class="mdl-cell mdl-cell--4-col mdl-cell--2-col-tablet mdl-cell--1-col-phone qr-code mdl-cell--bottom mdl-typography--text-right">
+          <div class="mdl-cell mdl-cell--4-col mdl-cell--2-col-tablet mdl-cell--1-col-phone qr-code mdl-cell--bottom mdl-typography--text-right">
             <small>{{ serial_number }}</small>
-            <img id="card-qr-code" alt='QR code for card verification'
-                 src='data:image/png;base64,{{ qr_code_b64_png | default("")}}' />
+            <img id="card-qr-code" alt='QR code for card verification' src='data:image/png;base64,{{ qr_code_b64_png | default("")}}' />
             <!-- <pre class="qr-code">
               {{ qr_code_ascii | default("blah")}}
             </pre> -->
@@ -107,8 +103,7 @@ show_card_actions_bar=True
     <button id="toggle-qr-code-btn" class="mdl-button mdl-button--icon mdl-button--fab" title="Toggle QR code display">
       <i class="material-icons">qr_code</i>
     </button>
-    <button id="save-as-screenshot-menu" class="mdl-button mdl-button--icon mdl-button--fab mdl-button--colored"
-            title="Save as image (.png)">
+    <button id="save-as-screenshot-menu" class="mdl-button mdl-button--icon mdl-button--fab mdl-button--colored" title="Save as image (.png)">
       <i class="material-icons">screenshot</i>
     </button>
     <ul class="mdl-menu mdl-menu--top-right mdl-js-menu mdl-js-ripple-effect" data-mdl-for="save-as-screenshot-menu">
@@ -141,8 +136,7 @@ show_card_actions_bar=True
       </span>
     </span>
     <span class="mdl-list__item-secondary-content">
-      <a class="mdl-list__item-secondary-action mdl-button mdl-js-button mdl-button--icon mdl-button--colored"
-         href="{{ url_for('logout') }}"
+      <a class="mdl-list__item-secondary-action mdl-button mdl-js-button mdl-button--icon mdl-button--colored" href="{{ url_for('logout') }}"
          title="If needed, logout now and log back in with an account whose email address matches the one used on our LV membership purchase."><i
            class="material-icons">logout</i></a>
     </span>
@@ -158,8 +152,7 @@ show_card_actions_bar=True
       </span>
     </span>
     <span class="mdl-list__item-secondary-content">
-      <a class="mdl-list__item-secondary-action mdl-button mdl-js-button mdl-button--icon mdl-button--colored"
-         href="mailto:los-verdes-tech-support@googlegroups.com"
+      <a class="mdl-list__item-secondary-action mdl-button mdl-js-button mdl-button--icon mdl-button--colored" href="mailto:los-verdes-tech-support@googlegroups.com"
          title="Email los-verdes-tech-support@googlegroups.com"><i class="material-icons">support_agent</i></a>
     </span>
   </li>
@@ -173,22 +166,26 @@ show_card_actions_bar=True
       </span>
     </span>
     <span class="mdl-list__item-secondary-content">
-      <a class="mdl-list__item-secondary-action mdl-button mdl-js-button mdl-button--icon mdl-button--colored"
-         href="https://www.losverdesatx.org/lv-store/membership" target="_blank"
-         title="Click here to open the membership store in a new tab"><i class="material-icons">storefront</i></a>
+      <a class="mdl-list__item-secondary-action mdl-button mdl-js-button mdl-button--icon mdl-button--colored" href="https://www.losverdesatx.org/lv-store/membership"
+         target="_blank" title="Click here to open the membership store in a new tab"><i class="material-icons">storefront</i></a>
     </span>
   </li>
 </ul>
 {% endmacro %}
 
 {% macro help_content() %}
+<h4>Help</h4>
+<details>
+  <summary>
+    <h6>What if I am unable to access my card?</h6>
+  </summary>
+  <div>
+    {{ troubleshooting_list() }}
+  </div>
+</details>
 <h4>About</h4>
-This website provides access to a digital membership card for any current members of the <a
-   href="https://losverdesatx.org" target="_blank">Los Verdes</a> futbol supporters group.
-<hr>
-<h5>Troubleshooting</h5>
-If you have issues retrieving your members card:
-{{ troubleshooting_list() }}
+This website provides access to a digital membership card for any current members of the <a href="https://losverdesatx.org" target="_blank">Los Verdes</a> futbol supporters group.
 <h5>Website Policies</h5>
 This site's privacy policy can be view here: <a href="{{ url_for('privacy_policy') }}">Privacy Policy</a>
+<hr>
 {% endmacro %}

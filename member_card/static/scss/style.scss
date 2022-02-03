@@ -275,3 +275,22 @@ div.membership-card > .membership-card-inner {
 .lv-content {
   max-width: 1080px;
 }
+
+details summary {
+  cursor: pointer;
+}
+details > summary {
+  background-color: #00b1415a;
+  cursor: pointer;
+  padding: .5rem 1rem;
+}
+
+details > summary > * {
+  display: inline;
+}
+
+details > div {
+  border: 2px solid #00b1415a;
+  margin-top: 0;
+  padding: 1rem;
+}

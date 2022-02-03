@@ -1,10 +1,13 @@
 {% extends "base.html.j2" %}
 {% set active_page = 'about' -%}
-
+{% block title %}Help & About - Digital Membership Card - Los Verdes{% endblock %}
 {% block content %}
 {% call macros.content_grid() %}
 
-<div class="membership-details-card mdl-card mdl-shadow--2dp">
+<div class="about-card mdl-card mdl-shadow--2dp">
+  <div class="mdl-card__title">
+    <h2 class="mdl-card__title-text">Help & About</h2>
+  </div>
   <div class="mdl-card__supporting-text">
     {{ macros.help_content() }}
   </div>
