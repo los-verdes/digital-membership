@@ -5,7 +5,7 @@ from uuid import UUID
 
 from dateutil.parser import parse
 from flask import jsonify, request, send_file
-from member_card import app
+from member_card.app import app
 from member_card.db import db, get_or_create
 from member_card.models import AppleDeviceRegistration, MembershipCard
 from member_card.utils import verify
