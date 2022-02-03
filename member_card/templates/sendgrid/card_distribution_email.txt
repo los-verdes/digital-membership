@@ -1,0 +1,30 @@
+{{ subject }}
+
+Your requested membership card is attached.
+
+{{card.title}}
+------------------------
+
+{{card.primary_info_text}}
+{{card.secondary_info_text}}
+{{card.aux_info_text}}
+{{card.serial_number}}
+{{card.qr_code_ascii}}
+
+Downloads
+---------
+
+Offline copies of this membership card can be downloaded using the links below:
+
+- Image (PNG): https://{{ cardImageUrl }}
+- Apple Wallet (pkpass): https://{{ applePassUrl }}
+
+
+Visit online at: https://card.losverd.es
+
+This Los Verdes digital membership card is intended for {{card.primary_info_text}}.
+
+
+If you are not {{card.primary_info_text}}, please feel free to delete this email or contact support@losverd.es for assistance.
+
+This email was requested via a form submission made at https://card.losverd.es/{{#if generating_ip_address}}, from requesting IP address `{{generating_ip_address}}`,{{/if}} at: {{submitted_on}}.

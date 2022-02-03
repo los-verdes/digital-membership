@@ -87,3 +87,50 @@ def send_card_email(message):
 
     except Exception as err:
         logger.error(f"Error sending email via SendGrid: {err=}", extra=dict(err=err))
+
+
+def update_sendgrid_template():
+    app = flask.current_app
+
+    sg = SendGridAPIClient(app.config["SENDGRID_API_KEY"])
+    template_id = app.config["SENDGRID_TEMPLATE_ID"]
+    get_template_resp = sg.client.templates._(template_id).get()
+    template = json.loads(get_template_resp.body.decode())
+    version = template["versions"][0]
+    version_id = version["id"]
+    from jinja2 import Environment, PackageLoader, select_autoescape
+
+    env = Environment(
+        loader=PackageLoader(__name__),
+        autoescape=select_autoescape(),
+        variable_start_string="{~~ ",
+        variable_end_string=" ~~}",
+        comment_start_string="{#~",
+        comment_end_string="~#}",
+    )
+    html_template = env.get_template("sendgrid/card_distribution_email.html.j2")
+    updated_html_content = html_template.render(
+        preview_text="Your requested Los Verdes membership card details are attached! PNG image, Apple Wallet and Google Play pass formats enclosed. =D",
+        view_online_href="https://card.losverd.es",
+        logo_src="card.losverd.es/static/LosVerdes_Logo_RGB_300_Horizontal_VerdeOnTransparent_CityYear.png",
+        downloads_img_src="card.losverd.es/static/small_lv_hands.png",
+        footer_logo_src="card.losverd.es/static/lv_hands.png",
+        card_img_src="{{cardImageUrl}}",
+    )
+    version["html_content"] = updated_html_content.strip()
+
+    plain_template = env.get_template("sendgrid/card_distribution_email.txt")
+    updated_plain_content = plain_template.render()
+    version["plain_content"] = updated_plain_content.strip()
+
+    # PATCH Response: 400 b'{"error":"You cannot switch editors once a dynamic template version has been created."}\n'
+    del version["editor"]
+
+    patch_version_resp = (
+        sg.client.templates._(template_id)
+        .versions._(version_id)
+        .patch(request_body=version)
+    )
+
+    logger.debug(f"{patch_version_resp.status_code=}:: {patch_version_resp.headers=}")
+    logger.info(f"{json.loads(patch_version_resp.body.decode())}")
