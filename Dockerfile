@@ -3,7 +3,7 @@ FROM python:3.9 AS base
 WORKDIR /app
 
 # Various pre-requisites for getting m2crypto install (which in turn is used by passkit)
-RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
+RUN sh -c 'set -o pipefail && wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add -' \
     && apt-get update \
     && apt-get install --no-install-recommends -y \
         build-essential=12.9 \
