@@ -14,7 +14,7 @@ from google.oauth2 import service_account
 
 logger = logging.getLogger(__name__)
 
-BASE_DIR = os.path.dirname(os.path.realpath(__file__))
+# BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 
 DEFAULT_SCOPES = [
     "https://www.googleapis.com/auth/cloud-platform",
@@ -46,14 +46,15 @@ def get_client(credentials=None):
     return storage.Client()
 
 
-def upload_build_to_gcs(client, bucket_id, prefix):
+def upload_statics_to_gcs(client, bucket_id, prefix, ignored_files=None):
     if prefix is None:
         prefix = ""
+    app = flask.current_app
     bucket = client.get_bucket(bucket_id)
-    build_dir_path = os.path.abspath(os.path.join(BASE_DIR, "..", "build/"))
-    logger.info(f"Uploading {build_dir_path=} to {bucket=} ({prefix=})")
-    upload_local_directory_to_gcs(client, build_dir_path, bucket, prefix)
-    logger.info(f"{build_dir_path=} upload to {bucket=} ({prefix=}) completed!")
+    statics_dir_path = os.path.abspath(os.path.join(app.config["BASE_DIR"], "static/"))
+    logger.info(f"Uploading {statics_dir_path=} to {bucket=} ({prefix=})")
+    upload_local_directory_to_gcs(client, statics_dir_path, bucket, prefix, ignored_files)
+    logger.info(f"{statics_dir_path=} upload to {bucket=} ({prefix=}) completed!")
 
 
 def remove_subpath_from_gcs(client, bucket_id, prefix):
@@ -66,17 +67,21 @@ def remove_subpath_from_gcs(client, bucket_id, prefix):
     logger.info(f"All blobs deleted from gs://{bucket_id}/{prefix}")
 
 
-def upload_local_directory_to_gcs(client, local_path, bucket, gcs_path):
+def upload_local_directory_to_gcs(client, local_path, bucket, gcs_path, ignored_files=None):
     assert os.path.isdir(local_path)
     for local_file in glob.glob(local_path + "/**"):
+        if ignored_files and local_file in ignored_files:
+            logger.debug(f"upload_local_directory_to_gcs() ignoring file {local_path} ({ignored_files=}")
         if not os.path.isfile(local_file):
             upload_local_directory_to_gcs(
                 client,
                 local_file,
                 bucket,
                 os.path.join(gcs_path, os.path.basename(local_file)),
+                ignored_files=ignored_files,
             )
         else:
+            print(f"imma uploading {local_file}")
             upload_file_to_gcs(
                 bucket=bucket,
                 local_file=local_file,
