@@ -28,6 +28,24 @@ resource "google_service_account" "digital_membership" {
   display_name = "website"
 }
 
+resource "google_service_account" "worker_pubsub_invoker" {
+  account_id   = "worker-pubsub-invoker"
+  display_name = "worker-pubsub-invoker"
+}
+
+resource "google_project_iam_member" "worker_pubsub_invoker_your_one_job" {
+  project = google_project.digital_membership.id
+  role    = "roles/run.invoker"
+  member  = "serviceAccount:${google_service_account.worker_pubsub_invoker.email}"
+}
+
+
+resource "google_project_iam_member" "worker_pubsub_invoker_token_creator" {
+  project = google_project.digital_membership.id
+  role    = "roles/iam.serviceAccountTokenCreator"
+  member  = "serviceAccount:${google_service_account.worker_pubsub_invoker.email}"
+}
+
 resource "google_service_account" "digital_membership_worker" {
   account_id   = "worker"
   display_name = "worker"
@@ -93,17 +111,17 @@ resource "google_project_iam_binding" "digital_membership_trace_agents" {
 #   member  = "serviceAccount:${google_service_account.db_task_runner.email}"
 # }
 
-resource "google_project_iam_member" "digital_membership_debugger_agent" {
-  project = google_project.digital_membership.id
-  role    = "roles/clouddebugger.agent"
-  member  = "serviceAccount:${google_service_account.digital_membership.email}"
-}
+# resource "google_project_iam_member" "digital_membership_debugger_agent" {
+#   project = google_project.digital_membership.id
+#   role    = "roles/clouddebugger.agent"
+#   member  = "serviceAccount:${google_service_account.digital_membership.email}"
+# }
 
-resource "google_project_iam_member" "digital_membership_trace_agent" {
-  project = google_project.digital_membership.id
-  role    = "roles/cloudtrace.agent"
-  member  = "serviceAccount:${google_service_account.digital_membership.email}"
-}
+# resource "google_project_iam_member" "digital_membership_trace_agent" {
+#   project = google_project.digital_membership.id
+#   role    = "roles/cloudtrace.agent"
+#   member  = "serviceAccount:${google_service_account.digital_membership.email}"
+# }
 
 # TODO: hook this up with a bot user's oauth creds (not jeffwecan...)
 resource "google_sourcerepo_repository" "digital_membership" {
@@ -121,26 +139,3 @@ resource "google_service_account_iam_binding" "allow_sa_impersonation" {
   role               = "roles/iam.serviceAccountUser"
   members            = [for u in concat(var.gcp_project_owners, var.gcp_project_editors) : "user:${u}"]
 }
-
-resource "google_pubsub_topic" "digital_membership" {
-  name = "digital-membership"
-}
-
-resource "google_pubsub_topic_iam_binding" "digital_membership_topic_publishers" {
-  topic = google_pubsub_topic.digital_membership.name
-  role  = "roles/pubsub.publisher"
-  members = concat(
-    [for u in concat(var.gcp_project_owners, var.gcp_project_editors) : "user:${u}"],
-    ["serviceAccount:${google_service_account.digital_membership.email}"],
-  )
-}
-
-
-# resource "google_pubsub_topic_iam_binding" "digital_membership_topic_subscribers" {
-#   topic = google_pubsub_topic.digital_membership.name
-#   role = "roles/pubsub.subscriber"
-#   members = concat(
-#     [for u in concat(var.gcp_project_owners, var.gcp_project_editors): "user:${u}"],
-#     ["serviceAccount:${google_service_account.digital_membership_worker.email}"],
-#   )
-# }

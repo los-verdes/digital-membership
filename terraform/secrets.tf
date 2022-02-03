@@ -67,6 +67,7 @@ data "google_iam_policy" "digital_membership_secret_access" {
     members = [
       "serviceAccount:${google_service_account.digital_membership.email}",
       "serviceAccount:${google_service_account.db_task_runner.email}",
+      "serviceAccount:${google_service_account.digital_membership_worker.email}",
     ]
   }
 }
@@ -82,6 +83,7 @@ data "google_iam_policy" "apple_private_key_secret_access" {
     role = "roles/secretmanager.secretAccessor"
     members = [
       "serviceAccount:${google_service_account.digital_membership.email}",
+      "serviceAccount:${google_service_account.digital_membership_worker.email}",
     ]
   }
 }

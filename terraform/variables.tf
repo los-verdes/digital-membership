@@ -1,4 +1,6 @@
-
+variable "app_log_level" {
+  default = "INFO"
+}
 
 variable "apple_pass_certificate" {
   sensitive = true

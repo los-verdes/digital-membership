@@ -29,6 +29,9 @@ COPY ./scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
 
 FROM python:3.9-slim AS website
 
+# Allow statements and log messages to immediately appear in the Cloud Run logs
+ENV PYTHONUNBUFFERED True
+
 WORKDIR /app
 
 COPY --from=base /opt/venv /opt/venv
@@ -40,14 +43,22 @@ ENTRYPOINT ["/app/scripts/docker-entrypoint.sh"]
 
 FROM base AS worker
 
-WORKDIR /app
-
 RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
     && apt-get update \
     && apt-get install --no-install-recommends -y \
         fonts-liberation=1:1.07.4-11 \
         google-chrome-stable=98.0.4758.80-1 \
     && rm -rf /var/lib/apt/lists/*
+
+COPY --from=base /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+COPY --from=base /app /app
+
+# Allow statements and log messages to immediately appear in the Cloud Run logs
+ENV PYTHONUNBUFFERED True
+
+WORKDIR /app
 
 
 ENV PATH="/opt/venv/bin:$PATH"

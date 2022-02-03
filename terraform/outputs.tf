@@ -63,8 +63,16 @@ output "website_service_account_email" {
   value = google_service_account.digital_membership.email
 }
 
+output "worker_pubsub_ingress_url" {
+  value = local.worker_pubsub_ingress_url
+}
+
 output "worker_service_account_email" {
   value = google_service_account.digital_membership_worker.email
+}
+
+output "worker_pubsub_invoker_service_account_email" {
+  value = google_service_account.worker_pubsub_invoker.email
 }
 
 output "website_service_account_key" {

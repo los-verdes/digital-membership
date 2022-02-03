@@ -4,9 +4,24 @@ locals {
   apple_key_secret_version_parts = split("/", data.google_secret_manager_secret_version.apple_private_key.id)
   apple_key_secret_version_key   = element(local.apple_key_secret_version_parts, length(local.apple_key_secret_version_parts) - 1)
 }
+
 resource "google_cloud_run_service" "digital_membership" {
-  provider                   = google-beta
-  name                       = "digital-membership"
+  provider = google-beta
+  for_each = {
+    "website" = {
+      image                   = var.website_image
+      service_account_name    = google_service_account.digital_membership.email
+      mount_apple_private_key = true
+      memory_mb               = "256"
+    }
+    "worker" = {
+      image                   = var.worker_image
+      service_account_name    = google_service_account.digital_membership_worker.email
+      mount_apple_private_key = true
+      memory_mb               = "512"
+    }
+  }
+  name                       = each.key
   location                   = var.gcp_region
   autogenerate_revision_name = true
 
@@ -22,14 +37,14 @@ resource "google_cloud_run_service" "digital_membership" {
         "autoscaling.knative.dev/minScale"      = "0"
         "autoscaling.knative.dev/maxScale"      = "1"
         "run.googleapis.com/cloudsql-instances" = google_sql_database_instance.digital_membership.connection_name
-        "run.googleapis.com/client-name"        = "member-card"
+        "run.googleapis.com/client-name"        = each.key
       }
     }
 
     spec {
-      service_account_name = google_service_account.digital_membership.email
+      service_account_name = each.value.service_account_name
       containers {
-        image = var.website_image
+        image = each.value.image
 
         env {
           name = "DIGITAL_MEMBERSHIP_SECRETS_JSON"
@@ -80,7 +95,7 @@ resource "google_cloud_run_service" "digital_membership" {
 
         env {
           name  = "LOG_LEVEL"
-          value = "DEBUG"
+          value = upper(var.app_log_level)
         }
 
         ports {
@@ -92,26 +107,32 @@ resource "google_cloud_run_service" "digital_membership" {
         resources {
           limits = {
             cpu    = "1"
-            memory = "256Mi"
+            memory = "${each.value.memory_mb}Mi"
           }
         }
 
-        volume_mounts {
-          name       = "apple_developer_private_key"
-          mount_path = "/secrets"
+        dynamic "volume_mounts" {
+          for_each = each.value.mount_apple_private_key == true ? [1] : []
+          content {
+            name       = "apple_developer_private_key"
+            mount_path = "/secrets"
+          }
         }
       }
 
-      volumes {
-        name = "apple_developer_private_key"
-        secret {
-          secret_name  = data.google_secret_manager_secret.apple_private_key.secret_id
-          default_mode = "0444" # 0444
-          items {
-            key  = local.apple_key_secret_version_key
-            path = "apple-private.key"
-            # mode = "0444" # 0444
-            # mode = 256 # 0400
+      dynamic "volumes" {
+        for_each = each.value.mount_apple_private_key == true ? [1] : []
+        content {
+          name = "apple_developer_private_key"
+          secret {
+            secret_name  = data.google_secret_manager_secret.apple_private_key.secret_id
+            default_mode = "0444" # 0444
+            items {
+              key  = local.apple_key_secret_version_key
+              path = "apple-private.key"
+              # mode = "0444" # 0444
+              # mode = 256 # 0400
+            }
           }
         }
       }
@@ -132,6 +153,26 @@ resource "google_cloud_run_domain_mapping" "digital_membership" {
   }
 
   spec {
-    route_name = google_cloud_run_service.digital_membership.name
+    route_name = google_cloud_run_service.digital_membership["website"].name
   }
+}
+
+
+resource "google_cloud_run_service_iam_member" "digital_membership" {
+  location = google_cloud_run_service.digital_membership["website"].location
+  project  = google_cloud_run_service.digital_membership["website"].project
+  service  = google_cloud_run_service.digital_membership["website"].name
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+
+}
+
+
+resource "google_cloud_run_service_iam_member" "digital_membership_worker" {
+  location = google_cloud_run_service.digital_membership["worker"].location
+  project  = google_cloud_run_service.digital_membership["worker"].project
+  service  = google_cloud_run_service.digital_membership["worker"].name
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+
 }
