@@ -54,11 +54,15 @@ class Settings(object):
     SERVICE_ACCOUNT_KEY: str = os.getenv("SERVICE_ACCOUNT_KEY", "")
     GCS_BUCKET_ID: str = os.getenv("GCS_BUCKET_ID", "")
     GCLOUD_PROJECT: str = os.getenv("GCLOUD_PROJECT", "")
-    GCLOUD_PUBSUB_TOPIC_ID: str = os.getenv("GCLOUD_PUBSUB_TOPIC_ID", "digital-membership")
+    GCLOUD_PUBSUB_TOPIC_ID: str = os.getenv(
+        "GCLOUD_PUBSUB_TOPIC_ID", "digital-membership"
+    )
 
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "info")
 
-    RECAPTCHA_SITE_KEY: str = os.getenv("RECAPTCHA_SITE_KEY", "6LdAblIeAAAAADLSJxAgNOhI2vSnZTG8rurt7Pnt")
+    RECAPTCHA_SITE_KEY: str = os.getenv(
+        "RECAPTCHA_SITE_KEY", "6LdAblIeAAAAADLSJxAgNOhI2vSnZTG8rurt7Pnt"
+    )
     RECAPTCHA_SECRET_KEY: str = os.getenv("RECAPTCHA_SECRET_KEY", "")
     RECAPTCHA_SIZE = "compact"
 
@@ -168,7 +172,7 @@ class Settings(object):
         logger.info("env var keys", extra=dict(env_var_keys=list(os.environ.keys())))
         if secrets_json := os.getenv("DIGITAL_MEMBERSHIP_SECRETS_JSON"):
             self._secrets = json.loads(secrets_json)
-        if secret_name := os.getenv("DIGITAL_MEMBERSHIP_GCP_SECRET_NAME"):
+        elif secret_name := os.getenv("DIGITAL_MEMBERSHIP_GCP_SECRET_NAME"):
             logger.info(f"Loading secrets from {secret_name=}")
             from member_card.secrets import retrieve_app_secrets
 
@@ -176,6 +180,7 @@ class Settings(object):
                 self._secrets = retrieve_app_secrets(secret_name)
 
         self.export_secrets_as_settings()
+        logger.debug(f"Initialized settings class!: {type(self)}...")
 
     def assert_required_settings_present(self) -> None:
         pass

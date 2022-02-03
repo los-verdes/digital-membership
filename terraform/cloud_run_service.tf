@@ -66,7 +66,7 @@ resource "google_cloud_run_service" "digital_membership" {
         }
         env {
           name  = "DIGITAL_MEMBERSHIP_DB_USERNAME"
-          value = google_sql_user.service_accounts["website"].name
+          value = google_sql_user.service_accounts[each.key].name
         }
         env {
           name  = "DIGITAL_MEMBERSHIP_DB_DATABASE_NAME"
