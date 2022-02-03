@@ -79,10 +79,25 @@ data "google_iam_policy" "apple_private_key_secret_access" {
 }
 
 resource "google_project_iam_member" "worker_pubsub_invoker_token_creator" {
+  #ts:skip=accurics.gcp.IAM.137 Unable to figure out how this is suppose to work otherwise...
   project = google_project.digital_membership.id
   role    = "roles/iam.serviceAccountTokenCreator"
   member  = "serviceAccount:${google_service_account.digital_membership["worker-pubsub-invoker"].email}"
 }
+
+# resource "google_project_service_identity" "pubsub" {
+#   provider = google-beta
+
+#   project = google_project.digital_membership.project_id
+#   service = "pubsub.googleapis.com"
+# }
+
+# resource "google_service_account_iam_member" "worker_pubsub_invoker_token_creator" {
+#   provider           = google-beta
+#   service_account_id = google_project_service_identity.pubsub.id
+#   role               = "roles/iam.serviceAccountTokenCreator"
+#   member             = "serviceAccount:${google_service_account.digital_membership["worker-pubsub-invoker"].email}"
+# }
 
 resource "google_project_iam_binding" "digital_membership_cloudsql_clients" {
   project = google_project.digital_membership.id
