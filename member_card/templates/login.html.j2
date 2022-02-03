@@ -1,5 +1,5 @@
 {% extends "base.html.j2" %}
-{% block title %}Login / Email Distribution - {% endblock %}
+{% block title %}Login / Email Distribution{% endblock %}
 {% block head %}
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 {% endblock %}
@@ -31,36 +31,9 @@
               Welcome Verdes!
             </h4>
             Digital membership cards can be obtained by either:
-            <ol>
+            <ul>
               <li>
-                <strong class="mdl-color-text--green">Email</strong>
-                <br>
-                Have a image and Google Pay / Apple wallet passes links for your membership card sent via email:
-                <form id="emailDistributionRequestForm" action="{{ url_for('email_distribution_request') }}" method="post">
-                  <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                    <input id="emailDistributionRecipient" name="emailDistributionRecipient" class="mdl-textfield__input" type="email">
-                    <label class="mdl-textfield__label" for="emailDistributionRecipient">E-mail</label>
-                    <span id="emailDistributionRecipientError" class="mdl-textfield__error">Please enter a valid email
-                      before submitting.</span>
-                  </div>
-                  <div class="error-messages mdl-color-text--red">{{ email_form_error_message }}</div>
-                  <div id='recaptcha' class="g-recaptcha" data-callback="onSubmit" data-expired-callback="onCaptchaExpired" data-error-callback="onCaptchaError"
-                       data-sitekey="{{ recaptcha_site_key }}" data-size="invisible">
-                  </div>
-                  <div class="mdl-typography--text-bottom	mdl-typography--text-right">
-                    <button id="emailDistributionSubmitBtn" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored">Submit Email
-                      Request</button>
-                    <div id="emailDistributionProgressBar" class="mdl-progress mdl-js-progress mdl-progress__indeterminate" style="display:none;"></div>
-                  </div>
-                </form>
-              </li>
-
-              <br>
-              <hr>
-              <br>
-
-              <li>
-                <strong class="mdl-color-text--green">Website</strong>
+                <strong class="mdl-color-text--green">Website Login</strong>:
                 <br>
                 Login to access the Los Verdes membership portal and retrieve your membership card:
                 <br>
@@ -69,7 +42,39 @@
                   {{ macros.sign_in_button() }}
                 </div>
               </li>
-            </ol>
+              <br>
+              <li>
+                <strong class="mdl-color-text--green">Email Request</strong>:
+                <br>
+                Have a image and Google Pay / Apple wallet passes links for your membership card sent via email:
+                <br>
+                <br>
+                <details>
+                  <summary>
+                    <h6>Email Distribution Form</h6>
+                  </summary>
+                  <div>
+                    <form id="emailDistributionRequestForm" action="{{ url_for('email_distribution_request') }}" method="post">
+                      <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                        <input id="emailDistributionRecipient" name="emailDistributionRecipient" class="mdl-textfield__input" type="email">
+                        <label class="mdl-textfield__label" for="emailDistributionRecipient">E-mail</label>
+                        <span id="emailDistributionRecipientError" class="mdl-textfield__error">Please enter a valid email
+                          before submitting.</span>
+                      </div>
+                      <div class="error-messages mdl-color-text--red">{{ email_form_error_message }}</div>
+                      <div id='recaptcha' class="g-recaptcha" data-callback="onSubmit" data-expired-callback="onCaptchaExpired" data-error-callback="onCaptchaError"
+                           data-sitekey="{{ recaptcha_site_key }}" data-size="invisible">
+                      </div>
+                      <div class="mdl-typography--text-bottom	mdl-typography--text-right">
+                        <button id="emailDistributionSubmitBtn" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored">Submit Email
+                          Request</button>
+                        <div id="emailDistributionProgressBar" class="mdl-progress mdl-js-progress mdl-progress__indeterminate" style="display:none;"></div>
+                      </div>
+                    </form>
+                  </div>
+                </details>
+              </li>
+            </ul>
             <br>
             <br>
             <br>
