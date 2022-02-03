@@ -1,5 +1,5 @@
 {% extends "base.html.j2" %}
-{% block title %}Email Distribution Request Submitted - Digital Membership Card - Los Verdes{% endblock %}
+{% block title %}Email Distribution Request Submitted{% endblock %}
 {% block head %}
 <meta http-equiv="refresh" content="{{ redirect_home_delay_seconds }}; url = {{ url_for('home') }}" />
 {% endblock %}
@@ -15,8 +15,7 @@
     <div class="mdl-card login-card mdl-shadow--2dp login-signin-panel">
       <div class="mdl-card__title">
         <h2 class="mdl-card__title-text">
-          <img class="lv-horizontal-logo-large"
-               src="{{ url_for('static', filename='LosVerdes_Logo_RGB_300_Horizontal_VerdeOnTransparent_CityYear.png') }}">
+          <img class="lv-horizontal-logo-large" src="{{ url_for('static', filename='LosVerdes_Logo_RGB_300_Horizontal_VerdeOnTransparent_CityYear.png') }}">
         </h2>
       </div>
       <div class="mdl-card__supporting-text">
@@ -32,8 +31,7 @@
         <ul class="mdl-list">
           <li class="mdl-list__item mdl-list__item--two-line">
             <span class="mdl-list__item-primary-content">
-              <span class="mdl-list__item-sub-title"><strong><i
-                     class="material-icons mdl-list__item-icon">add_task</i>Requested</strong></span>
+              <span class="mdl-list__item-sub-title"><strong><i class="material-icons mdl-list__item-icon">add_task</i>Requested</strong></span>
               <span>Los Verdes membership card</span>
             </span>
           </li>
@@ -74,8 +72,7 @@
       <hr>
       <div class="mdl-card__actions mdla-card--border mdl-typography--text-right">
 
-        <a class="mdl-button mdl-js-button mdl-button--colored" href="{{ url_for('home') }}"
-           title="Click here to open the membership store in a new tab">
+        <a class="mdl-button mdl-js-button mdl-button--colored" href="{{ url_for('home') }}" title="Click here to open the membership store in a new tab">
           Back Home
           <i class="material-icons">home</i>
         </a>

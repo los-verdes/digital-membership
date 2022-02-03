@@ -53,7 +53,7 @@ a {
 
 .email-request-landing-side-cover {
   // background: url("login_side_cover.png") center / cover;
-  background: url("LosVerdes_Logo_RGB_300_Stack_BlackOnTransparent.png") center / contain;
+  background: url("LosVerdes_Logo_RGB_300_Stack_BlackOnTransparent.png") center / fit;
   background-repeat: no-repeat;
   // min-height: calc(300px);
   height: 100%;
@@ -80,6 +80,17 @@ div.qr-code {
 .mdl-mini-footer {
   padding-top: 2px;
   padding-bottom: 2px;
+}
+
+div.lv-drawer-header-logo {
+  background: url("LosVerdes_Logo_RGB_300_Horizontal_BlackOnTransparent_CityYear_logo@2x.png") center / contain;
+  background-repeat: no-repeat;
+  width: 100%;
+
+  > h3 {
+    margin-top: 5px;
+    margin-bottom: 5px;
+  }
 }
 
 img.lv-horizontal-logo-small {
@@ -282,7 +293,7 @@ details summary {
 details > summary {
   background-color: #00b1415a;
   cursor: pointer;
-  padding: .5rem 1rem;
+  padding: 0.5rem 1rem;
 }
 
 details > summary > * {
@@ -293,4 +304,14 @@ details > div {
   border: 2px solid #00b1415a;
   margin-top: 0;
   padding: 1rem;
+}
+
+.about-card {
+  > .mdl-card__title {
+    height: 175px;
+    background-image: url("lv_hands.png");
+    background-position: center;
+    background-size: cover;
+    border-bottom: 2px solid #00b140;
+  }
 }

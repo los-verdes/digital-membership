@@ -1,5 +1,5 @@
 {% extends "base.html.j2" %}
-{% block title %}Login / Email Distribution - Digital Membership Card - Los Verdes{% endblock %}
+{% block title %}Login / Email Distribution - {% endblock %}
 {% block head %}
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 {% endblock %}
@@ -16,8 +16,7 @@
     <div class="mdl-card login-card mdl-shadow--2dp login-signin-panel">
       <div class="mdl-card__title">
         <h2 class="mdl-card__title-text">
-          <img class="lv-horizontal-logo-large"
-               src="{{ url_for('static', filename='LosVerdes_Logo_RGB_300_Horizontal_VerdeOnTransparent_CityYear.png') }}">
+          <img class="lv-horizontal-logo-large" src="{{ url_for('static', filename='LosVerdes_Logo_RGB_300_Horizontal_VerdeOnTransparent_CityYear.png') }}">
         </h2>
       </div>
       <div class="mdl-card__supporting-text">
@@ -37,26 +36,21 @@
                 <strong class="mdl-color-text--green">Email</strong>
                 <br>
                 Have a image and Google Pay / Apple wallet passes links for your membership card sent via email:
-                <form id="emailDistributionRequestForm" action="{{ url_for('email_distribution_request') }}"
-                      method="post">
+                <form id="emailDistributionRequestForm" action="{{ url_for('email_distribution_request') }}" method="post">
                   <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                    <input id="emailDistributionRecipient" name="emailDistributionRecipient"
-                           class="mdl-textfield__input" type="email">
+                    <input id="emailDistributionRecipient" name="emailDistributionRecipient" class="mdl-textfield__input" type="email">
                     <label class="mdl-textfield__label" for="emailDistributionRecipient">E-mail</label>
                     <span id="emailDistributionRecipientError" class="mdl-textfield__error">Please enter a valid email
                       before submitting.</span>
                   </div>
                   <div class="error-messages mdl-color-text--red">{{ email_form_error_message }}</div>
-                  <div id='recaptcha' class="g-recaptcha" data-callback="onSubmit"
-                       data-expired-callback="onCaptchaExpired" data-error-callback="onCaptchaError"
+                  <div id='recaptcha' class="g-recaptcha" data-callback="onSubmit" data-expired-callback="onCaptchaExpired" data-error-callback="onCaptchaError"
                        data-sitekey="{{ recaptcha_site_key }}" data-size="invisible">
                   </div>
                   <div class="mdl-typography--text-bottom	mdl-typography--text-right">
-                    <button id="emailDistributionSubmitBtn"
-                            class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored">Submit Email
+                    <button id="emailDistributionSubmitBtn" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored">Submit Email
                       Request</button>
-                    <div id="emailDistributionProgressBar"
-                         class="mdl-progress mdl-js-progress mdl-progress__indeterminate" style="display:none;"></div>
+                    <div id="emailDistributionProgressBar" class="mdl-progress mdl-js-progress mdl-progress__indeterminate" style="display:none;"></div>
                   </div>
                 </form>
               </li>
@@ -88,9 +82,6 @@
           </div>
         </div>
       </div>
-      <!-- <div class="mdl-card__actions mdla-card--border mdl-typography--text-right">
-        <span class="vhlm">Verde Hast La Muerte</span>
-      </div> -->
     </div>
 
   </div>
