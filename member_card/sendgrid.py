@@ -21,10 +21,9 @@ from sendgrid.helpers.mail import Mail
 logger = logging.getLogger(__name__)
 
 
-def generate_and_send_email(app, email, base_url):
+def generate_and_send_email(app, user, email, base_url):
     gcs_client = get_client()
     bucket = gcs_client.get_bucket(app.config["GCS_BUCKET_ID"])
-    user = User.query.filter_by(email=email).one()
 
     # attachment_ttl = timedelta(minutes=15)
     # attachment_ttl = timedelta(days=1)
