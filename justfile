@@ -134,6 +134,9 @@ push: build
   docker push '{{ worker_gcr_image_name }}:{{ image_tag }}'
   docker push '{{ worker_gcr_image_name }}:latest'
 
+  echo "Uploading statics..."
+  just flask build-and-upload-statics
+
 deploy: build push
   just tf init
   just tf apply \
