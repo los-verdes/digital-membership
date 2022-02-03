@@ -23,7 +23,7 @@ resource "google_pubsub_subscription" "worker" {
   ack_deadline_seconds = 600
 
   push_config {
-    push_endpoint = "https://example.com/push" #local.worker_pubsub_ingress_url
+    push_endpoint = local.worker_pubsub_ingress_url
     oidc_token {
       service_account_email = google_service_account.worker_pubsub_invoker.email
     }
