@@ -86,7 +86,7 @@ div.lv-drawer-header-logo {
   background: url("LosVerdes_Logo_RGB_300_Horizontal_BlackOnTransparent_CityYear_logo@2x.png") center / contain;
   background-repeat: no-repeat;
   width: 100%;
-
+  overflow: hidden;
   > h3 {
     margin-top: 5px;
     margin-bottom: 5px;
@@ -285,6 +285,10 @@ div.membership-card > .membership-card-inner {
 
 .lv-content {
   max-width: 1080px;
+}
+
+details {
+  padding-bottom: 5px;
 }
 
 details summary {
