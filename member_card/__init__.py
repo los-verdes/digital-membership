@@ -4,8 +4,7 @@ import os
 from datetime import datetime
 
 import click
-from flask import (Flask, g, redirect, render_template, request, send_file,
-                   url_for)
+from flask import Flask, g, redirect, render_template, request, send_file, url_for
 from flask.logging import default_handler
 from flask_gravatar import Gravatar
 from flask_login import current_user as current_login_user

@@ -263,6 +263,15 @@ ignored-modules=flask,
                 dateutil,
                 opentelemetry,
                 pythonjsonlogger,
+                flask_recaptcha,
+                email_validator,
+                sendgrid,
+                jinja2,
+                html2image,
+                PIL,
+                google.auth,
+                googleapiclient.discovery,
+                google.oauth2,
                 click
 
 # Show a hint with possible names when a member name was not found. The aspect

@@ -119,16 +119,6 @@ class MembershipCard(db.Model):
         return str(getattr(self.serial_number, "hex"))
 
     @property
-    def qr_code_ascii(self):
-        # qr_code = qrcode.make(self.qr_code_message)
-        qr = qrcode.QRCode()
-        qr.add_data(self.qr_code_message)
-        with StringIO() as f:
-            qr.print_ascii(out=f)
-            f.seek(0)
-            return f.read()
-
-    @property
     def qr_code_b64_png(self):
         qr = qrcode.QRCode()
         qr.add_data(self.qr_code_message)
