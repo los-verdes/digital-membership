@@ -37,7 +37,7 @@ COPY ./config/ ./config
 COPY ./member_card/ ./member_card
 COPY ./*.py ./
 
-CMD ["exec", "gunicorn", "--bind=:$PORT", "--workers=1", "--threads=8", "--timeout=0", "--log-file=-", "--log-level=info", "--log-config=config/gunicron_logging.ini", "wsgi:create_app()"]
+CMD ["exec", "gunicorn", "--bind=:$PORT", "--workers=1", "--threads=8", "--timeout=0", "--log-config=config/gunicron_logging.ini", "wsgi:create_app()"]
 
 FROM base AS worker
 
@@ -60,4 +60,4 @@ COPY ./config/ ./config
 COPY ./member_card/ ./member_card
 COPY ./*.py ./
 
-CMD ["exec", "gunicorn", "--bind=:$PORT", "--workers=1", "--threads=8", "--timeout=0", "--log-file=-", "--log-level=info", "--log-config=config/gunicron_logging.ini", "wsgi:create_app()"]
+CMD ["exec", "gunicorn", "--bind=:$PORT", "--workers=1", "--threads=8", "--timeout=0", "--log-config=config/gunicron_logging.ini", "wsgi:create_app()"]

@@ -40,15 +40,7 @@ def create_app():
     if app.config["TRACING_ENABLED"]:
         utils.initialize_tracer()
 
-    # utils.configure_logging(
-    #     project_id=app.config["GCLOUD_PROJECT"],
-    #     # running_in_cloudrun=running_in_cloudrun
-    # )
     app.logger.removeHandler(default_handler)
-
-    # log_level = getattr(logging, os.getenv("LOG_LEVEL", "INFO").upper())
-    # app.logger.setLevel(log_level)
-    # app.logger.propagate = True
 
     logger.debug("instrument_app")
     FlaskInstrumentor().instrument_app(app)
