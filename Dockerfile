@@ -22,11 +22,6 @@ RUN pip install \
         --requirement requirements.txt \
         google-python-cloud-debugger==2.18
 
-COPY ./config/ ./config
-COPY ./member_card/ ./member_card
-COPY ./*.py ./
-COPY ./scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
-
 FROM python:3.9-slim AS website
 
 # Allow statements and log messages to immediately appear in the Cloud Run logs
@@ -37,11 +32,23 @@ WORKDIR /app
 COPY --from=base /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-COPY --from=base /app /app
+COPY requirements.txt .
+COPY ./config/ ./config
+COPY ./member_card/ ./member_card
+COPY ./*.py ./
+COPY ./scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
 
 ENTRYPOINT ["/app/scripts/docker-entrypoint.sh"]
 
 FROM base AS worker
+
+# Allow statements and log messages to immediately appear in the Cloud Run logs
+ENV PYTHONUNBUFFERED True
+
+WORKDIR /app
+
+COPY --from=base /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
 RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
     && apt-get update \
@@ -50,17 +57,10 @@ RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable 
         google-chrome-stable=98.0.4758.80-1 \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=base /opt/venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-
-COPY --from=base /app /app
-
-# Allow statements and log messages to immediately appear in the Cloud Run logs
-ENV PYTHONUNBUFFERED True
-
-WORKDIR /app
-
-
-ENV PATH="/opt/venv/bin:$PATH"
+COPY requirements.txt .
+COPY ./config/ ./config
+COPY ./member_card/ ./member_card
+COPY ./*.py ./
+COPY ./scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
 
 ENTRYPOINT ["/app/scripts/docker-entrypoint.sh"]
