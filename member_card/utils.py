@@ -34,47 +34,6 @@ def remember_cwd():
         os.chdir(curdir)
 
 
-# def configure_logging(project_id=None):
-# import google.cloud.logging
-# from google.cloud.logging.handlers import (
-#     StructuredLogHandler,
-#     setup_logging,
-#     CloudLoggingHandler,
-# )
-#     log_level_str = os.getenv("LOG_LEVEL", "INFO").upper()
-#     log_level = getattr(logging, log_level_str)
-
-#     excluded_loggers = (
-#         "asyncio",
-#         "googleapiclient",
-#         "google.cloud",
-#         "google.auth",
-#         "google_auth_httplib2",
-#         "google.api_core.bidi",
-#         "urllib3",
-#         "werkzeug",
-#     )
-#     # if running_in_cloudrun:
-#     logging.info(f"{project_id=} => using StructuredLogHandler() for logging")
-#     setup_logging(
-#         handler=CloudLoggingHandler(project_id=project_id),
-#         log_level=log_level,
-#         excluded_loggers=excluded_loggers,
-#     )
-#     # else:
-#     #     logging.basicConfig(level=log_level)
-#     #     logging.info(f"{running_in_cloudrun=} => using stock python logging")
-#     #     for logger_name in excluded_loggers:
-#     #         # prevent excluded loggers from propagating logs to handler
-#     #         logger = logging.getLogger(logger_name)
-#     #         logger.propagate = False
-
-#     logging.getLogger().propagate = True
-#     logging.info(
-#         f"Logging configuration completed (using {project_id=} => using StructuredLogHandler)"
-#     )
-
-
 def initialize_tracer():
     set_global_textmap(CloudTraceFormatPropagator())
     tracer_provider = TracerProvider()
@@ -131,16 +90,7 @@ def load_settings(app):
     settings_env = app.config["ENV"].lower().strip()
 
     settings_obj = get_settings_obj_for_env(settings_env)
-    # logging.debug(
-    #     f"app.config before loading settings from object {settings_obj}: {app.config=}"
-    # )
     app.config.from_object(settings_obj())
-    # logging.debug(
-    #     f"app.config after loading settings from object {settings_obj}: {app.config=}"
-    # )
-    # logging.debug(app.config["SQLALCHEMY_DATABASE_URI"])
-    # breakpoint()
-    # DB
 
 
 libsass = get_filter(

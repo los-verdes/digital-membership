@@ -118,13 +118,13 @@ dictConfig(
             "member_card": {
                 "level": log_level,
                 "handlers": logging_handlers,
+                "propagate": False,
             },
         },
     }
 )
 
-logger = logging.getLogger(__name__)
-
+logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
 if __name__ == "__main__":
     app = create_app()

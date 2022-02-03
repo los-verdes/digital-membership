@@ -7,11 +7,11 @@ from opentelemetry.instrumentation.flask import FlaskInstrumentor
 
 from member_card import utils
 
-logger = logging.getLogger(__name__)
-
 
 def create_app():
     from member_card.app import app, login_manager, recaptcha, cdn
+
+    logger = logging.getLogger(__name__)
 
     utils.load_settings(app)
 

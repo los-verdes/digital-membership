@@ -11,7 +11,7 @@ worker_gcr_image_name := gcr_repo + "/" + worker_image_name
 python_reqs_file := "requirements.txt"
 export GCLOUD_PROJECT := "lv-digital-membership"
 # TODO: dev as default after we get done setting this all up....
-export FLASK_APP := env_var_or_default("FLASK_APP", "wsgi")
+export FLASK_APP := env_var_or_default("FLASK_APP", "wsgi:create_app()")
 export FLASK_ENV := env_var_or_default("FLASK_ENV", "developement")
 export FLASK_DEBUG := "true"
 export LOG_LEVEL := env_var_or_default("LOG_LEVEL", "debug")
