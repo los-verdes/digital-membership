@@ -112,9 +112,9 @@ def update_sendgrid_template():
     updated_html_content = html_template.render(
         preview_text="Your requested Los Verdes membership card details are attached! PNG image, Apple Wallet and Google Play pass formats enclosed. =D",
         view_online_href="https://card.losverd.es",
-        logo_src="card.losverd.es/static/LosVerdes_Logo_RGB_300_Horizontal_VerdeOnTransparent_CityYear.png",
-        downloads_img_src="card.losverd.es/static/small_lv_hands.png",
-        footer_logo_src="card.losverd.es/static/lv_hands.png",
+        logo_src="cstatic.losverd.es/static/LosVerdes_Logo_RGB_300_Horizontal_VerdeOnTransparent_CityYear.png",
+        downloads_img_src="cstatic.losverd.es/static/small_lv_hands.png",
+        footer_logo_src="cstatic.losverd.es/static/lv_hands.png",
         card_img_src="{{cardImageUrl}}",
     )
     version["html_content"] = updated_html_content.strip()

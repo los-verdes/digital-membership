@@ -15,6 +15,7 @@ from member_card import utils
 from member_card.db import squarespace_orders_etl
 from member_card.models import User
 from member_card.squarespace import Squarespace
+from flask_cdn import CDN
 
 BASE_DIR = os.path.dirname(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "member_card")
@@ -28,6 +29,8 @@ logger.propagate = False
 login_manager = utils.MembershipLoginManager()
 
 recaptcha = ReCaptcha()
+
+cdn = CDN()
 
 
 @login_manager.user_loader
@@ -380,8 +383,7 @@ def update_sendgrid_template():
 
 @app.cli.command("send-test-email")
 @click.argument("email")
-@click.argument("base_url", default="https://card.losverd.es")
-def send_test_email(email, base_url):
+def send_test_email(email):
     from member_card.sendgrid import generate_and_send_email
 
     generate_and_send_email(
@@ -417,3 +419,19 @@ def create_apple_pass_cli(email, zip_file_path=None):
 
 def create_apple_pass(email, zip_file=None):
     pass
+
+
+@app.cli.command("force-assets-bundle-build")
+def force_assets_bundle_build():
+    utils.force_assets_bundle_build(app)
+
+
+@app.cli.command("upload-statics")
+def upload_statics():
+    from member_card.storage import get_client, upload_statics_to_gcs
+
+    upload_statics_to_gcs(
+        client=get_client(),
+        bucket_id=app.config["GCS_BUCKET_ID"],
+        prefix="static",
+    )

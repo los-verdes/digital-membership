@@ -143,12 +143,21 @@ def load_settings(app):
     # DB
 
 
+libsass = get_filter(
+    "libsass",
+    as_output=True,
+    style="compressed",
+)
+
+
+def force_assets_bundle_build(app):
+    bundles = register_asset_bundles(app)
+    for bundle_name, bundle in bundles.items():
+        logging.info(f"Building bundle {bundle_name} ({bundle=})...")
+        bundle.build(force=True, disable_cache=True)
+
+
 def register_asset_bundles(app):
-    libsass = get_filter(
-        "libsass",
-        as_output=True,
-        style="compressed",
-    )
     assets = Environment(app)  # create an Environment instance
     bundles = {  # define nested Bundle
         "style": Bundle(
@@ -158,6 +167,8 @@ def register_asset_bundles(app):
         )
     }
     assets.register(bundles)
+
+    return bundles
 
 
 def is_authenticated(user):

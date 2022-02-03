@@ -272,6 +272,7 @@ ignored-modules=flask,
                 google.auth,
                 googleapiclient.discovery,
                 google.oauth2,
+                flask_cdn,
                 click
 
 # Show a hint with possible names when a member name was not found. The aspect

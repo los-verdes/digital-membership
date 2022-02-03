@@ -6,6 +6,7 @@ M2Crypto
 cloud-sql-python-connector[pg8000]
 email-validator
 flask
+flask-cdn
 flask-login
 google-auth
 google-cloud-firestore
