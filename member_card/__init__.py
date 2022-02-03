@@ -323,6 +323,7 @@ def about():
 @app.route("/pubsub", methods=["POST"])
 def pubsub_ingress():
     import base64
+
     envelope = request.get_json()
     if not envelope:
         msg = "no Pub/Sub message received"
@@ -338,14 +339,16 @@ def pubsub_ingress():
 
     print(f"{isinstance(pubsub_message, dict)=}")
     print(f"{pubsub_message=}")
-    message = json.loads(base64.b64decode(pubsub_message["data"]).decode("utf-8").strip())
-    if message.get('type') == 'email_distribution_request':
+    message = json.loads(
+        base64.b64decode(pubsub_message["data"]).decode("utf-8").strip()
+    )
+    if message.get("type") == "email_distribution_request":
 
         from member_card.sendgrid import generate_and_send_email
 
         generate_and_send_email(
             app=app,
-            email=message['submitted_email'],
+            email=message["submitted_email"],
             base_url="https://card.losverd.es",
         )
     # print(f"Hello {name}!")

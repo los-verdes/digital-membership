@@ -18,7 +18,7 @@ resource "google_cloud_run_service" "digital_membership" {
       image                   = var.worker_image
       service_account_name    = google_service_account.digital_membership_worker.email
       mount_apple_private_key = true
-      memory_mb               = "512"
+      memory_mb               = "256"
     }
   }
   name                       = each.key
@@ -34,7 +34,7 @@ resource "google_cloud_run_service" "digital_membership" {
 
     metadata {
       annotations = {
-        "autoscaling.knative.dev/minScale"      = "1"
+        "autoscaling.knative.dev/minScale"      = "0"
         "autoscaling.knative.dev/maxScale"      = "1"
         "run.googleapis.com/cloudsql-instances" = google_sql_database_instance.digital_membership.connection_name
         "run.googleapis.com/client-name"        = each.key

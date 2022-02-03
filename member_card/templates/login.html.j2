@@ -1,13 +1,31 @@
 {% extends "base.html.j2" %}
 {% block head %}
-<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<script>
+</script>
 <script>
   function onSubmit(token) {
-    document.getElementById("submit-button").disabled = true;
-    document.getElementById("submit-progress").style.display = "block";
     document.getElementById("emailDistributionRequest").submit();
   }
+
+  function validate(event) {
+    event.preventDefault();
+    if (!document.getElementById('email').value) {
+      var formToastContainer = document.querySelector('#email-form-toast');
+      var data = { message: 'Please enter a valid email address before submitting', timeout: 10000 };
+      formToastContainer.MaterialSnackbar.showSnackbar(data);
+    } else {
+      document.getElementById("email-submit-button").disabled = true;
+      document.getElementById("submit-progress").style.display = "block";
+      grecaptcha.execute();
+    }
+  }
+
+  function onload() {
+    var element = document.getElementById('email-submit-button');
+    element.onclick = validate;
+  }
 </script>
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 {% endblock %}
 
 {% block content %}
@@ -50,10 +68,12 @@
                     <span class="mdl-textfield__error">Enter a valid email!</span>
                   </div>
                   <div class="error-messages mdl-color-text--red">{{ email_form_error_message }}</div>
+                  <div id='recaptcha' class="g-recaptcha" data-callback="onSubmit"
+                       data-sitekey="{{ recaptcha_site_key }}" data-size="invisible">
+                  </div>
                   <div class="mdl-typography--text-bottom	mdl-typography--text-right">
-                    <button id="submit-button"
-                            class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored g-recaptcha"
-                            data-sitekey="{{ recaptcha_site_key }}" data-callback='onSubmit'>Submit Email
+                    <button id="email-submit-button"
+                            class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored">Submit Email
                       Request</button>
                     <div id="submit-progress" class="mdl-progress mdl-js-progress mdl-progress__indeterminate"
                          style="display:none;"></div>
@@ -94,7 +114,10 @@
     </div>
 
   </div>
-
+</div>
+<div id="email-form-toast" class="mdl-js-snackbar mdl-snackbar">
+  <div id="email-form-content" class="mdl-snackbar__text"></div>
+  <button class="mdl-snackbar__action" type="button"></button>
 </div>
 {% endcall %}
 {% endblock %}
@@ -102,5 +125,6 @@
 {% block before_body_close %}
 <script>
   document.getElementById("about-panel-content").style.display = "block";
+  onload();
 </script>
 {% endblock %}

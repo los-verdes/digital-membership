@@ -115,7 +115,7 @@ def generate_and_send_email(app, email, base_url):
     # apple_pass_signed_url = get_presigned_url(apple_pass_blob, attachment_ttl)
     generated_on = datetime.utcnow().isoformat()
     # subject = f"{app.config['EMAIL_SUBJECT_TEXT']} (generated on: {generated_on})"
-    subject = app.config['EMAIL_SUBJECT_TEXT']
+    subject = app.config["EMAIL_SUBJECT_TEXT"]
     serial_number = str(membership_card.serial_number)
     show_pass_signature = utils.sign(serial_number)
     template_data = {
