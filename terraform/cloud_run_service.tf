@@ -40,10 +40,11 @@ resource "google_cloud_run_service" "digital_membership" {
 
     metadata {
       annotations = {
-        "autoscaling.knative.dev/minScale"      = "0"
-        "autoscaling.knative.dev/maxScale"      = "1"
-        "run.googleapis.com/cloudsql-instances" = google_sql_database_instance.digital_membership.connection_name
-        "run.googleapis.com/client-name"        = each.key
+        "autoscaling.knative.dev/minScale"         = "0"
+        "autoscaling.knative.dev/maxScale"         = "1"
+        "run.googleapis.com/cloudsql-instances"    = google_sql_database_instance.digital_membership.connection_name
+        "run.googleapis.com/client-name"           = each.key
+        "run.googleapis.com/execution-environment" = "gen2"
       }
     }
 

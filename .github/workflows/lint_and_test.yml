@@ -28,7 +28,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IGNORE_GITIGNORED_FILES: true
           VALIDATE_ALL_CODEBASE: false
-          VALIDATE_JSCPD_ALL_CODEBASE: true
+          # JSCPD - meebee later...
+          # VALIDATE_JSCPD_ALL_CODEBASE: true
           VALIDATE_PYTHON_MYPY: false
           VALIDATE_CSS: false
           VALIDATE_JAVASCRIPT_STANDARD: false
