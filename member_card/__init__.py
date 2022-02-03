@@ -206,29 +206,29 @@ def email_distribution_request():
     request_accepted = True
     submitted_email = request.form["email"]
     log_extra = dict(submitted_email=submitted_email)
-    try:
-        user = User.query.filter_by(email=submitted_email).one()
-        log_extra.update(dict(user=user))
-    except Exception as err:
-        log_extra.update(dict(user_query_err=err))
-        logger.warning(
-            f"no matching user found for {submitted_email=}",
-            extra=log_extra,
-        )
-        user = None
+    # try:
+    #     user = User.query.filter_by(email=submitted_email).one()
+    #     log_extra.update(dict(user=user))
+    # except Exception as err:
+    #     log_extra.update(dict(user_query_err=err))
+    #     logger.warning(
+    #         f"no matching user found for {submitted_email=}",
+    #         extra=log_extra,
+    #     )
+    #     user = None
 
-    if user and user.has_active_memberships:
-        logger.info(f"Found {user=} for {submitted_email=}", extra=log_extra)
-        from member_card.pubsub import publish_message
-
-        publish_message(
-            project_id=app.config["GCLOUD_PROJECT"],
-            topic_id=app.config["GCLOUD_PUBSUB_TOPIC_ID"],
-            message_data=dict(
-                type="email_distribution_request",
-                submitted_email=submitted_email,
-            ),
-        )
+    # if user and user.has_active_memberships:
+    #     logger.info(f"Found {user=} for {submitted_email=}", extra=log_extra)
+    from member_card.pubsub import publish_message
+    logger.info("publishing email distribution request to topic", extra=log_extra)
+    publish_message(
+        project_id=app.config["GCLOUD_PROJECT"],
+        topic_id=app.config["GCLOUD_PUBSUB_TOPIC_ID"],
+        message_data=dict(
+            type="email_distribution_request",
+            submitted_email=submitted_email,
+        ),
+    )
 
     return render_template(
         "email_request_landing_page.html.j2",
