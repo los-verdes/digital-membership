@@ -10,8 +10,13 @@ from member_card import utils
 
 def create_cli_app():
     from member_card.app import app
+    logger = logging.getLogger(__name__)
 
+    logger.debug("load_settings")
     utils.load_settings(app)
+
+    logger.debug("register_asset_bundles")
+    utils.register_asset_bundles(app)
     return app
 
 
@@ -33,9 +38,6 @@ def create_app():
 
     logger.debug("instrument_app")
     FlaskInstrumentor().instrument_app(app)
-
-    logger.debug("register_asset_bundles")
-    utils.register_asset_bundles(app)
 
     logger.debug("login_manager.init_app")
     login_manager.init_app(app)
