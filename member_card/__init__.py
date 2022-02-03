@@ -10,6 +10,7 @@ from member_card import utils
 
 def create_cli_app():
     from member_card.app import app
+
     logger = logging.getLogger(__name__)
 
     logger.debug("load_settings")
