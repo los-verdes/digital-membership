@@ -6,14 +6,14 @@ locals {
       image                   = var.website_image
       service_account_name    = google_service_account.digital_membership["website"].email
       mount_apple_private_key = true
-      memory_mb               = "256"
+      memory_mb               = "512"
       invokers                = ["allUsers"]
     }
     "worker" = {
       image                   = var.worker_image
       service_account_name    = google_service_account.digital_membership["worker"].email
       mount_apple_private_key = true
-      memory_mb               = "256"
+      memory_mb               = "512"
       invokers                = ["serviceAccount:${google_service_account.digital_membership["worker-pubsub-invoker"].email}"]
     }
   }
