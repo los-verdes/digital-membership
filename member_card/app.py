@@ -383,8 +383,7 @@ def update_sendgrid_template():
 
 @app.cli.command("send-test-email")
 @click.argument("email")
-@click.argument("base_url", default="https://card.losverd.es")
-def send_test_email(email, base_url):
+def send_test_email(email):
     from member_card.sendgrid import generate_and_send_email
 
     generate_and_send_email(
@@ -427,10 +426,10 @@ def force_assets_bundle_build():
     utils.force_assets_bundle_build(app)
 
 
-@app.cli.command("build-and-upload-statics")
-def build_and_upload_statics():
+@app.cli.command("upload-statics")
+def upload_statics():
     from member_card.storage import get_client, upload_statics_to_gcs
-    utils.force_assets_bundle_build(app)
+
     upload_statics_to_gcs(
         client=get_client(),
         bucket_id=app.config["GCS_BUCKET_ID"],

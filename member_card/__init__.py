@@ -11,9 +11,12 @@ logger = logging.getLogger(__name__)
 
 
 def create_app():
-    from member_card.app import app, login_manager, recaptcha
+    from member_card.app import app, login_manager, recaptcha, cdn
 
     utils.load_settings(app)
+
+    logger.debug("cdn.init_app")
+    cdn.init_app(app)
 
     logger.debug("initialize_tracer")
     if app.config["TRACING_ENABLED"]:

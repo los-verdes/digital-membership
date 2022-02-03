@@ -53,7 +53,9 @@ def upload_statics_to_gcs(client, bucket_id, prefix, ignored_files=None):
     bucket = client.get_bucket(bucket_id)
     statics_dir_path = os.path.abspath(os.path.join(app.config["BASE_DIR"], "static/"))
     logger.info(f"Uploading {statics_dir_path=} to {bucket=} ({prefix=})")
-    upload_local_directory_to_gcs(client, statics_dir_path, bucket, prefix, ignored_files)
+    upload_local_directory_to_gcs(
+        client, statics_dir_path, bucket, prefix, ignored_files
+    )
     logger.info(f"{statics_dir_path=} upload to {bucket=} ({prefix=}) completed!")
 
 
@@ -67,11 +69,15 @@ def remove_subpath_from_gcs(client, bucket_id, prefix):
     logger.info(f"All blobs deleted from gs://{bucket_id}/{prefix}")
 
 
-def upload_local_directory_to_gcs(client, local_path, bucket, gcs_path, ignored_files=None):
+def upload_local_directory_to_gcs(
+    client, local_path, bucket, gcs_path, ignored_files=None
+):
     assert os.path.isdir(local_path)
     for local_file in glob.glob(local_path + "/**"):
         if ignored_files and local_file in ignored_files:
-            logger.debug(f"upload_local_directory_to_gcs() ignoring file {local_path} ({ignored_files=}")
+            logger.debug(
+                f"upload_local_directory_to_gcs() ignoring file {local_path} ({ignored_files=}"
+            )
         if not os.path.isfile(local_file):
             upload_local_directory_to_gcs(
                 client,

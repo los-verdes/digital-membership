@@ -110,6 +110,8 @@ build-worker:
   docker build . --target worker --tag '{{ worker_image_name }}:{{ image_tag }}'
 
 build: build-website build-worker
+  echo "Building statics..."
+  just flask assets build
 
 run-worker: build-worker
   docker run -it --rm '{{ worker_image_name }}:{{ image_tag }}'
@@ -135,7 +137,7 @@ push: build
   docker push '{{ worker_gcr_image_name }}:latest'
 
   echo "Uploading statics..."
-  just flask build-and-upload-statics
+  just flask upload-statics
 
 deploy: build push
   just tf init

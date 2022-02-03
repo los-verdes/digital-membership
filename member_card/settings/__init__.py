@@ -33,6 +33,13 @@ class Settings(object):
     RUNNING_ON_CLOUD_RUN: bool = CLOUD_RUN_SERVICE != "N/A"
     TRACING_ENABLED: bool = RUNNING_ON_CLOUD_RUN
 
+    # https://stackoverflow.com/a/53214929
+    CDN_DOMAIN = os.getenv("GCS_BUCKET_ID", "")
+    CDN_TIMESTAMP = False
+    CDN_DEBUG = True
+    CDN_HTTPS = True
+    FLASK_ASSETS_USE_CDN = True
+
     DB_CONNECTION_NAME: str = os.environ["DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME"]
     DB_USERNAME: str = os.environ["DIGITAL_MEMBERSHIP_DB_USERNAME"]
     DB_DATABASE_NAME: str = os.environ["DIGITAL_MEMBERSHIP_DB_DATABASE_NAME"]
@@ -202,6 +209,7 @@ class ProductionSettings(Settings):
     SOCIAL_AUTH_REDIRECT_IS_HTTPS: bool = True
     SQLALCHEMY_DATABASE_URI: str = "postgresql+pg8000://"
     SQLALCHEMY_ECHO: bool = False
+    CDN_DEBUG = False
 
     def __init__(self) -> None:
 
