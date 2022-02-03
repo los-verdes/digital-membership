@@ -7,7 +7,7 @@ from google.cloud.logging_v2.handlers._helpers import get_request_data
 from google_cloud_logger import GoogleCloudFormatter
 from pythonjsonlogger.jsonlogger import JsonFormatter
 
-from member_card import create_app
+from member_card import create_app, create_cli_app
 
 try:
     import googleclouddebugger
@@ -129,3 +129,4 @@ logging.getLogger("werkzeug").setLevel(logging.ERROR)
 if __name__ == "__main__":
     app = create_app()
     app.run()
+    assert create_cli_app

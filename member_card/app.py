@@ -49,6 +49,9 @@ def global_user():
 
 @app.teardown_appcontext
 def commit_on_success(error=None):
+    if "sqlalchemy" not in app.extensions:
+        # TODO: do this better
+        return
     from member_card.db import db
 
     if error is None:
@@ -287,6 +290,7 @@ def pubsub_ingress():
         log_extra = dict(email_distribution_recipient=email_distribution_recipient)
         logger.debug("looking up user...", extra=log_extra)
         try:
+            # BONUS TODO: make this case-insensitive
             user = User.query.filter_by(email=email_distribution_recipient).one()
             log_extra.update(dict(user=user))
         except Exception as err:

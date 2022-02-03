@@ -8,12 +8,19 @@ from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from member_card import utils
 
 
+def create_cli_app():
+    from member_card.app import app
+
+    utils.load_settings(app)
+    return app
+
+
 def create_app():
-    from member_card.app import app, login_manager, recaptcha, cdn
+    from member_card.app import login_manager, recaptcha, cdn
 
     logger = logging.getLogger(__name__)
 
-    utils.load_settings(app)
+    app = create_cli_app()
 
     logger.debug("cdn.init_app")
     cdn.init_app(app)
