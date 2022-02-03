@@ -140,7 +140,7 @@ push: build
   echo "Uploading statics..."
   just flask upload-statics
 
-deploy: build push
+deploy: ci-install-python-reqs build push
   just tf init
   just tf apply \
     -auto-approve \
