@@ -334,6 +334,7 @@ def pubsub_ingress():
         from member_card.sendgrid import generate_and_send_email
         submitted_email = message["submitted_email"]
         log_extra = dict(submitted_email=submitted_email)
+        logger.debug("looking up user...", extra=log_extra)
         try:
             user = User.query.filter_by(email=submitted_email).one()
             log_extra.update(dict(user=user))
@@ -349,6 +350,7 @@ def pubsub_ingress():
             logger.info(f"Found {user=} for {submitted_email=}. Generating and sending email now", extra=log_extra)
             generate_and_send_email(
                 app=app,
+                user=user,
                 email=submitted_email,
                 base_url="https://card.losverd.es",
             )
@@ -442,7 +444,7 @@ def update_sendgrid_template():
     )
     template = env.get_template("sendgrid_email.html.j2")
     updated_html_content = template.render(
-        preview_text="Your requested Los Verdes membership card details are attached!",
+        preview_text="Your requested Los Verdes membership card details are attached! PNG image, Apple Wallet and Google Play pass formats enclosed. =D",
         view_online_href="https://card.losverd.es",
         logo_src="card.losverd.es/static/LosVerdes_Logo_RGB_300_Horizontal_VerdeOnTransparent_CityYear.png",
         downloads_img_src="card.losverd.es/static/small_lv_hands.png",

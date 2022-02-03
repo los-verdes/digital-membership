@@ -20,7 +20,7 @@ resource "google_pubsub_subscription" "worker" {
   name  = "worker-subscription"
   topic = google_pubsub_topic.digital_membership.name
 
-  message_retention_duration = 60 * 60 * 12
+  message_retention_duration = "${60 * 60 * 12}s"
   ack_deadline_seconds = 600
 
   push_config {
