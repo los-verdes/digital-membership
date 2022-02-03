@@ -4,6 +4,7 @@ Flask-SQLAlchemy
 Flask-reCaptcha
 M2Crypto
 cloud-sql-python-connector[pg8000]
+email-validator
 flask
 flask-login
 google-auth

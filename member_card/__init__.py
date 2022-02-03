@@ -189,40 +189,64 @@ def home():
 
 @app.route("/email-distribution-request", methods=["POST"])
 def email_distribution_request():
+    from member_card.pubsub import publish_message
+    from email_validator import validate_email, EmailNotValidError
 
-    email_form_message = None
-    request_accepted = False
+    log_extra = dict(form=request.form)
+
+    # First prerequisite: verified recaptcha stuff:
     if not recaptcha.verify():
         email_form_error_message = "Request not verified via ReCaptcha! Please try again or contact support@losverd.es for assistance."
         logger.error(
-            "Unable to verify recaptcha, redirecting to login", extra=dict(request.form)
+            "Unable to verify recaptcha, redirecting to login", extra=log_extra
         )
         return redirect(
             f"{url_for('login')}?emailFormErrorMessage={email_form_error_message}"
         )
 
-    email_form_message = "Request received"
-    redirect_home_delay_seconds = "45"
-    request_accepted = True
-    submitted_email = request.form["email"]
-    log_extra = dict(submitted_email=submitted_email)
-    from member_card.pubsub import publish_message
-    logger.info("publishing email distribution request to topic", extra=log_extra)
+    email_distribution_recipient = request.form["emailDistributionRecipient"]
+    log_extra.update(dict(email_distribution_recipient=email_distribution_recipient))
+
+    # Second prerequisite: we can actually send to this address
+    try:
+        # Validate.
+        valid = validate_email(email_distribution_recipient)
+
+        # Update with the normalized form.
+        email_distribution_recipient = valid.email
+        log_extra.update(
+            dict(email_distribution_recipient=email_distribution_recipient)
+        )
+    except EmailNotValidError as err:
+        log_extra.update(dict(err=err))
+        # email is not valid, exception message is human-readable
+        email_form_error_message = str(err)
+        logger.error(
+            "Unable to validate email, redirecting to login",
+            extra=dict(form=request.form),
+        )
+        return redirect(
+            f"{url_for('login')}?emailFormErrorMessage={email_form_error_message}"
+        )
+
+    topic_id = app.config["GCLOUD_PUBSUB_TOPIC_ID"]
+    logger.info(
+        f"publishing email distribution request to pubsub {topic_id=}", extra=log_extra
+    )
     publish_message(
         project_id=app.config["GCLOUD_PROJECT"],
-        topic_id=app.config["GCLOUD_PUBSUB_TOPIC_ID"],
+        topic_id=topic_id,
         message_data=dict(
             type="email_distribution_request",
-            submitted_email=submitted_email,
+            email_distribution_recipient=email_distribution_recipient,
         ),
     )
 
     return render_template(
         "email_request_landing_page.html.j2",
-        submitted_email=submitted_email,
-        request_accepted=request_accepted,
-        email_form_message=email_form_message,
-        redirect_home_delay_seconds=redirect_home_delay_seconds,
+        email_distribution_recipient=email_distribution_recipient,
+        submission_response_msg="Request received",
+        redirect_home_delay_seconds="45",
     )
 
 
@@ -332,26 +356,30 @@ def pubsub_ingress():
     if message.get("type") == "email_distribution_request":
 
         from member_card.sendgrid import generate_and_send_email
-        submitted_email = message["submitted_email"]
-        log_extra = dict(submitted_email=submitted_email)
+
+        email_distribution_recipient = message["email_distribution_recipient"]
+        log_extra = dict(email_distribution_recipient=email_distribution_recipient)
         logger.debug("looking up user...", extra=log_extra)
         try:
-            user = User.query.filter_by(email=submitted_email).one()
+            user = User.query.filter_by(email=email_distribution_recipient).one()
             log_extra.update(dict(user=user))
         except Exception as err:
             log_extra.update(dict(user_query_err=err))
             logger.warning(
-                f"no matching user found for {submitted_email=}",
+                f"no matching user found for {email_distribution_recipient=}",
                 extra=log_extra,
             )
             user = None
 
         if user and user.has_active_memberships:
-            logger.info(f"Found {user=} for {submitted_email=}. Generating and sending email now", extra=log_extra)
+            logger.info(
+                f"Found {user=} for {email_distribution_recipient=}. Generating and sending email now",
+                extra=log_extra,
+            )
             generate_and_send_email(
                 app=app,
                 user=user,
-                email=submitted_email,
+                email=email_distribution_recipient,
                 base_url="https://card.losverd.es",
             )
     # print(f"Hello {name}!")
@@ -442,8 +470,8 @@ def update_sendgrid_template():
         comment_start_string="{#~",
         comment_end_string="~#}",
     )
-    template = env.get_template("sendgrid_email.html.j2")
-    updated_html_content = template.render(
+    html_template = env.get_template("sendgrid_email.html.j2")
+    updated_html_content = html_template.render(
         preview_text="Your requested Los Verdes membership card details are attached! PNG image, Apple Wallet and Google Play pass formats enclosed. =D",
         view_online_href="https://card.losverd.es",
         logo_src="card.losverd.es/static/LosVerdes_Logo_RGB_300_Horizontal_VerdeOnTransparent_CityYear.png",
@@ -452,6 +480,17 @@ def update_sendgrid_template():
         card_img_src="{{cardImageUrl}}",
     )
     version["html_content"] = updated_html_content.strip()
+
+    plain_template = env.get_template("sendgrid_email.txt")
+    updated_plain_content = plain_template.render(
+        preview_text="Your requested Los Verdes membership card details are attached! PNG image, Apple Wallet and Google Play pass formats enclosed. =D",
+        view_online_href="https://card.losverd.es",
+        logo_src="card.losverd.es/static/LosVerdes_Logo_RGB_300_Horizontal_VerdeOnTransparent_CityYear.png",
+        downloads_img_src="card.losverd.es/static/small_lv_hands.png",
+        footer_logo_src="card.losverd.es/static/lv_hands.png",
+        card_img_src="{{cardImageUrl}}",
+    )
+    version["plain_content"] = updated_plain_content.strip()
 
     # PATCH Response: 400 b'{"error":"You cannot switch editors once a dynamic template version has been created."}\n'
     del version["editor"]

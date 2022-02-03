@@ -1,30 +1,5 @@
 {% extends "base.html.j2" %}
 {% block head %}
-<script>
-</script>
-<script>
-  function onSubmit(token) {
-    document.getElementById("emailDistributionRequest").submit();
-  }
-
-  function validate(event) {
-    event.preventDefault();
-    if (!document.getElementById('email').value) {
-      var formToastContainer = document.querySelector('#email-form-toast');
-      var data = { message: 'Please enter a valid email address before submitting', timeout: 10000 };
-      formToastContainer.MaterialSnackbar.showSnackbar(data);
-    } else {
-      document.getElementById("email-submit-button").disabled = true;
-      document.getElementById("submit-progress").style.display = "block";
-      grecaptcha.execute();
-    }
-  }
-
-  function onload() {
-    var element = document.getElementById('email-submit-button');
-    element.onclick = validate;
-  }
-</script>
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 {% endblock %}
 
@@ -61,22 +36,26 @@
                 <strong class="mdl-color-text--green">Email</strong>
                 <br>
                 Have a image and Google Pay / Apple wallet passes links for your membership card sent via email:
-                <form id="emailDistributionRequest" action="{{ url_for('email_distribution_request') }}" method="post">
+                <form id="emailDistributionRequestForm" action="{{ url_for('email_distribution_request') }}"
+                      method="post">
                   <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                    <input id="email" name="email" class="mdl-textfield__input" type="email">
-                    <label class="mdl-textfield__label" for="email">E-mail</label>
-                    <span class="mdl-textfield__error">Enter a valid email!</span>
+                    <input id="emailDistributionRecipient" name="emailDistributionRecipient"
+                           class="mdl-textfield__input" type="email">
+                    <label class="mdl-textfield__label" for="emailDistributionRecipient">E-mail</label>
+                    <span id="emailDistributionRecipientError" class="mdl-textfield__error">Please enter a valid email
+                      before submitting.</span>
                   </div>
                   <div class="error-messages mdl-color-text--red">{{ email_form_error_message }}</div>
                   <div id='recaptcha' class="g-recaptcha" data-callback="onSubmit"
+                       data-expired-callback="onCaptchaExpired" data-error-callback="onCaptchaError"
                        data-sitekey="{{ recaptcha_site_key }}" data-size="invisible">
                   </div>
                   <div class="mdl-typography--text-bottom	mdl-typography--text-right">
-                    <button id="email-submit-button"
+                    <button id="emailDistributionSubmitBtn"
                             class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--colored">Submit Email
                       Request</button>
-                    <div id="submit-progress" class="mdl-progress mdl-js-progress mdl-progress__indeterminate"
-                         style="display:none;"></div>
+                    <div id="emailDistributionProgressBar"
+                         class="mdl-progress mdl-js-progress mdl-progress__indeterminate" style="display:none;"></div>
                   </div>
                 </form>
               </li>
@@ -115,8 +94,8 @@
 
   </div>
 </div>
-<div id="email-form-toast" class="mdl-js-snackbar mdl-snackbar">
-  <div id="email-form-content" class="mdl-snackbar__text"></div>
+<div id="toastSnackbar" class="mdl-js-snackbar mdl-snackbar">
+  <div id="toastSnackbarContent" class="mdl-snackbar__text"></div>
   <button class="mdl-snackbar__action" type="button"></button>
 </div>
 {% endcall %}
@@ -124,7 +103,9 @@
 
 {% block before_body_close %}
 <script>
-  document.getElementById("about-panel-content").style.display = "block";
-  onload();
+  window.onload = function () {
+    document.getElementById("about-panel-content").style.display = "block";
+    distributionFormOnload();
+  }
 </script>
 {% endblock %}

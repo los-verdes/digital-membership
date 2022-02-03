@@ -19,12 +19,9 @@
                src="{{ url_for('static', filename='LosVerdes_Logo_RGB_300_Horizontal_VerdeOnTransparent_CityYear.png') }}">
         </h2>
       </div>
-      {% if request_accepted %}
-      {% else %}
-      {% endif %}
       <div class="mdl-card__supporting-text">
         <h4>
-          Email Submission Result
+          Email Distribution Request
         </h4>
 
         Your membership card request for <strong>{{submitted_email}}</strong> has
@@ -51,14 +48,25 @@
             <span class="mdl-list__item-primary-content">
               <span class="mdl-list__item-sub-title"><strong><i class="material-icons mdl-list__item-icon">comment</i>
                   Response</strong></span>
-              <span>{{ email_form_message }}</span>
+              <span>{{ submission_response_msg }}</span>
             </span>
           </li>
         </ul>
         <hr>
+        <ul>
+          <li>
+            No email will be sent out if the submitted email address has no match in the Los Verdes membership rolls.
+          </li>
+          <li>
+            Membership card email generation and delivery typically takes about 5-10 minutes.
+          </li>
+          <li>
+            See the "Troubleshooting" section on the <a href="{{ url_for('about') }}">About page</a> for any issues.
+          </li>
+        </ul>
         <h6>
-        Redirecting you <a href="{{ url_for('home') }}">back home</a> in {{ redirect_home_delay_seconds }} seconds...
-      </h6>
+          Redirecting you <a href="{{ url_for('home') }}">back home</a> in {{ redirect_home_delay_seconds }} seconds...
+        </h6>
         <div id="submit-progress" class="mdl-progress mdl-js-progress mdl-progress__indeterminate"></div>
         <br>
         <br>

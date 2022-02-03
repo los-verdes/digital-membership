@@ -25,12 +25,19 @@ resource "google_storage_bucket_iam_member" "digital_membership_sa_obj_admin" {
 
 resource "google_storage_bucket_iam_member" "digital_membership_sa_bucket_reader" {
   bucket = google_storage_bucket.statics.name
-  role    = "roles/storage.legacyBucketReader"
-  member  = "serviceAccount:${google_service_account.digital_membership.email}"
+  role   = "roles/storage.legacyBucketReader"
+  member = "serviceAccount:${google_service_account.digital_membership.email}"
 }
 
 
 resource "google_storage_bucket_iam_member" "digital_membership_worker_sa_obj_admin" {
+  bucket = google_storage_bucket.statics.name
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${google_service_account.digital_membership_worker.email}"
+}
+
+
+resource "google_storage_bucket_iam_member" "digital_membership_worker_sa_obj_owner" {
   bucket = google_storage_bucket.statics.name
   role   = "roles/storage.legacyObjectOwner"
   member = "serviceAccount:${google_service_account.digital_membership_worker.email}"
@@ -39,8 +46,8 @@ resource "google_storage_bucket_iam_member" "digital_membership_worker_sa_obj_ad
 
 resource "google_storage_bucket_iam_member" "digital_membership_worker_sa_bucket_reader" {
   bucket = google_storage_bucket.statics.name
-  role    = "roles/storage.legacyBucketReader"
-  member  = "serviceAccount:${google_service_account.digital_membership_worker.email}"
+  role   = "roles/storage.legacyBucketReader"
+  member = "serviceAccount:${google_service_account.digital_membership_worker.email}"
 }
 
 

@@ -280,7 +280,7 @@
                   </tr>
                   <tr>
                     <td align="center" bgcolor="#eeeeee">
-                      <a href="<%asm_global_unsubscribe_raw_url%>" target="_blank"
+                      <a href="https://<%asm_global_unsubscribe_raw_url%>" target="_blank"
                          style="font-size: 12px; line-height: 14px; font-weight: 500; font-family: 'Roboto', sans-serif; color: #212121; text-decoration: underline;padding: 0px; border: 1px solid #eeeeee; display: inline-block;">Unsubscribe</a>
                     </td>
                   </tr>
@@ -841,15 +841,23 @@
 {% call card_contents(
 title="Digital Membership Card",
 img_src=card_img_src,
-buttons=[
-{"href": card_img_src, "text": "📇 Download (.png)"},
-{"href": "{{applePassUrl}}", "img_src": "https://card.losverd.es/static/Add_to_Apple_Wallet_rgb_US-UK.png"},
-]
 ) %}
 Your requested membership card is attached.
 <br>
 <br>
-Thank you and Enjoy! :)
+Gracias!
+{% endcall %}
+{% endcall %}
+
+{% call single_column_card() %}
+{% call card_contents(
+buttons=[
+{"href": card_img_src, "text": "📇 Download (.png)"},
+{"href": "{{applePassUrl}}", "img_src": "https://card.losverd.es/static/Add_to_Apple_Wallet_rgb_US-UK.png"},
+]
+)
+%}
+
 <h3 style="font-family: 'Impact', sans-serif; border-bottom: 1px dashed #00b140;">
   Downloads
 </h3>
@@ -870,7 +878,8 @@ Offline copies of this membership card can be downloaded using the links below.
      href="mailto:support@losverd.es">support@losverd.es</a> for assistance.
   <br>
   This email was requested via a form submission made at <a
-  href="https://card.losverd.es/">https://card.losverd.es/</a>{{#if generating_ip_address}}, from requesting IP address `{{generating_ip_address}}`,{{/if}} at: {{generated_on}}.
+     href="https://card.losverd.es/">https://card.losverd.es/</a>{{#if generating_ip_address}}, from requesting IP
+    address `{{generating_ip_address}}`,{{/if}} at: {{generated_on}}.
 </span>
 <br>
 <br>

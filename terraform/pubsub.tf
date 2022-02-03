@@ -21,7 +21,7 @@ resource "google_pubsub_subscription" "worker" {
   topic = google_pubsub_topic.digital_membership.name
 
   message_retention_duration = "${60 * 60 * 12}s"
-  ack_deadline_seconds = 600
+  ack_deadline_seconds       = 600
 
   push_config {
     push_endpoint = local.worker_pubsub_ingress_url
