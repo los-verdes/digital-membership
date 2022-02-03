@@ -9,7 +9,7 @@ resource "google_pubsub_topic_iam_binding" "digital_membership_topic_publishers"
   role  = "roles/pubsub.publisher"
   members = concat(
     [for u in concat(var.gcp_project_owners, var.gcp_project_editors) : "user:${u}"],
-    ["serviceAccount:${google_service_account.digital_membership.email}"],
+    ["serviceAccount:${google_service_account.digital_membership["website"].email}"],
   )
 }
 
@@ -26,7 +26,7 @@ resource "google_pubsub_subscription" "worker" {
   push_config {
     push_endpoint = local.worker_pubsub_ingress_url
     oidc_token {
-      service_account_email = google_service_account.worker_pubsub_invoker.email
+      service_account_email = google_service_account.digital_membership["worker-pubsub-invoker"].email
     }
     # attributes = {
     #   x-goog-version = "v1"
@@ -43,7 +43,7 @@ resource "google_pubsub_subscription" "worker" {
 #   role = "roles/pubsub.subscriber"
 #   members = concat(
 #     [for u in concat(var.gcp_project_owners, var.gcp_project_editors): "user:${u}"],
-#     ["serviceAccount:${google_service_account.digital_membership_worker.email}"],
+#     ["serviceAccount:${google_service_account.digital_membership["worker"].email}"],
 #   )
 # }
 

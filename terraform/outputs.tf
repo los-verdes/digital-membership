@@ -19,7 +19,7 @@ locals {
 # }
 
 output "db_task_runner_service_account_email" {
-  value = google_service_account.db_task_runner.email
+  value = google_service_account.digital_membership["db-task-runner"].email
 }
 
 output "gh_terraform_applier_service_account_email" {
@@ -60,7 +60,7 @@ output "website_domain_name" {
 }
 
 output "website_service_account_email" {
-  value = google_service_account.digital_membership.email
+  value = google_service_account.digital_membership["website"].email
 }
 
 output "worker_pubsub_ingress_url" {
@@ -68,14 +68,9 @@ output "worker_pubsub_ingress_url" {
 }
 
 output "worker_service_account_email" {
-  value = google_service_account.digital_membership_worker.email
+  value = google_service_account.digital_membership["worker"].email
 }
 
 output "worker_pubsub_invoker_service_account_email" {
-  value = google_service_account.worker_pubsub_invoker.email
-}
-
-output "website_service_account_key" {
-  sensitive = true
-  value     = google_service_account_key.digital_membership.private_key
+  value = google_service_account.digital_membership["worker-pubsub-invoker"].email
 }

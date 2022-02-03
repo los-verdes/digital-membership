@@ -66,17 +66,3 @@ resource "google_project_service" "digital_membership" {
     update = "40m"
   }
 }
-
-resource "google_project_iam_member" "project_owners" {
-  for_each = toset(var.gcp_project_owners)
-  project  = google_project.digital_membership.id
-  role     = "roles/owner"
-  member   = "user:${each.value}"
-}
-
-resource "google_project_iam_member" "project_editors" {
-  for_each = toset(var.gcp_project_editors)
-  project  = google_project.digital_membership.id
-  role     = "roles/editor"
-  member   = "user:${each.value}"
-}
