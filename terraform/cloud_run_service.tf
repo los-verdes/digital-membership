@@ -1,4 +1,6 @@
 locals {
+  cloud_run_domain_name = "${var.cloud_run_subdomain}.${var.base_domain}"
+
   cloud_run_services = {
     "website" = {
       image                   = var.website_image
@@ -15,6 +17,7 @@ locals {
       invokers                = ["serviceAccount:${google_service_account.digital_membership["worker-pubsub-invoker"].email}"]
     }
   }
+
   secret_version_parts           = split("/", google_secret_manager_secret_version.digital_membership.id)
   secret_version_key             = element(local.secret_version_parts, length(local.secret_version_parts) - 1)
   apple_key_secret_version_parts = split("/", data.google_secret_manager_secret_version.apple_private_key.id)
@@ -145,10 +148,6 @@ resource "google_cloud_run_service" "digital_membership" {
       }
     }
   }
-}
-
-locals {
-  cloud_run_domain_name = "${var.cloud_run_subdomain}.${var.base_domain}"
 }
 
 resource "google_cloud_run_domain_mapping" "digital_membership" {
