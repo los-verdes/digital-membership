@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import json
 import os
+from datetime import datetime
 from urllib.parse import urlparse
 
 import click
@@ -189,8 +190,9 @@ def home():
 
 @app.route("/email-distribution-request", methods=["POST"])
 def email_distribution_request():
+    from email_validator import EmailNotValidError, validate_email
+
     from member_card.pubsub import publish_message
-    from email_validator import validate_email, EmailNotValidError
 
     log_extra = dict(form=request.form)
 
@@ -239,6 +241,8 @@ def email_distribution_request():
         message_data=dict(
             type="email_distribution_request",
             email_distribution_recipient=email_distribution_recipient,
+            remote_addr=request.remote_addr,
+            submitted_on=datetime.utcnow().isoformat(),
         ),
     )
 
@@ -377,12 +381,10 @@ def pubsub_ingress():
                 extra=log_extra,
             )
             generate_and_send_email(
-                app=app,
                 user=user,
-                email=email_distribution_recipient,
-                base_url="https://card.losverd.es",
+                submitting_ip_address=message.get("remote_addr"),
+                submitted_on=message.get("submitted_on"),
             )
-    # print(f"Hello {name}!")
 
     return ("", 204)
 
@@ -512,9 +514,7 @@ def send_test_email(email, base_url):
     from member_card.sendgrid import generate_and_send_email
 
     generate_and_send_email(
-        app=app,
-        email=email,
-        base_url=base_url,
+        user=User.query.filter_by(email=email).one(),
     )
 
 

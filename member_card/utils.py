@@ -255,14 +255,11 @@ def social_url_for(name, **kwargs):
     return url.format(**kwargs)
 
 
-# def url_for(endpoint: str, **values: t.Any) -> str:
-#     prepend_base_dir = values.pop('prepend_base_dir', False)
-#     url_for_result = flask.url_for(endpoint=endpoint, **values)
-#     if prepend_base_dir:
-#         base_dir = flask.current_app.config["BASE_DIR"]
-#         logging.warning(
-#             f"`url_for_prepend_base_dir` set in global context, prepending {base_dir} to {url_for_result=} "
-#         )
-#         url_for_result = os.path.join(base_dir, url_for_result.lstrip("/"))
+def get_jinja_template(template_path):
+    from jinja2 import Environment, PackageLoader, select_autoescape
 
-#     return url_for_result
+    env = Environment(
+        loader=PackageLoader(__name__),
+        autoescape=select_autoescape(),
+    )
+    return env.get_template(template_path)

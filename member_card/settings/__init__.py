@@ -38,6 +38,10 @@ class Settings(object):
     DB_DATABASE_NAME: str = os.environ["DIGITAL_MEMBERSHIP_DB_DATABASE_NAME"]
     DB_PASSWORD: str = os.getenv("DIGITAL_MEMBERSHIP_DB_ACCESS_TOKEN")
 
+    BASE_URL: str = (
+        f'https://{os.getenv("DIGITAL_MEMBERSHIP_BASE_URL", "card.losverd.es")}'
+    )
+
     DEBUG: bool = True
     # from: https://github.com/python-social-auth/social-examples
     DEBUG_TB_INTERCEPT_REDIRECTS: bool = False
@@ -67,6 +71,7 @@ class Settings(object):
     RECAPTCHA_SIZE = "compact"
 
     SENDGRID_API_KEY: str = os.getenv("SENDGRID_API_KEY", "")
+    SENDGRID_GROUP_ID: str = os.getenv("SENDGRID_GROUP_ID", "29631")
     SENDGRID_TEMPLATE_ID: str = os.getenv(
         "SENDGRID_TEMPLATE_ID", "d-626729a6eed9402fa4ce849d8227afc4"
     )

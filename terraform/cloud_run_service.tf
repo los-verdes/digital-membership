@@ -72,6 +72,10 @@ resource "google_cloud_run_service" "digital_membership" {
           name  = "DIGITAL_MEMBERSHIP_DB_DATABASE_NAME"
           value = google_sql_database.database.name
         }
+        env {
+          name  = "DIGITAL_MEMBERSHIP_BASE_URL"
+          value = local.cloud_run_domain_name
+        }
 
         env {
           name  = "GCS_BUCKET_ID"
