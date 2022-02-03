@@ -3,7 +3,7 @@ resource "google_storage_bucket" "statics" {
   location      = "US"
   force_destroy = true
 
-  uniform_bucket_level_access = false
+  uniform_bucket_level_access = true
 
   website {
     main_page_suffix = "index.html"
@@ -21,6 +21,13 @@ resource "google_storage_bucket_iam_member" "digital_membership_sa_obj_admin" {
   role   = "roles/storage.objectAdmin"
   member = "serviceAccount:${google_service_account.digital_membership.email}"
 }
+
+resource "google_storage_bucket_iam_member" "digital_membership_worker_sa_obj_admin" {
+  bucket = google_storage_bucket.statics.name
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${google_service_account.digital_membership_worker.email}"
+}
+
 
 # resource "google_storage_bucket_iam_member" "test_site_publisher_sa_obj_admin" {
 #   bucket = google_storage_bucket.static_site.name

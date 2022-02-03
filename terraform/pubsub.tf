@@ -31,6 +31,10 @@ resource "google_pubsub_subscription" "worker" {
     #   x-goog-version = "v1"
     # }
   }
+
+  retry_policy {
+    minimum_backoff = "300s"
+  }
 }
 
 # resource "google_pubsub_topic_iam_binding" "digital_membership_topic_subscribers" {

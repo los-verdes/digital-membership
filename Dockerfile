@@ -36,9 +36,12 @@ COPY requirements.txt .
 COPY ./config/ ./config
 COPY ./member_card/ ./member_card
 COPY ./*.py ./
-COPY ./scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
+# COPY ./scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
 
-ENTRYPOINT ["/app/scripts/docker-entrypoint.sh"]
+# ENTRYPOINT ["/app/scripts/docker-entrypoint.sh"]
+# CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 main:app
+# --preload
+CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 --log-file=- --log-level=info --log-config=config/gunicron_logging.ini 'wsgi:create_app()'
 
 FROM base AS worker
 
@@ -61,6 +64,7 @@ COPY requirements.txt .
 COPY ./config/ ./config
 COPY ./member_card/ ./member_card
 COPY ./*.py ./
-COPY ./scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
+# COPY ./scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
 
-ENTRYPOINT ["/app/scripts/docker-entrypoint.sh"]
+# ENTRYPOINT ["/app/scripts/docker-entrypoint.sh"]
+CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 --log-file=- --log-level=info --log-config=config/gunicron_logging.ini 'wsgi:create_app()'

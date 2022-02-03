@@ -70,7 +70,11 @@ resource "google_service_account" "db_task_runner" {
 
 resource "google_project_iam_binding" "digital_membership_cloudsql_clients" {
   project = google_project.digital_membership.id
-  role    = "roles/cloudsql.client"
+  for_each = toset([
+    "roles/cloudsql.instanceUser",
+    "roles/cloudsql.client",
+  ])
+  role = each.value
   members = [
     "serviceAccount:${google_service_account.digital_membership.email}",
     "serviceAccount:${google_service_account.digital_membership_worker.email}",
