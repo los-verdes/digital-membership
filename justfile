@@ -110,6 +110,8 @@ build-worker:
 
 build: build-website build-worker
 
+run-worker: build-worker
+  docker run -it --rm '{{ worker_image_name }}:{{ image_tag }}'
 shell-worker: build-worker
   docker run -it --rm --entrypoint='' '{{ worker_image_name }}:{{ image_tag }}'  bash
 

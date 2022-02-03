@@ -43,6 +43,7 @@ def get_base_url():
 def create_app():
     utils.load_settings(app)
 
+    logger.debug("initialize_tracer")
     if app.config["TRACING_ENABLED"]:
         utils.initialize_tracer()
 
@@ -56,9 +57,13 @@ def create_app():
     # app.logger.setLevel(log_level)
     # app.logger.propagate = True
 
+    logger.debug("instrument_app")
     FlaskInstrumentor().instrument_app(app)
 
+    logger.debug("register_asset_bundles")
     utils.register_asset_bundles(app)
+
+    logger.debug("login_manager.init_app")
     login_manager.init_app(app)
 
     from member_card.db import db
