@@ -2,10 +2,10 @@
 import json
 import os
 from datetime import datetime
-from urllib.parse import urlparse
 
 import click
-from flask import Flask, g, redirect, render_template, request, send_file, url_for
+from flask import (Flask, g, redirect, render_template, request, send_file,
+                   url_for)
 from flask.logging import default_handler
 from flask_gravatar import Gravatar
 from flask_login import current_user as current_login_user
@@ -32,12 +32,6 @@ logger.propagate = False
 login_manager = utils.MembershipLoginManager()
 
 recaptcha = ReCaptcha()
-
-
-def get_base_url():
-    parsed_base_url = urlparse(request.base_url)
-    # return f"{parsed_base_url.scheme}://{parsed_base_url.netloc}"
-    return f"https://{parsed_base_url.netloc}"
 
 
 def create_app():
