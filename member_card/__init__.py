@@ -28,10 +28,9 @@ BASE_DIR = os.path.dirname(
 app = Flask(__name__)
 logger = app.logger
 logger.propagate = False
+
 login_manager = utils.MembershipLoginManager()
 
-# TODO: add invisible support
-# Ref: https://developers.google.com/recaptcha/docs/invisible
 recaptcha = ReCaptcha()
 
 
@@ -159,7 +158,6 @@ def load_common_context():
 
 app.context_processor(backends)
 app.jinja_env.globals["url"] = utils.social_url_for
-# app.jinja_env.globals["url_for"] = utils.url_for
 
 
 @app.route("/")
