@@ -63,6 +63,7 @@ def generate_and_send_email(app, email, base_url):
         bbox = diff.getbbox()
         if bbox:
             return im.crop(bbox)
+        return im
 
     with TemporaryDirectory() as td:
         output_path = td
@@ -71,6 +72,9 @@ def generate_and_send_email(app, email, base_url):
             output_path=output_path,
             temp_path=td,
             size=(img_width, img_height),
+            custom_flags=[
+                "--no-sandbox",
+            ],
         )
         hti.screenshot(
             html_str=html_content,
