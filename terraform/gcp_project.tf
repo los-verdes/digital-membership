@@ -53,6 +53,9 @@ resource "google_project_service" "digital_membership" {
     # │ Error: Error when reading or editing App Engine Application "lv-digital-membership":
     # googleapi: Error 403: App Engine Admin API has not been used in project ...
     "appengine.googleapis.com",
+
+    # Email distribution requests / background worker tasks generally
+    "pubsub.googleapis.com",
   ])
 
   service                    = each.value
@@ -62,18 +65,4 @@ resource "google_project_service" "digital_membership" {
     create = "30m"
     update = "40m"
   }
-}
-
-resource "google_project_iam_member" "project_owners" {
-  for_each = toset(var.gcp_project_owners)
-  project  = google_project.digital_membership.id
-  role     = "roles/owner"
-  member   = "user:${each.value}"
-}
-
-resource "google_project_iam_member" "project_editors" {
-  for_each = toset(var.gcp_project_editors)
-  project  = google_project.digital_membership.id
-  role     = "roles/editor"
-  member   = "user:${each.value}"
 }

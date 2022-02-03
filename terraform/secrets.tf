@@ -37,8 +37,12 @@ resource "google_secret_manager_secret_version" "digital_membership" {
     # db_database_name   = google_sql_database.database.name
     # db_username        = google_sql_user.service_account.name
 
+    recaptcha_secret_key = var.recaptcha_secret_key
+
     # Flask's secret key: https://flask.palletsprojects.com/en/2.0.x/config/#SECRET_KEY
     secret_key = random_password.flask_secret_key.result
+
+    sendgrid_api_key = var.sendgrid_api_key
 
     # For configuring python-social-auth / Google OAuth 2 bits:
     social_auth_google_oauth2_key    = var.oauth_client_id
@@ -48,39 +52,3 @@ resource "google_secret_manager_secret_version" "digital_membership" {
     squarespace_api_key = var.squarespace_api_key
   })
 }
-
-resource "google_secret_manager_secret_iam_policy" "digital_membership" {
-  project     = google_secret_manager_secret.digital_membership.project
-  secret_id   = google_secret_manager_secret.digital_membership.id
-  policy_data = data.google_iam_policy.digital_membership_secret_access.policy_data
-}
-
-data "google_iam_policy" "digital_membership_secret_access" {
-  binding {
-    role = "roles/secretmanager.secretAccessor"
-    members = [
-      "serviceAccount:${google_service_account.digital_membership.email}",
-      "serviceAccount:${google_service_account.db_task_runner.email}",
-    ]
-  }
-}
-
-resource "google_secret_manager_secret_iam_policy" "apple_private_key" {
-  project     = data.google_secret_manager_secret.apple_private_key.project
-  secret_id   = data.google_secret_manager_secret.apple_private_key.id
-  policy_data = data.google_iam_policy.apple_private_key_secret_access.policy_data
-}
-
-data "google_iam_policy" "apple_private_key_secret_access" {
-  binding {
-    role = "roles/secretmanager.secretAccessor"
-    members = [
-      "serviceAccount:${google_service_account.digital_membership.email}",
-    ]
-  }
-}
-# resource "google_project_iam_member" "digital_membership_datastore_viewer" {
-#   project = google_project.digital_membership.id
-#   role    = "roles/datastore.viewer"
-#   member  = "serviceAccount:${google_service_account.digital_membership.email}"
-# }

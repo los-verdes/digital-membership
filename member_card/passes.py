@@ -6,12 +6,14 @@ from typing import Callable
 
 import flask
 
-from member_card import get_base_url
 from member_card.db import db, get_or_create
 from member_card.models import MembershipCard
+from member_card.storage import upload_file_to_gcs
 from member_card.utils import sign
 
 DEFAULT_APPLE_KEY_FILEPATH = "/secrets/apple-private.key"
+
+logger = logging.getLogger(__name__)
 
 
 def with_apple_developer_key() -> Callable:
@@ -29,21 +31,21 @@ def with_apple_developer_key() -> Callable:
                 and os.path.isfile(key_filepath)
                 and os.access(key_filepath, os.R_OK)
             ):
-                logging.debug(f"Using {key_filepath=}")
+                logger.debug(f"Using {key_filepath=}")
                 kwargs["key_filepath"] = key_filepath
                 return method(*args, **kwargs)
 
             if "APPLE_DEVELOPER_PRIVATE_KEY" not in flask.current_app.config:
                 error_msg = f"File {key_filepath} doesn't exist or isn't readable _and_ no key found under APPLE_DEVELOPER_PRIVATE_KEY env var!"
-                logging.error(error_msg)
+                logger.error(error_msg)
                 raise Exception(error_msg)
 
             unformatted_key = flask.current_app.config["APPLE_DEVELOPER_PRIVATE_KEY"]
-            logging.warning(
+            logger.warning(
                 f"File {key_filepath} doesn't exist or isn't readable, pulling key from environment and stashing in temp file...."
             )
             with tempfile.NamedTemporaryFile(mode="w", suffix=".key") as key_fp:
-                logging.info(
+                logger.info(
                     f"Stashing Apple developer key under a temporary file {key_fp.name=}"
                 )
                 formatted_key = "\n".join(unformatted_key.split("\\n"))
@@ -59,7 +61,8 @@ def with_apple_developer_key() -> Callable:
 
 def get_or_create_membership_card(user):
     app = flask.current_app
-    web_service_url = f"{get_base_url()}/passkit"
+    base_url = app.config["BASE_URL"]
+    web_service_url = f"{base_url}/passkit"
     membership_card = get_or_create(
         session=db.session,
         model=MembershipCard,
@@ -76,11 +79,11 @@ def get_or_create_membership_card(user):
 
     # TODO: do this more efficient like:
     if not membership_card.qr_code_message:
-        logging.debug("generating QR code for message")
+        logger.debug("generating QR code for message")
         serial_number = str(membership_card.serial_number)
         qr_code_signature = sign(serial_number)
-        qr_code_message = f"Content: {get_base_url()}{flask.url_for('verify_pass', serial_number=serial_number)}?signature={qr_code_signature}"
-        logging.debug(f"{qr_code_message=}")
+        qr_code_message = f"Content: {base_url}{flask.url_for('verify_pass', serial_number=serial_number)}?signature={qr_code_signature}"
+        logger.debug(f"{qr_code_message=}")
         setattr(membership_card, "qr_code_message", qr_code_message)
         db.session.add(membership_card)
         db.session.commit()
@@ -89,9 +92,12 @@ def get_or_create_membership_card(user):
 
 
 @with_apple_developer_key()
-def get_apple_pass_for_user(user, key_filepath=DEFAULT_APPLE_KEY_FILEPATH):
+def get_apple_pass_for_user(
+    user, apple_pass=None, key_filepath=DEFAULT_APPLE_KEY_FILEPATH
+):
     app = flask.current_app
-    apple_pass = get_or_create_membership_card(user=user)
+    if apple_pass is None:
+        apple_pass = get_or_create_membership_card(user=user)
     db.session.add(apple_pass)
     db.session.commit()
     _, pkpass_out_path = tempfile.mkstemp()
@@ -101,3 +107,21 @@ def get_apple_pass_for_user(user, key_filepath=DEFAULT_APPLE_KEY_FILEPATH):
         pkpass_out_path=pkpass_out_path,
     )
     return pkpass_out_path
+
+
+def generate_and_upload_apple_pass(user, membership_card, bucket):
+    local_apple_pass_path = get_apple_pass_for_user(
+        user=user, apple_pass=membership_card
+    )
+    remote_apple_pass_path = f"membership-cards/apple-passes/{membership_card.apple_pass_serial_number}.pkpass"
+    apple_pass_url = f"{bucket.id}/{remote_apple_pass_path}"
+    blob = upload_file_to_gcs(
+        bucket=bucket,
+        local_file=local_apple_pass_path,
+        remote_path=remote_apple_pass_path,
+        content_type="application/vnd.apple.pkpass",
+    )
+    logger.info(
+        f"{local_apple_pass_path=} uploaded for {user=}: {apple_pass_url=} ({blob=})"
+    )
+    return apple_pass_url

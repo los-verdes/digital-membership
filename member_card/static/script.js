@@ -40,12 +40,12 @@ if (saveScreenshotBtn) {
           clonedDoc.getElementById('card-qr-code').style.display = 'block'
         }
       }).then(function (canvas) {
-      saveAs(canvas.toDataURL(), 'lv-members-card.png')
-    })
+        saveAs(canvas.toDataURL(), 'lv-members-card.png')
+      })
   })
 }
 
-function saveAs (uri, filename) {
+function saveAs(uri, filename) {
   const link = document.createElement('a')
   if (typeof link.download === 'string') {
     link.href = uri
@@ -62,4 +62,56 @@ function saveAs (uri, filename) {
   } else {
     window.open(uri)
   }
+}
+
+// Email distribution form things:
+function sendFormErrorToast(msg, timeout = 5000) {
+  var formToastContainer = document.getElementById('toastSnackbar');
+  var data = { message: msg, timeout: timeout };
+  formToastContainer.MaterialSnackbar.showSnackbar(data);
+  // Re-enable the form if we encounter an error so folks can resubmit
+  document.getElementById("emailDistributionSubmitBtn").disabled = false;
+  document.getElementById("emailDistributionProgressBar").style.display = "none";
+}
+
+function onCaptchaExpired() {
+  sendFormErrorToast('Form (captcha) data has expired. Please try submitting again in a moment.')
+}
+
+function onCaptchaError() {
+  sendFormErrorToast('Form (captcha) encountered an error. Please try submitting again in a moment.')
+}
+
+function validate(event) {
+  event.preventDefault();
+  var form = event.target.closest('form');
+  var formElements = form.elements;
+  for (var i = 0, formElement; formElement = formElements[i++];) {
+    if (!formElement.classList.contains("mdl-textfield__input")) {
+      // console.debug("skipping formElement " + formElement.id + ", is is not one of our mdl-textfield__inputs...")
+      continue
+    }
+    if (!formElement.value || formElement.parentElement.classList.contains("is-invalid")) {
+      var errorMsg = 'Please enter a valid value for ' + formElement.name + ' before submitting.';
+      elementErrorMsgSpans = formElement.parentNode.getElementsByTagName('span')
+      if (elementErrorMsgSpans.length) {
+        errorMsg = elementErrorMsgSpans[0].textContent;
+      }
+      sendFormErrorToast(errorMsg)
+      return
+    }
+  }
+
+  document.getElementById("emailDistributionSubmitBtn").disabled = true;
+  document.getElementById("emailDistributionProgressBar").style.display = "block";
+  grecaptcha.execute();
+}
+
+function onSubmit(token) {
+  document.getElementById("emailDistributionRequestForm").submit();
+}
+
+function distributionFormOnload() {
+  var element = document.getElementById('emailDistributionSubmitBtn');
+  element.onclick = validate;
 }

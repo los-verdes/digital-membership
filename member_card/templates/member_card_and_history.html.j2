@@ -1,5 +1,5 @@
 {% extends "base.html.j2" %}
-
+{% block title %}Card Downloads & Membership History{% endblock %}
 {% block content %}
 {% call macros.content_grid() %}
 {{
@@ -20,53 +20,46 @@
     <h4 class="vhlm">Membership History</h4>
     <hr>
 
-    <ul class="mdl-list">
 
-      {% for membership_order in membership_orders %}
-      <li class="mdl-list__item">
-        <span class="mdl-list__item-primary-content">
-          <i class="material-icons mdl-list__item-icon">{% if membership_order.is_active %}verified{% else
-            %}check_circle_outline{% endif %}</i>
-          <details>
-            <summary class="mdl-button mdl-js-button mdl-button--raised"
-                     id="membership-details-{{ membership_order.id }}">
-              Order #{{ membership_order.order_number }} - {{ membership_order.product_name }}
-              ({{ membership_order.created_on.strftime("%x") }})
-            </summary>
-            <ul class="mdl-list">
-              {% for key, value in membership_order.to_dict().items() %}
-              <li class="mdl-list__item mdl-list__item--two-line">
-                <span class="mdl-list__item-primary-content">
-                  <span class="mdl-list__item-sub-title"><strong>{{ key | replace("_", " ") | title }}</strong></span>
-                  <span>{{ value }}</span>
-                </span>
-              </li>
-              {% endfor %}
-            </ul>
-          </details>
-        </span>
-      </li>
-      {% endfor %}
+    {% for membership_order in membership_orders | reverse %}
+    <details>
+      <summary id="membership-details-{{ membership_order.id }}">
+        <h5>Order #{{ membership_order.order_number }} - {{ membership_order.product_name }}</h5>
+      </summary>
+      <div>
+        <ul class="mdl-list">
+          {% for key, value in membership_order.to_dict().items() %}
+          <li class="mdl-list__item mdl-list__item--two-line">
+            <span class="mdl-list__item-primary-content">
+              <span class="mdl-list__item-sub-title"><strong>{{ key | replace("_", " ") | title }}</strong></span>
+              <span>{{ value }}</span>
+            </span>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </details>
+    {% endfor %}
 
-    </ul>
 
     <h4 class="vhlm">Verde Hasta La Muerte</h4>
     <hr>
     <details>
-      <summary class="mdl-button mdl-js-button mdl-button--raised" id="user-details-{{ current_user.id }}">User
-        Details
+      <summary id="user-details-{{ current_user.id }}">
+        <h5>User Details</h5>
       </summary>
-
-      <ul class="mdl-list">
-        {% for key, value in current_user.to_dict().items() %}
-        <li class="mdl-list__item mdl-list__item--two-line">
-          <span class="mdl-list__item-primary-content">
-            <span class="mdl-list__item-sub-title"><strong>{{ key | replace("_", " ") | title }}</strong></span>
-            <span>{{ value }}</span>
-          </span>
-        </li>
-        {% endfor %}
-      </ul>
+      <div>
+        <ul class="mdl-list">
+          {% for key, value in current_user.to_dict().items() %}
+          <li class="mdl-list__item mdl-list__item--two-line">
+            <span class="mdl-list__item-primary-content">
+              <span class="mdl-list__item-sub-title"><strong>{{ key | replace("_", " ") | title }}</strong></span>
+              <span>{{ value }}</span>
+            </span>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
     </details>
 
   </div>

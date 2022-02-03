@@ -55,6 +55,7 @@ jobs:
           creds: ${{ steps.google-app-creds.outputs.creds }}
           instance: lv-digital-membership:us-central1:lv-digital-membership-30c67c90
 
+        # TODO: migrate this to a scheme where we publish a "sync-subscriptions" pubsub message rather than execute it here
       - name: Sync Subscriptions
         run: just sync-subscriptions
         env:

@@ -25,6 +25,8 @@ class Settings(object):
         "APPLE_PASS_PRIVATE_KEY_PASSWORD", ""
     )
 
+    BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
     CLOUD_RUN_SERVICE: str = os.getenv("K_SERVICE", "N/A")
     CLOUD_RUN_REVISION: str = os.getenv("K_REVISION", "N/A")
     CLOUD_RUN_CONFIGURATION: str = os.getenv("K_SERVICE", "N/A")
@@ -36,16 +38,44 @@ class Settings(object):
     DB_DATABASE_NAME: str = os.environ["DIGITAL_MEMBERSHIP_DB_DATABASE_NAME"]
     DB_PASSWORD: str = os.getenv("DIGITAL_MEMBERSHIP_DB_ACCESS_TOKEN")
 
+    BASE_URL: str = (
+        f'https://{os.getenv("DIGITAL_MEMBERSHIP_BASE_URL", "card.losverd.es")}'
+    )
+
     DEBUG: bool = True
     # from: https://github.com/python-social-auth/social-examples
     DEBUG_TB_INTERCEPT_REDIRECTS: bool = False
 
+    EMAIL_FROM_ADDRESS: str = os.getenv("EMAIL_FROM_ADDRESS", "verde-bot@losverd.es")
+    EMAIL_FROM_NAME: str = os.getenv("EMAIL_FROM_NAME", "Los Verdes (verde-bot)")
+    EMAIL_SUBJECT_TEXT: str = os.getenv(
+        "EMAIL_SUBJECT_TEXT", "Los Verdes Membership Card Details"
+    )
+
     GOOGLE_DISCOVERY_URL: str = (
         "https://accounts.google.com/.well-known/openid-configuration"
     )
+    SERVICE_ACCOUNT_KEY: str = os.getenv("SERVICE_ACCOUNT_KEY", "")
+    GCS_BUCKET_ID: str = os.getenv("GCS_BUCKET_ID", "")
     GCLOUD_PROJECT: str = os.getenv("GCLOUD_PROJECT", "")
+    GCLOUD_PUBSUB_TOPIC_ID: str = os.getenv(
+        "GCLOUD_PUBSUB_TOPIC_ID", "digital-membership"
+    )
 
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "info")
+
+    RECAPTCHA_SITE_KEY: str = os.getenv(
+        "RECAPTCHA_SITE_KEY", "6LdAblIeAAAAADLSJxAgNOhI2vSnZTG8rurt7Pnt"
+    )
+    RECAPTCHA_SECRET_KEY: str = os.getenv("RECAPTCHA_SECRET_KEY", "")
+    RECAPTCHA_SIZE = "compact"
+
+    SENDGRID_API_KEY: str = os.getenv("SENDGRID_API_KEY", "")
+    SENDGRID_GROUP_ID: str = os.getenv("SENDGRID_GROUP_ID", "29631")
+    SENDGRID_TEMPLATE_ID: str = os.getenv(
+        "SENDGRID_TEMPLATE_ID", "d-626729a6eed9402fa4ce849d8227afc4"
+    )
+    # SERVER_NAME: str = os.getenv("SERVER_NAME", "card.losverd.es")
 
     SOCIAL_AUTH_DISCONNECT_REDIRECT_URL: str = "/logout"
     SOCIAL_AUTH_GOOGLE_OAUTH2_KEY: str = os.environ.get("GOOGLE_CLIENT_ID", "")
@@ -145,6 +175,17 @@ class Settings(object):
     def __init__(self) -> None:
         logger.debug(f"Initializing settings class: {type(self)}...")
         logger.info("env var keys", extra=dict(env_var_keys=list(os.environ.keys())))
+        if secrets_json := os.getenv("DIGITAL_MEMBERSHIP_SECRETS_JSON"):
+            self._secrets = json.loads(secrets_json)
+        elif secret_name := os.getenv("DIGITAL_MEMBERSHIP_GCP_SECRET_NAME"):
+            logger.info(f"Loading secrets from {secret_name=}")
+            from member_card.secrets import retrieve_app_secrets
+
+            if not self._secrets:
+                self._secrets = retrieve_app_secrets(secret_name)
+
+        self.export_secrets_as_settings()
+        logger.debug(f"Initialized settings class!: {type(self)}...")
 
     def assert_required_settings_present(self) -> None:
         pass
@@ -169,10 +210,6 @@ class ProductionSettings(Settings):
             [p for p in self.SOCIAL_AUTH_PIPELINE if not p.endswith("debug")]
         )
         # from: https://realpython.com/flask-google-login/
-        if secrets_json := os.getenv("DIGITAL_MEMBERSHIP_SECRETS_JSON"):
-            self._secrets = json.loads(secrets_json)
-
-        self.export_secrets_as_settings()
         self.use_gcp_sql_connector()
         logger.debug(f"{self.SQLALCHEMY_ENGINE_OPTIONS=}")
 
@@ -183,12 +220,6 @@ class DevelopementSettings(Settings):
 
 class RemoteSqlProductionSettings(ProductionSettings):
     def __init__(self) -> None:
-        if secret_name := os.getenv("DIGITAL_MEMBERSHIP_GCP_SECRET_NAME"):
-            logger.info(f"Loading secrets from {secret_name=}")
-            from member_card.secrets import retrieve_app_secrets
-
-            if not self._secrets:
-                self._secrets = retrieve_app_secrets(secret_name)
 
         super().__init__()
 

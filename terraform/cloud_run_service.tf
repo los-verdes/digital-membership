@@ -1,12 +1,33 @@
 locals {
+  cloud_run_domain_name = "${var.cloud_run_subdomain}.${var.base_domain}"
+
+  cloud_run_services = {
+    "website" = {
+      image                   = var.website_image
+      service_account_name    = google_service_account.digital_membership["website"].email
+      mount_apple_private_key = true
+      memory_mb               = "256"
+      invokers                = ["allUsers"]
+    }
+    "worker" = {
+      image                   = var.worker_image
+      service_account_name    = google_service_account.digital_membership["worker"].email
+      mount_apple_private_key = true
+      memory_mb               = "256"
+      invokers                = ["serviceAccount:${google_service_account.digital_membership["worker-pubsub-invoker"].email}"]
+    }
+  }
+
   secret_version_parts           = split("/", google_secret_manager_secret_version.digital_membership.id)
   secret_version_key             = element(local.secret_version_parts, length(local.secret_version_parts) - 1)
   apple_key_secret_version_parts = split("/", data.google_secret_manager_secret_version.apple_private_key.id)
   apple_key_secret_version_key   = element(local.apple_key_secret_version_parts, length(local.apple_key_secret_version_parts) - 1)
 }
+
 resource "google_cloud_run_service" "digital_membership" {
   provider                   = google-beta
-  name                       = "digital-membership"
+  for_each                   = local.cloud_run_services
+  name                       = each.key
   location                   = var.gcp_region
   autogenerate_revision_name = true
 
@@ -22,14 +43,14 @@ resource "google_cloud_run_service" "digital_membership" {
         "autoscaling.knative.dev/minScale"      = "0"
         "autoscaling.knative.dev/maxScale"      = "1"
         "run.googleapis.com/cloudsql-instances" = google_sql_database_instance.digital_membership.connection_name
-        "run.googleapis.com/client-name"        = "member-card"
+        "run.googleapis.com/client-name"        = each.key
       }
     }
 
     spec {
-      service_account_name = google_service_account.digital_membership.email
+      service_account_name = each.value.service_account_name
       containers {
-        image = var.cloud_run_container_image
+        image = each.value.image
 
         env {
           name = "DIGITAL_MEMBERSHIP_SECRETS_JSON"
@@ -51,16 +72,30 @@ resource "google_cloud_run_service" "digital_membership" {
         }
         env {
           name  = "DIGITAL_MEMBERSHIP_DB_USERNAME"
-          value = google_sql_user.service_accounts["website"].name
+          value = google_sql_user.service_accounts[each.key].name
         }
         env {
           name  = "DIGITAL_MEMBERSHIP_DB_DATABASE_NAME"
           value = google_sql_database.database.name
         }
+        env {
+          name  = "DIGITAL_MEMBERSHIP_BASE_URL"
+          value = local.cloud_run_domain_name
+        }
+
+        env {
+          name  = "GCS_BUCKET_ID"
+          value = google_storage_bucket.statics.name
+        }
 
         env {
           name  = "GCLOUD_PROJECT"
           value = var.gcp_project_id
+        }
+
+        env {
+          name  = "GCLOUD_PUBSUB_TOPIC_ID"
+          value = google_pubsub_topic.digital_membership.name
         }
 
         env {
@@ -70,7 +105,7 @@ resource "google_cloud_run_service" "digital_membership" {
 
         env {
           name  = "LOG_LEVEL"
-          value = "DEBUG"
+          value = upper(var.app_log_level)
         }
 
         ports {
@@ -82,26 +117,32 @@ resource "google_cloud_run_service" "digital_membership" {
         resources {
           limits = {
             cpu    = "1"
-            memory = "256Mi"
+            memory = "${each.value.memory_mb}Mi"
           }
         }
 
-        volume_mounts {
-          name       = "apple_developer_private_key"
-          mount_path = "/secrets"
+        dynamic "volume_mounts" {
+          for_each = each.value.mount_apple_private_key == true ? [1] : []
+          content {
+            name       = "apple_developer_private_key"
+            mount_path = "/secrets"
+          }
         }
       }
 
-      volumes {
-        name = "apple_developer_private_key"
-        secret {
-          secret_name  = data.google_secret_manager_secret.apple_private_key.secret_id
-          default_mode = "0444" # 0444
-          items {
-            key  = local.apple_key_secret_version_key
-            path = "apple-private.key"
-            # mode = "0444" # 0444
-            # mode = 256 # 0400
+      dynamic "volumes" {
+        for_each = each.value.mount_apple_private_key == true ? [1] : []
+        content {
+          name = "apple_developer_private_key"
+          secret {
+            secret_name  = data.google_secret_manager_secret.apple_private_key.secret_id
+            default_mode = "0444" # 0444
+            items {
+              key  = local.apple_key_secret_version_key
+              path = "apple-private.key"
+              # mode = "0444" # 0444
+              # mode = 256 # 0400
+            }
           }
         }
       }
@@ -111,13 +152,13 @@ resource "google_cloud_run_service" "digital_membership" {
 
 resource "google_cloud_run_domain_mapping" "digital_membership" {
   location = var.gcp_region
-  name     = var.cloud_run_domain_name
+  name     = local.cloud_run_domain_name
 
   metadata {
     namespace = var.gcp_project_id
   }
 
   spec {
-    route_name = google_cloud_run_service.digital_membership.name
+    route_name = google_cloud_run_service.digital_membership["website"].name
   }
 }

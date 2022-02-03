@@ -1,6 +1,8 @@
+import contextlib
 import hashlib
 import hmac
 import logging
+import os
 import uuid
 from base64 import urlsafe_b64encode as b64e
 
@@ -21,6 +23,15 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from webassets.filter import get_filter
 
 from member_card.settings import get_settings_obj_for_env
+
+
+@contextlib.contextmanager
+def remember_cwd():
+    curdir = os.getcwd()
+    try:
+        yield
+    finally:
+        os.chdir(curdir)
 
 
 # def configure_logging(project_id=None):
@@ -240,5 +251,15 @@ def social_url_for(name, **kwargs):
         url = "/disconnect/{backend}/{association_id}/"
     else:
         url = name
-    logging.debug(f"social_url_for() => {name=}: {kwargs=}")
+    # logging.debug(f"social_url_for() => {name=}: {kwargs=}")
     return url.format(**kwargs)
+
+
+def get_jinja_template(template_path):
+    from jinja2 import Environment, PackageLoader, select_autoescape
+
+    env = Environment(
+        loader=PackageLoader(__name__),
+        autoescape=select_autoescape(),
+    )
+    return env.get_template(template_path)

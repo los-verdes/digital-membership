@@ -1,4 +1,6 @@
-
+variable "app_log_level" {
+  default = "INFO"
+}
 
 variable "apple_pass_certificate" {
   sensitive = true
@@ -14,14 +16,13 @@ variable "apple_pass_private_key_password" {
 }
 # variable "gcp_billing_account_name" {}
 
-variable "cloud_run_container_image" {
-  type    = string
-  default = "gcr.io/lv-digital-membership/member-card:latest"
+variable "base_domain" {
+  type = string
 }
 
-variable "cloud_run_domain_name" {
+variable "cloud_run_subdomain" {
   type    = string
-  default = "card.losverd.es"
+  default = "card"
 }
 
 variable "flask_env" {
@@ -67,10 +68,28 @@ variable "squarespace_api_key" {
   sensitive = true
 }
 
+variable "recaptcha_secret_key" {
+  sensitive = true
+}
+
+variable "sendgrid_api_key" {
+  sensitive = true
+}
+
 variable "oauth_client_id" {
   sensitive = true
 }
 
 variable "oauth_client_secret" {
   sensitive = true
+}
+
+variable "website_image" {
+  type    = string
+  default = "gcr.io/lv-digital-membership/website:latest"
+}
+
+variable "worker_image" {
+  type    = string
+  default = "gcr.io/lv-digital-membership/worker:latest"
 }

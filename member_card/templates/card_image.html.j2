@@ -1,0 +1,99 @@
+{% import 'macros.html.j2' as macros %}
+<!doctype html>
+<!--
+  Los Verdes Digital Membership Page
+  Copyright 2022 Google Inc. All rights reserved.
+-->
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="Digital membership card portal for members of the Los Verdes supporters group.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title_str }}</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.green-light_green.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Almendra+Display&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&display=swap" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="https://card.losverd.es/static/style.css?f186aa8e">
+  <link rel="shortcut icon" href="https://card.losverd.es/static/favicon.ico">
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-3YFLF9K9KG"></script>
+  <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag('js', new Date());
+
+      gtag('config', 'G-3YFLF9K9KG');
+    </script>
+  <script defer src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
+  <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+  <script defer src="https://card.losverd.es/static/html2canvas.min.js"></script>
+  <script defer type="module" src="https://card.losverd.es/static/script.js"></script>
+  <style type="text/css">
+
+    body {
+      background-color: transparent;
+  }
+  .mdl-card {
+      width: 100%;
+      box-shadow: none;
+  }
+  div.qr-code>img {
+      display: block;
+  }
+  div.membership-card {
+      position: relative;
+      width: 90%;
+  }
+  .members-card-wide>.mdl-card__title h3 {
+    font-size: calc(36px + 4vh);
+    line-height: calc(36px + 3vh);
+    margin: 0px
+  }
+  .live-laugh-love-large {
+    font-family: "Bungee";
+    color: white;
+    font-size: calc(24px + 3.5vh)
+  }
+
+  .live-laugh-love {
+    font-family: "Bungee";
+    color: white;
+    font-size: calc(24px + 2vh)
+  }
+
+  .live-laugh-love>small {
+    font-size: calc(12px + 1.5vh)
+  }
+  ::-webkit-scrollbar {
+    display: none;
+  }
+  </style>
+</head>
+
+<body>
+{{
+  macros.membership_card(
+    title="Los Verdes Membership Card",
+    primary_info_text=membership_card.user.fullname,
+    secondary_info_text="Member Since " ~ membership_card.member_since.strftime('%b %Y'),
+    serial_number=membership_card.serial_number,
+    aux_info_text="Good through " ~ membership_card.member_until.strftime('%b %d, %Y'),
+    qr_code_b64_png=membership_card.qr_code_b64_png,
+    show_card_actions_bar=False,
+  )
+}}
+<br>
+<br>
+<br>
+hay
+
+</body>
+
+</html>
