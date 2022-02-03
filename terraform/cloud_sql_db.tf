@@ -64,3 +64,6 @@ resource "google_sql_user" "users" {
   instance = google_sql_database_instance.digital_membership.name
   type     = "CLOUD_IAM_USER"
 }
+
+# TODO: move SQL roles bootstrap script from bash to a subsequent TF apply w/ postgres provider
+# (maybe can wrap the two deals in: https://github.com/mitchellh/terraform-provider-multispace?)
