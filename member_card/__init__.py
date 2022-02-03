@@ -4,8 +4,7 @@ import os
 from urllib.parse import urlparse
 
 import click
-from flask import (Flask, g, redirect, render_template, request, send_file,
-                   url_for)
+from flask import Flask, g, redirect, render_template, request, send_file, url_for
 from flask.logging import default_handler
 from flask_gravatar import Gravatar
 from flask_login import current_user as current_login_user
@@ -453,7 +452,12 @@ def update_sendgrid_template():
 @click.argument("base_url", default="https://card.losverd.es")
 def send_test_email(email, base_url):
     from member_card.sendgrid import generate_and_send_email
-    generate_and_send_email(email, base_url)
+
+    generate_and_send_email(
+        app=app,
+        email=email,
+        base_url=base_url,
+    )
 
 
 @app.cli.command("query-db")
