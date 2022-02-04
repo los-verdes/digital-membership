@@ -173,7 +173,7 @@ def email_distribution_request():
 
     return render_template(
         "email_request_landing_page.html.j2",
-        email_distribution_recipient=email_distribution_recipient,
+        submitted_email=email_distribution_recipient,
         submission_response_msg="Request received",
         redirect_home_delay_seconds="45",
     )
