@@ -61,6 +61,7 @@ def generate_card_image(membership_card, output_path):
             size=(img_width, img_height),
             custom_flags=[
                 "--no-sandbox",
+                "--hide-scrollbars",
             ],
         )
         hti.screenshot(
