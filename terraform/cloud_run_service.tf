@@ -7,12 +7,14 @@ locals {
       service_account_name    = google_service_account.digital_membership["website"].email
       mount_apple_private_key = true
       memory_mb               = "512"
+      min_scale               = "1"
       invokers                = ["allUsers"]
     }
     "worker" = {
       image                   = var.worker_image
       service_account_name    = google_service_account.digital_membership["worker"].email
       mount_apple_private_key = true
+      min_scale               = "0"
       memory_mb               = "512"
       invokers                = ["serviceAccount:${google_service_account.digital_membership["worker-pubsub-invoker"].email}"]
     }
