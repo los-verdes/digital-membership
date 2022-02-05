@@ -35,6 +35,7 @@ class Settings(object):
 
     # https://stackoverflow.com/a/53214929
     CDN_DOMAIN = os.getenv("GCS_BUCKET_ID", "")
+    STATIC_ASSET_BASE_URL = f"https://{CDN_DOMAIN}/static"
     CDN_TIMESTAMP = False
     CDN_DEBUG = True
     CDN_HTTPS = True

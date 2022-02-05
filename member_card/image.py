@@ -2,8 +2,10 @@ import logging
 import os
 from tempfile import TemporaryDirectory
 
+from flask import current_app
 from html2image import Html2Image
 from PIL import Image, ImageChops
+
 from member_card.storage import upload_file_to_gcs
 from member_card.utils import get_jinja_template
 
@@ -42,6 +44,23 @@ def generate_and_upload_card_image(membership_card, bucket):
     return card_image_url
 
 
+def remove_image_background(img):
+    img = img.convert("RGBA")
+
+    img_data = img.getdata()
+
+    updated_img_data = []
+
+    for pixel in img_data:
+        if pixel[0] == 255 and pixel[1] == 255 and pixel[2] == 255:
+            updated_img_data.append((255, 255, 255, 0))
+        else:
+            updated_img_data.append(pixel)
+
+    img.putdata(updated_img_data)
+    return img
+
+
 def generate_card_image(membership_card, output_path):
     img_aspect_ratio = 1.586
     img_height = 500
@@ -51,7 +70,11 @@ def generate_card_image(membership_card, output_path):
         membership_card=membership_card,
         card_height=img_height,
         card_width=img_width,
+        static_base_url=current_app.config["STATIC_ASSET_BASE_URL"],
     )
+    with open("card.html", "w") as f:
+        f.write(html_content)
+    screenshot_filename = f"screenshot_{membership_card.serial_number.hex}.png"
     card_image_filename = f"{membership_card.serial_number.hex}.png"
 
     with TemporaryDirectory() as td:
@@ -66,10 +89,12 @@ def generate_card_image(membership_card, output_path):
         )
         hti.screenshot(
             html_str=html_content,
-            save_as=card_image_filename,
+            save_as=screenshot_filename,
         )
+        screenshot_path = os.path.join(output_path, screenshot_filename)
+        img = Image.open(screenshot_path)
+        img = remove_image_background(img)
         image_path = os.path.join(output_path, card_image_filename)
-        img = Image.open(image_path)
         img = trim(img)
         img.save(image_path)
     return image_path

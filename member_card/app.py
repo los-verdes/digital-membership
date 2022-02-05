@@ -5,6 +5,7 @@ from datetime import datetime
 
 import click
 from flask import Flask, g, redirect, render_template, request, send_file, url_for
+from flask_cdn import CDN
 from flask_login import current_user as current_login_user
 from flask_login import login_required, logout_user
 from flask_recaptcha import ReCaptcha
@@ -15,7 +16,6 @@ from member_card import utils
 from member_card.db import squarespace_orders_etl
 from member_card.models import User
 from member_card.squarespace import Squarespace
-from flask_cdn import CDN
 
 BASE_DIR = os.path.dirname(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "member_card")
@@ -392,6 +392,24 @@ def send_test_email(email):
 
     generate_and_send_email(
         user=User.query.filter_by(email=email).one(),
+    )
+
+
+@app.cli.command("generate-card-image")
+@click.argument("email")
+def generate_card_image(email):
+    from member_card.image import generate_card_image
+    from member_card.passes import get_or_create_membership_card
+
+    user = User.query.filter_by(email=email).one()
+    membership_card = get_or_create_membership_card(
+        user=user,
+    )
+    output_path = app.config["BASE_DIR"]
+    logger.info(f"Generating image of {membership_card=} for {user=} to {output_path=}")
+    generate_card_image(
+        membership_card=membership_card,
+        output_path=output_path,
     )
 
 

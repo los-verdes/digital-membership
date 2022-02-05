@@ -19,8 +19,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Almendra+Display&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Bungee&display=swap" rel="stylesheet">
-  <link rel="stylesheet" type="text/css" href="https://card.losverd.es/static/style.css?f186aa8e">
-  <link rel="shortcut icon" href="https://card.losverd.es/static/favicon.ico">
+  <link rel="stylesheet" type="text/css" href="{{ static_base_url }}/style.css?f186aa8e">
+  <link rel="shortcut icon" href="{{ static_base_url }}/favicon.ico">
 
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-3YFLF9K9KG"></script>
   <script>
@@ -33,8 +33,8 @@
   <script defer src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 
   <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
-  <script defer src="https://card.losverd.es/static/html2canvas.min.js"></script>
-  <script defer type="module" src="https://card.losverd.es/static/script.js"></script>
+  <script defer src="{{ static_base_url }}/html2canvas.min.js"></script>
+  <script defer type="module" src="{{ static_base_url }}/script.js"></script>
   <style type="text/css">
 
     body {
@@ -58,14 +58,20 @@
   }
   .live-laugh-love-large {
     font-family: "Bungee";
-    color: white;
-    font-size: calc(24px + 3.5vh)
+    color: rgb(254, 254, 254);
+    font-size: calc(24px + 3.5vh);
   }
 
   .live-laugh-love {
     font-family: "Bungee";
-    color: white;
+    color: rgb(254, 254, 254);
     font-size: calc(24px + 2vh)
+  }
+
+  .houschka {
+    font-family: houschka-rounded, sans-serif;
+    font-style: normal;
+    font-weight: 900;
   }
 
   .live-laugh-love>small {
