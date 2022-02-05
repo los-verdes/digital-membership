@@ -37,8 +37,9 @@ class Settings(object):
         "GOOGLE_PAY_PROGRAM_NAME", "Los Verdes Membership Cards"
     )
     GOOGLE_PAY_ORIGINS = [
-        "https://localcard.losverd.es:5000/",
-        "https://pay.google.com",
+        "https://card.losverd.es",
+        "https://localcard.losverd.es:5000",
+        # "https://pay.google.com",
     ]
     GOOGLE_PAY_AUDIENCE = "google"
     GOOGLE_PAY_JWT_TYPE = "savetoandroidpay"
