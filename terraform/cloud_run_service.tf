@@ -7,7 +7,7 @@ locals {
       service_account_name    = google_service_account.digital_membership["website"].email
       mount_apple_private_key = true
       memory_mb               = "512"
-      min_scale               = "1"
+      min_scale               = "0"
       invokers                = ["allUsers"]
     }
     "worker" = {
