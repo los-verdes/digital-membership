@@ -70,8 +70,20 @@ function sendFormErrorToast(msg, timeout = 5000) {
   var data = { message: msg, timeout: timeout };
   formToastContainer.MaterialSnackbar.showSnackbar(data);
   // Re-enable the form if we encounter an error so folks can resubmit
-  document.getElementById("emailDistributionSubmitBtn").disabled = false;
-  document.getElementById("emailDistributionProgressBar").style.display = "none";
+  var emailSubmitBtn = document.getElementById("emailDistributionSubmitBtn");
+  var emailProgressBar = document.getElementById("emailDistributionProgressBar");
+  if (emailSubmitBtn && emailProgressBar) {
+    emailSubmitBtn.disabled = false;
+    emailProgressBar.style.display = "none";
+  }
+}
+
+function gpaySaveSuccessHandler() {
+  sendFormErrorToast('Membership card saved as GPay Pass! :D')
+}
+
+function gpaySaveFailureHandler(err) {
+  sendFormErrorToast('GPay Pass save error: ' + err.errorCode + ': ' + err.errorMessage);
 }
 
 function onCaptchaExpired() {

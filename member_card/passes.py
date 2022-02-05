@@ -11,8 +11,7 @@ from member_card.models import MembershipCard
 from member_card.storage import upload_file_to_gcs
 from member_card.utils import sign
 
-DEFAULT_APPLE_KEY_FILEPATH = "/secrets/apple-private.key"
-
+DEFAULT_APPLE_KEY_FILEPATH = "/apple-secrets/private.key"
 logger = logging.getLogger(__name__)
 
 
@@ -20,7 +19,7 @@ def with_apple_developer_key() -> Callable:
     def decorator(method: Callable) -> Callable:
         @functools.wraps(method)
         def new_func(*args, **kwargs):
-            key_filepath = DEFAULT_APPLE_KEY_FILEPATH
+            key_filepath = flask.current_app.config["APPLE_KEY_FILEPATH"]
 
             # running_in_cloud_run = os.getenv("K_SERVICE", False)
             running_in_cloud_run = (

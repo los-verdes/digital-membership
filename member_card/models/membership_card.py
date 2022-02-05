@@ -50,6 +50,34 @@ class MembershipCard(db.Model):
     background_color = "#00B140"
     foreground_color = "#000000"
 
+    _google_pay_jwt = None
+
+    logo = "LosVerdes_Logo_RGB_300_Horizontal_BlackOnTransparent_CityYear_logo@2x.png"
+    icon = "LV_Tee_Crest_onVerde_rgb_filled_icon@2x.png"
+    description = "Los Verdes Membership Card"
+
+    @property
+    def logo_uri(self):
+        from flask import current_app
+
+        return f"{current_app.config['STATIC_ASSET_BASE_URL']}/{self.logo}"
+
+    @property
+    def google_pay_jwt(self):
+        if self._google_pay_jwt is not None:
+            return self._google_pay_jwt
+        from member_card.gpay import generate_pass_jwt
+
+        google_pay_jwt = generate_pass_jwt(self)
+        self._google_pay_jwt = google_pay_jwt.decode("UTF-8")
+        return self._google_pay_jwt
+
+    @property
+    def icon_uri(self):
+        from flask import current_app
+
+        return f"{current_app.config['STATIC_ASSET_BASE_URL']}/{self.icon}"
+
     id = db.Column(db.Integer, primary_key=True, autoincrement=True, unique=True)
     serial_number = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
@@ -170,7 +198,7 @@ class MembershipCard(db.Model):
         qr_code = Barcode(format=BarcodeFormat.QR, message=self.qr_code_message)
 
         passfile_attrs = dict(
-            description="Los Verdes Membership Card",
+            description=self.description,
             serialNumber=self.apple_pass_serial_number,
             backgroundColor=hex2rgb(self.background_color),
             foregroundColor=hex2rgb(self.foreground_color),

@@ -4,7 +4,15 @@ import os
 from datetime import datetime
 
 import click
-from flask import Flask, g, redirect, render_template, request, send_file, url_for
+from flask import (
+    Flask,
+    g,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    url_for,
+)
 from flask_cdn import CDN
 from flask_login import current_user as current_login_user
 from flask_login import login_required, logout_user
@@ -100,6 +108,7 @@ def home():
         from member_card.passes import get_or_create_membership_card
 
         membership_card = get_or_create_membership_card(current_user)
+        # response_body = render_template(
         return render_template(
             "member_card_and_history.html.j2",
             membership_card=membership_card,
@@ -457,3 +466,31 @@ def upload_statics():
         bucket_id=app.config["GCS_BUCKET_ID"],
         prefix="static",
     )
+
+
+@app.cli.command("demo-google-pay-pass")
+@click.argument("email")
+def demo_google_pay_pass(email):
+    from member_card import gpay
+    from member_card.passes import get_or_create_membership_card
+
+    SAVE_LINK = "https://pay.google.com/gp/v/save/"
+
+    user = User.query.filter_by(email=email).one()
+    membership_card = get_or_create_membership_card(
+        user=user,
+    )
+
+    pass_jwt = gpay.generate_pass_jwt(
+        membership_card=membership_card,
+    )
+
+    print(f"This is an 'object' jwt:\n{pass_jwt.decode('UTF-8')}\n")
+    print(
+        "you can decode it with a tool to see the unsigned JWT representation:\nhttps://jwt.io\n"
+    )
+    print(f"Try this save link in your browser:\n{SAVE_LINK}{pass_jwt.decode('UTF-8')}")
+    # demonstrate the different "services" that make links/values for frontend to render a functional "save to phone" button
+    # demoFatJwt(vertical_type, class_id, object_id)
+    # demoObjectJwt(vertical_type, class_id, object_id)
+    # demoSkinnyJwt(vertical_type, class_id, object_id)

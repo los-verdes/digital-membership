@@ -102,7 +102,7 @@ serve:
   # export DIGITAL_MEMBERSHIP_GCP_SECRET_NAME="projects/567739286055/secrets/digital-membership/versions/latest"
   # ~/bin/cloud_sql_proxy -instances='lv-digital-membership:us-central1:lv-digital-membership=tcp:5432'  -enable_iam_login
   # export DIGITAL_MEMBERSHIP_DB_USERNAME="$(gcloud auth list 2>/dev/null | egrep '^\*' | awk '{print $2;}')"
-  flask run --cert=tmp-certs/cert.pem --key=tmp-certs/key.pem
+  flask run --cert=tmp-certs/cert.pem --key=tmp-certs/key.pem --host=0.0.0.0
 
 build-website:
   docker build . --target website --tag '{{ website_image_name }}:{{ image_tag }}'

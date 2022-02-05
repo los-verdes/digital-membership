@@ -25,6 +25,7 @@ primary_info_text,
 secondary_info_text,
 aux_info_text,
 serial_number,
+google_pay_jwt="",
 qr_code_b64_png="",
 validation_msg="",
 above_card_heading="",
@@ -94,9 +95,8 @@ show_card_actions_bar=True
   <!-- Buttons enable various card-saving actions shown under the main card design -->
   <div class="mdl-card__actions mdl-card--border mdl-typography--text-right">
     {% if not validation_msg %}
-    <button class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" disabled>
-      <i class="material-icons">download</i> Google Pay
-    </button>
+    {% if google_pay_jwt %}
+    {% endif %}
     <a class="mdl-button mdl-js-button mdl-js-ripple-effect" href="{{ url_for('passes_apple_pay') }}">
       <img src="{{ url_for('static', filename='Add_to_Apple_Wallet_rgb_US-UK.svg') }}">
     </a>
@@ -123,6 +123,7 @@ show_card_actions_bar=True
     </button>
   </div> -->
 </div>
+
 {% endmacro %}
 
 {% macro troubleshooting_list() %}
@@ -190,3 +191,10 @@ This site's privacy policy can be view here: <a href="{{ url_for('privacy_policy
 <hr>
 {% endmacro %}
 
+
+{% macro snackbar() %}
+<div id="toastSnackbar" class="mdl-js-snackbar mdl-snackbar">
+  <div id="toastSnackbarContent" class="mdl-snackbar__text"></div>
+  <button class="mdl-snackbar__action" type="button"></button>
+</div>
+{% endmacro %}

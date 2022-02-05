@@ -1,5 +1,7 @@
 {% extends "base.html.j2" %}
+
 {% block title %}Card Downloads & Membership History{% endblock %}
+
 {% block content %}
 {% call macros.content_grid() %}
 {{
@@ -9,15 +11,26 @@
     secondary_info_text="Member Since " ~ membership_card.member_since.strftime('%b %Y'),
     serial_number=membership_card.serial_number,
     aux_info_text="Good through " ~ membership_card.member_until.strftime('%b %d, %Y'),
+    google_pay_jwt=membership_card.google_pay_jwt,
     qr_code_b64_png=membership_card.qr_code_b64_png,
   )
 }}
 {% endcall %}
-
+<pre>
+  {{ membership_card.google_pay_jwt }}
+</pre>
 {% call macros.content_grid() %}
 <div class="membership-details-card mdl-card mdl-shadow--2dp">
   <div class="mdl-card__supporting-text">
     <h4 class="vhlm">Membership History</h4>
+    <hr>
+    GPAY:
+
+
+    <button id="googlePayBtn" class="mdl-button mdl-button--icon mdl-button--fab" title="Add to Google Pay">
+    </button>
+    <i class="material-icons">money</i>
+    <g:savetoandroidpay jwt="{{ google_pay_jwt }}"></g:savetoandroidpay>
     <hr>
 
 
@@ -65,4 +78,5 @@
   </div>
 </div>
 {% endcall %}
+{{ macros.snackbar }}
 {% endblock %}
