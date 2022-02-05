@@ -72,8 +72,7 @@ def generate_card_image(membership_card, output_path):
         card_width=img_width,
         static_base_url=current_app.config["STATIC_ASSET_BASE_URL"],
     )
-    with open("card.html", "w") as f:
-        f.write(html_content)
+
     screenshot_filename = f"screenshot_{membership_card.serial_number.hex}.png"
     card_image_filename = f"{membership_card.serial_number.hex}.png"
 
