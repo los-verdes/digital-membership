@@ -25,7 +25,7 @@ class Settings(object):
         "APPLE_PASS_PRIVATE_KEY_PASSWORD", ""
     )
 
-    BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
     CLOUD_RUN_SERVICE: str = os.getenv("K_SERVICE", "N/A")
     CLOUD_RUN_REVISION: str = os.getenv("K_REVISION", "N/A")
