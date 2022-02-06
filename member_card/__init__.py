@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import logging
+import os
 
 from flask.logging import default_handler
 from flask_gravatar import Gravatar
@@ -27,6 +28,12 @@ def create_app():
     logger = logging.getLogger(__name__)
 
     app = create_cli_app()
+
+    if os.getenv("K_SERVICE") == "worker":
+        from member_card.worker import worker_bp
+
+        logger.debug("registering worker blueprint")
+        app.register_blueprint(worker_bp)
 
     logger.debug("cdn.init_app")
     cdn.init_app(app)
