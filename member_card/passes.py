@@ -11,6 +11,10 @@ from member_card.storage import upload_file_to_gcs
 logger = logging.getLogger(__name__)
 
 
+class MemberCardPass(object):
+    pass
+
+
 @with_apple_developer_key()
 def get_apple_pass_for_user(user, apple_pass=None, key_filepath=None):
     app = flask.current_app

@@ -125,11 +125,11 @@ def squarespace_orders_etl(squarespace_client, db_session, membership_sku, load_
                 db.session.commit()
                 member_user_id = member_user.id
                 member_user_ids_by_email[customer_email] = member_user_id
+            else:
+                member_user = (
+                    db_session.query(models.User).filter_by(id=member_user_id).one()
+                )
 
-            if not member_user_id:
-                logger.debug(f"{member_user_id=}")
-                breakpoint()
-                logger.debug(f"{member_user_id=}")
             membership_kwargs = dict(
                 order_id=subscription_order["id"],
                 order_number=subscription_order["orderNumber"],
@@ -171,6 +171,13 @@ def squarespace_orders_etl(squarespace_client, db_session, membership_sku, load_
                 member_user.first_name = membership.billing_address_first_name
                 member_user.last_name = membership.billing_address_last_name
                 db.session.add(member_user)
+            elif (
+                member_user.first_name != membership.billing_address_first_name
+                or member_user.last_name != membership.billing_address_last_name
+            ):
+                logger.warning(
+                    f"{member_user.fullname=} does not match {membership.billing_address_first_name} {membership.billing_address_last_name} for some reason..."
+                )
             db.session.add(membership)
             db.session.commit()
 
