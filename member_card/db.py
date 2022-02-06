@@ -162,6 +162,13 @@ def squarespace_orders_etl(squarespace_client, db_session, membership_sku, load_
                 kwargs=membership_kwargs,
             )
             memberships.append(membership)
+            if not member_user.fullname:
+                member_name = f"{membership.billing_address_first_name} {membership.billing_address_last_name}"
+                logger.debug(f"No name set yet on {member_user=}, updating to: {member_name}")
+                member_user.fullname = member_name
+                member_user.first_name = membership.billing_address_first_name
+                member_user.last_name = membership.billing_address_last_name
+                db.session.add(member_user)
             db.session.add(membership)
             db.session.commit()
 
