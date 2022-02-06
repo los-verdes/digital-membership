@@ -6,13 +6,14 @@ from datetime import datetime, timezone
 from io import BytesIO, StringIO
 from os.path import abspath, dirname, join
 
+import flask
 import qrcode
-from member_card.db import db
-from member_card.models.apple_device_registration import (
-    membership_card_to_apple_device_assoc_table,
-)
+from member_card.db import db, get_or_create
 from member_card.models.annual_membership import (
     membership_card_to_membership_assoc_table,
+)
+from member_card.models.apple_device_registration import (
+    membership_card_to_apple_device_assoc_table,
 )
 from member_card.utils import sign
 from sqlalchemy.dialects.postgresql import UUID
@@ -22,6 +23,38 @@ from wallet.models import Barcode, BarcodeFormat, Generic, Pass
 
 BASE_DIR = abspath(join(dirname(abspath(__file__)), ".."))
 logger = logging.getLogger("member_card")
+
+
+def get_or_create_membership_card(user):
+    app = flask.current_app
+    base_url = app.config["BASE_URL"]
+    web_service_url = f"{base_url}/passkit"
+    membership_card = get_or_create(
+        session=db.session,
+        model=MembershipCard,
+        user_id=user.id,
+        apple_organization_name=app.config["APPLE_DEVELOPER_TEAM_ID"],
+        apple_pass_type_identifier=app.config["APPLE_DEVELOPER_PASS_TYPE_ID"],
+        apple_team_identifier=app.config["APPLE_DEVELOPER_TEAM_ID"],
+        member_since=user.member_since,
+        member_until=user.membership_expiry,
+        web_service_url=web_service_url,
+    )
+    db.session.add(membership_card)
+    db.session.commit()
+
+    # TODO: do this more efficient like:
+    if not membership_card.qr_code_message:
+        logger.debug("generating QR code for message")
+        serial_number = str(membership_card.serial_number)
+        qr_code_signature = sign(serial_number)
+        qr_code_message = f"Content: {base_url}{flask.url_for('verify_pass', serial_number=serial_number)}?signature={qr_code_signature}"
+        logger.debug(f"{qr_code_message=}")
+        setattr(membership_card, "qr_code_message", qr_code_message)
+        db.session.add(membership_card)
+        db.session.commit()
+
+    return membership_card
 
 
 def hex2rgb(hex, alpha=None):

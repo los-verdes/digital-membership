@@ -1,99 +1,18 @@
-import functools
 import logging
-import os
 import tempfile
-from typing import Callable
 
 import flask
 
-from member_card.db import db, get_or_create
-from member_card.models import MembershipCard
+from member_card.apple_wallet import with_apple_developer_key
+from member_card.db import db
+from member_card.models.membership_card import get_or_create_membership_card
 from member_card.storage import upload_file_to_gcs
-from member_card.utils import sign
 
-DEFAULT_APPLE_KEY_FILEPATH = "/apple-secrets/private.key"
 logger = logging.getLogger(__name__)
 
 
-def with_apple_developer_key() -> Callable:
-    def decorator(method: Callable) -> Callable:
-        @functools.wraps(method)
-        def new_func(*args, **kwargs):
-            key_filepath = flask.current_app.config["APPLE_KEY_FILEPATH"]
-
-            # running_in_cloud_run = os.getenv("K_SERVICE", False)
-            running_in_cloud_run = (
-                os.getenv("FLASK_ENV", "unknown").lower().strip() == "production"
-            )
-            if running_in_cloud_run or (
-                key_filepath
-                and os.path.isfile(key_filepath)
-                and os.access(key_filepath, os.R_OK)
-            ):
-                logger.debug(f"Using {key_filepath=}")
-                kwargs["key_filepath"] = key_filepath
-                return method(*args, **kwargs)
-
-            if "APPLE_DEVELOPER_PRIVATE_KEY" not in flask.current_app.config:
-                error_msg = f"File {key_filepath} doesn't exist or isn't readable _and_ no key found under APPLE_DEVELOPER_PRIVATE_KEY env var!"
-                logger.error(error_msg)
-                raise Exception(error_msg)
-
-            unformatted_key = flask.current_app.config["APPLE_DEVELOPER_PRIVATE_KEY"]
-            logger.warning(
-                f"File {key_filepath} doesn't exist or isn't readable, pulling key from environment and stashing in temp file...."
-            )
-            with tempfile.NamedTemporaryFile(mode="w", suffix=".key") as key_fp:
-                logger.info(
-                    f"Stashing Apple developer key under a temporary file {key_fp.name=}"
-                )
-                formatted_key = "\n".join(unformatted_key.split("\\n"))
-                key_fp.write(formatted_key)
-                key_fp.seek(0)
-                kwargs["key_filepath"] = key_fp.name
-                return method(*args, **kwargs)
-
-        return new_func
-
-    return decorator
-
-
-def get_or_create_membership_card(user):
-    app = flask.current_app
-    base_url = app.config["BASE_URL"]
-    web_service_url = f"{base_url}/passkit"
-    membership_card = get_or_create(
-        session=db.session,
-        model=MembershipCard,
-        user_id=user.id,
-        apple_organization_name=app.config["APPLE_DEVELOPER_TEAM_ID"],
-        apple_pass_type_identifier=app.config["APPLE_DEVELOPER_PASS_TYPE_ID"],
-        apple_team_identifier=app.config["APPLE_DEVELOPER_TEAM_ID"],
-        member_since=user.member_since,
-        member_until=user.membership_expiry,
-        web_service_url=web_service_url,
-    )
-    db.session.add(membership_card)
-    db.session.commit()
-
-    # TODO: do this more efficient like:
-    if not membership_card.qr_code_message:
-        logger.debug("generating QR code for message")
-        serial_number = str(membership_card.serial_number)
-        qr_code_signature = sign(serial_number)
-        qr_code_message = f"Content: {base_url}{flask.url_for('verify_pass', serial_number=serial_number)}?signature={qr_code_signature}"
-        logger.debug(f"{qr_code_message=}")
-        setattr(membership_card, "qr_code_message", qr_code_message)
-        db.session.add(membership_card)
-        db.session.commit()
-
-    return membership_card
-
-
 @with_apple_developer_key()
-def get_apple_pass_for_user(
-    user, apple_pass=None, key_filepath=DEFAULT_APPLE_KEY_FILEPATH
-):
+def get_apple_pass_for_user(user, apple_pass=None, key_filepath=None):
     app = flask.current_app
     if apple_pass is None:
         apple_pass = get_or_create_membership_card(user=user)

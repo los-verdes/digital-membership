@@ -4,10 +4,8 @@ from datetime import datetime
 
 import flask
 from member_card.image import generate_and_upload_card_image
-from member_card.passes import (
-    get_or_create_membership_card,
-    generate_and_upload_apple_pass,
-)
+from member_card.passes import generate_and_upload_apple_pass
+from member_card.models.membership_card import get_or_create_membership_card
 from member_card.storage import get_client as get_gcs_client
 from sendgrid import Asm, SendGridAPIClient
 from sendgrid.helpers.mail import Mail

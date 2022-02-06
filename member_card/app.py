@@ -105,7 +105,7 @@ def home():
         return redirect("/login")
 
     if current_user.has_active_memberships:
-        from member_card.passes import get_or_create_membership_card
+        from member_card.models.membership_card import get_or_create_membership_card
 
         membership_card = get_or_create_membership_card(current_user)
         # response_body = render_template(
@@ -408,7 +408,7 @@ def send_test_email(email):
 @click.argument("email")
 def generate_card_image(email):
     from member_card.image import generate_card_image
-    from member_card.passes import get_or_create_membership_card
+    from member_card.models.membership_card import get_or_create_membership_card
 
     user = User.query.filter_by(email=email).one()
     membership_card = get_or_create_membership_card(
@@ -472,7 +472,7 @@ def upload_statics():
 @click.argument("email")
 def demo_google_pay_pass(email):
     from member_card import gpay
-    from member_card.passes import get_or_create_membership_card
+    from member_card.models.membership_card import get_or_create_membership_card
 
     SAVE_LINK = "https://pay.google.com/gp/v/save/"
 
@@ -490,7 +490,3 @@ def demo_google_pay_pass(email):
         "you can decode it with a tool to see the unsigned JWT representation:\nhttps://jwt.io\n"
     )
     print(f"Try this save link in your browser:\n{SAVE_LINK}{pass_jwt.decode('UTF-8')}")
-    # demonstrate the different "services" that make links/values for frontend to render a functional "save to phone" button
-    # demoFatJwt(vertical_type, class_id, object_id)
-    # demoObjectJwt(vertical_type, class_id, object_id)
-    # demoSkinnyJwt(vertical_type, class_id, object_id)
