@@ -95,11 +95,6 @@ show_card_actions_bar=True
   <!-- Buttons enable various card-saving actions shown under the main card design -->
   <div class="mdl-card__actions mdl-card--border mdl-typography--text-right">
     {% if not validation_msg %}
-    {% if google_pay_jwt %}
-    {% endif %}
-    <a class="mdl-button mdl-js-button mdl-js-ripple-effect" href="{{ url_for('passes_apple_pay') }}">
-      <img src="{{ url_for('static', filename='Add_to_Apple_Wallet_rgb_US-UK.svg') }}">
-    </a>
     <button id="toggle-qr-code-btn" class="mdl-button mdl-button--icon mdl-button--fab" title="Toggle QR code display">
       <i class="material-icons">qr_code</i>
     </button>
@@ -109,6 +104,12 @@ show_card_actions_bar=True
     <ul class="mdl-menu mdl-menu--top-right mdl-js-menu mdl-js-ripple-effect" data-mdl-for="save-as-screenshot-menu">
       <li id="save-as-screenshot-btn" class="mdl-menu__item">Save card as image (.png)</li>
     </ul>
+    <a class="save-pass-button save-apple-pass-button" href="{{ url_for('passes_apple_pay') }}">
+      <img class="mdl-js-button mdl-js-ripple-effect" src="{{ url_for('static', filename='Add_to_Apple_Wallet_rgb_US-UK.svg') }}">
+    </a>
+    <a class="save-pass-button save-google-pass-button" href="https://pay.google.com/gp/v/save/{{ google_pay_jwt }}" target="_blank">
+      <img class="mdl-js-button mdl-js-ripple-effect" src="{{ url_for('static', filename='save_to_google_pay.svg') }}">
+    </a>
     {% else %}
     <a class="mdl-button mdl-js-button mdl-js-ripple-effect" href="{{ url_for('home') }}">
       Back to Home

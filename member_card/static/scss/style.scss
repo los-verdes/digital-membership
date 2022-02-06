@@ -319,3 +319,11 @@ details > div {
     border-bottom: 2px solid #00b140;
   }
 }
+
+.save-pass-button {
+  align-items: flex-start;
+  display: inline-block;
+  min-height: 32px;
+  max-height: 64px;
+  padding: 8px;
+}

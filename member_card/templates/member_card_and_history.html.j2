@@ -16,24 +16,10 @@
   )
 }}
 {% endcall %}
-<pre>
-  {{ membership_card.google_pay_jwt }}
-</pre>
 {% call macros.content_grid() %}
 <div class="membership-details-card mdl-card mdl-shadow--2dp">
   <div class="mdl-card__supporting-text">
     <h4 class="vhlm">Membership History</h4>
-    <hr>
-    GPAY:
-
-
-    <button id="googlePayBtn" class="mdl-button mdl-button--icon mdl-button--fab" title="Add to Google Pay">
-    </button>
-    <i class="material-icons">money</i>
-    <g:savetoandroidpay jwt="{{ google_pay_jwt }}"></g:savetoandroidpay>
-    <hr>
-
-
     {% for membership_order in membership_orders | reverse %}
     <details>
       <summary id="membership-details-{{ membership_order.id }}">
@@ -78,5 +64,5 @@
   </div>
 </div>
 {% endcall %}
-{{ macros.snackbar }}
+
 {% endblock %}

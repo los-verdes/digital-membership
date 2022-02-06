@@ -36,20 +36,22 @@ class Settings(object):
     GOOGLE_PAY_PROGRAM_NAME: str = os.environ.get(
         "GOOGLE_PAY_PROGRAM_NAME", "Los Verdes Membership Cards"
     )
-    GOOGLE_PAY_ORIGINS = [
-        "https://card.losverd.es",
-        "https://localcard.losverd.es:5000",
-        # "https://pay.google.com",
-    ]
-    GOOGLE_PAY_AUDIENCE = "google"
-    GOOGLE_PAY_JWT_TYPE = "savetoandroidpay"
-    GOOGLE_PAY_SCOPES = ["https://www.googleapis.com/auth/wallet_object.issuer"]
     GOOGLE_PAY_SERVICE_ACCOUNT_EMAIL_ADDRESS: str = os.getenv(
         "GOOGLE_PAY_SERVICE_ACCOUNT_EMAIL_ADDRESS", ""
     )
     GOOGLE_PAY_SERVICE_ACCOUNT_FILE: str = os.getenv(
         "GOOGLE_PAY_SERVICE_ACCOUNT_FILE", "/secrets/service-account-key.json"
     )
+    GOOGLE_PAY_ORIGINS = [
+        "https://card.losverd.es",
+        "https://localcard.losverd.es:5000",
+        # "https://pay.google.com",
+    ]
+
+    # Constants that are application agnostic. Used for JWT
+    GOOGLE_PAY_AUDIENCE = "google"
+    GOOGLE_PAY_JWT_TYPE = "savetoandroidpay"
+    GOOGLE_PAY_SCOPES = ["https://www.googleapis.com/auth/wallet_object.issuer"]
 
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
