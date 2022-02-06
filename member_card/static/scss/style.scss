@@ -103,7 +103,9 @@ img.lv-horizontal-logo {
 
 .troubleshooting-list {
   > .mdl-list__item--three-line {
-    height: 125px;
+    display: block;
+    overflow: auto;
+    height: fit-content;
   }
 }
 
