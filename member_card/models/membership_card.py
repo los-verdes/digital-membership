@@ -63,6 +63,10 @@ class MembershipCard(db.Model):
         return f"{current_app.config['STATIC_ASSET_BASE_URL']}/{self.logo}"
 
     @property
+    def google_pass_save_url(self):
+        return f"https://pay.google.com/gp/v/save/{self.google_pay_jwt}"
+
+    @property
     def google_pay_jwt(self):
         if self._google_pay_jwt is not None:
             return self._google_pay_jwt

@@ -66,6 +66,7 @@ def generate_and_send_email(
         "applePassUrl": apple_pass_url,
         "submitted_on": submitted_on,
         "submitting_ip_address": submitting_ip_address,  # TODO: propagate this information over here somehow...
+        "googlePassUrl": membership_card.google_pass_save_url,
     }
 
     logger.info(

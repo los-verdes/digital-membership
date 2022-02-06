@@ -233,19 +233,19 @@
           <table border="0" cellspacing="0" cellpadding="0">
             <tr>
               <td align="right" style="border-radius: 3px; display: flex; text-align: right;">
-                {% for button in buttons %}
-                {% if button.img_src %}
+                {%- for button in buttons -%}
+                {%- if button.img_src -%}
                 <a href="{~~ button.href ~~}" target="_blank" alt="{~~ button.text ~~}">
                   <img src="{~~ button.img_src ~~}">
-                  {% else %}
                 </a>
+                  {%- else -%}
                 <a href="{~~ button.href ~~}" target="_blank" alt="{~~ button.text ~~}"
                    style="background-color:#000000; border-radius:10px; border-width:0px; color:#ffffff; display:inline-block; font-size:12px; font-weight:normal; letter-spacing:0px; line-height:normal; padding: 5px; padding-bottom: 2px; max-height: 25px; text-align:center; text-decoration:none; border: 2px outset #00b140; font-family:verdana,geneva,sans-serif;">
                   {~~ button.text ~~}
                 </a>
-                {% endif %}
+                {%- endif -%}
                 &nbsp;&nbsp;&nbsp;
-                {% endfor %}
+                {%- endfor -%}
               </td>
             </tr>
           </table>
@@ -854,6 +854,7 @@ Gracias!
 buttons=[
 {"href": card_img_src, "text": "📇 Download (.png)"},
 {"href": "{{applePassUrl}}", "img_src": "https://cstatic.losverd.es/static/Add_to_Apple_Wallet_rgb_US-UK.png"},
+{"href": "{{googlePassUrl}}", "img_src": "https://cstatic.losverd.es/static/save_to_google_pay.png"},
 ]
 )
 %}
