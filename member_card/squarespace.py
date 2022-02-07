@@ -182,7 +182,7 @@ class Squarespace(object):
             order_product_names = [i["productName"] for i in order["lineItems"]]
             if any(i["sku"] in membership_skus for i in order["lineItems"]):
                 logging.debug(
-                    f"{order['id']=} (#{order['orderNumber']}) includes {i['sku']} ({membership_skus=}) in {order_product_names=}"
+                    f"{order['id']=} (#{order['orderNumber']}) includes {membership_skus=} in {order_product_names=}"
                 )
                 membership_orders.append(order)
                 continue

@@ -4,7 +4,8 @@
 
 {% block content %}
 {% call macros.content_grid() %}
-{{
+<div id="save-as-screenshot-window">
+  {{
   macros.membership_card(
     title="Los Verdes Membership Card",
     primary_info_text=membership_card.user.fullname,
@@ -15,6 +16,7 @@
     qr_code_b64_png=membership_card.qr_code_b64_png,
   )
 }}
+</div>
 {% endcall %}
 {% call macros.content_grid() %}
 <div class="membership-details-card mdl-card mdl-shadow--2dp">

@@ -63,12 +63,23 @@ a {
   height: 100%;
 }
 
+.membership-card-actions {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.mdl-card__supporting-text {
+  width: 100%;
+}
+
 div.qr-code {
-  margin: 0px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
   > img {
     // display: none;
     object-fit: contain;
-    width: 100%;
+    max-height: 100px;
   }
   > small {
     color: $bright-verde;
