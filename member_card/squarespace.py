@@ -150,7 +150,7 @@ class Squarespace(object):
 
     def load_membership_orders_datetime_window(
         self,
-        membership_sku,
+        membership_skus,
         modified_before=None,
         modified_after=None,
     ):
@@ -161,10 +161,10 @@ class Squarespace(object):
         )
 
         return self.load_all_membership_orders(
-            membership_sku, order_params=order_params
+            membership_skus, order_params=order_params
         )
 
-    def load_all_membership_orders(self, membership_sku, order_params=None):
+    def load_all_membership_orders(self, membership_skus, order_params=None):
         # ) -> List[AnnualMembership]:
         # remove "None"s
         if order_params is None:
@@ -180,9 +180,9 @@ class Squarespace(object):
             all_orders.append(order)
 
             order_product_names = [i["productName"] for i in order["lineItems"]]
-            if any(i["sku"] == membership_sku for i in order["lineItems"]):
+            if any(i["sku"] in membership_skus for i in order["lineItems"]):
                 logging.debug(
-                    f"{order['id']=} (#{order['orderNumber']}) includes {membership_sku=} in {order_product_names=}"
+                    f"{order['id']=} (#{order['orderNumber']}) includes {i['sku']} ({membership_skus=}) in {order_product_names=}"
                 )
                 membership_orders.append(order)
                 continue

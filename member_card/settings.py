@@ -160,6 +160,7 @@ class Settings(object):
     )
 
     SQUARESPACE_API_KEY: str = os.getenv("SQUARESPACE_API_KEY", "")
+    SQUARESPACE_MEMBERSHIP_SKUS = os.getenv("SQUARESPACE_MEMBERSHIP_SKUS", "SQ3671268,SQ6438806").split(",")
 
     SESSION_PROTECTION: str = "strong"
     SECRET_KEY: str = os.environ.get("SECRET_KEY", "not-very-secret-at-all")
