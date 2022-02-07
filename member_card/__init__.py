@@ -62,6 +62,9 @@ def create_app():
 
     init_social(app, db.session)
 
+    with app.app_context():
+        db.create_all()
+
     from member_card.routes import passkit
 
     assert passkit

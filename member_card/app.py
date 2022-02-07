@@ -221,8 +221,7 @@ def verify_pass(serial_number):
     signature_verified = utils.verify(signature=signature, data=serial_number)
     if not signature_verified:
         return "Unable to verify signature!", 401
-    # current_user = g.user
-    # if current_user.is_authenticated:
+
     verified_card = (
         db.session.query(MembershipCard).filter_by(serial_number=serial_number).one()
     )
