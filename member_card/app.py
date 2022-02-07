@@ -282,11 +282,12 @@ def ensure_db_schemas(drop_first):
 def sync_subscriptions(membership_sku, load_all):
     from member_card.db import db
 
+    membership_skus = app.config["SQUARESPACE_MEMBERSHIP_SKUS"]
     squarespace = Squarespace(api_key=app.config["SQUARESPACE_API_KEY"])
     etl_results = squarespace_orders_etl(
         squarespace_client=squarespace,
         db_session=db.session,
-        membership_sku=membership_sku,
+        membership_skus=membership_skus,
         load_all=load_all,
     )
     logger.info(f"sync_subscriptions() => {etl_results=}")
@@ -313,10 +314,7 @@ def recreate_user(email):
                 association_id=association.id,
             )
             logger.info(f"{disconnect_resp=}")
-    # for membership_card in user.membership_cards:
-    #     for apple_device_registration in membership_card.apple_device_registrations:
-    #         db.session.delete(apple_device_registration)
-    #     db.session.delete(membership_card)
+
     db.session.delete(user)
     db.session.commit()
     member_user = get_or_create(

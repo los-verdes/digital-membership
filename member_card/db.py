@@ -64,7 +64,7 @@ def get_or_create(session, model, **kwargs):
         return instance
 
 
-def squarespace_orders_etl(squarespace_client, db_session, membership_sku, load_all):
+def squarespace_orders_etl(squarespace_client, db_session, membership_skus, load_all):
     from member_card import models
 
     start_time = datetime.now(tz=ZoneInfo("UTC"))
@@ -90,14 +90,14 @@ def squarespace_orders_etl(squarespace_client, db_session, membership_sku, load_
         modified_before = start_time.strftime("%Y-%m-%dT%H:%M:%SZ")
 
         subscription_orders = squarespace_client.load_membership_orders_datetime_window(
-            membership_sku=membership_sku,
+            membership_skus=membership_skus,
             modified_after=modified_after,
             modified_before=modified_before,
         )
 
     else:
         subscription_orders = squarespace_client.load_all_membership_orders(
-            membership_sku=membership_sku,
+            membership_skus=membership_skus,
         )
 
     subscription_orders.reverse()
@@ -106,7 +106,7 @@ def squarespace_orders_etl(squarespace_client, db_session, membership_sku, load_
     logger.info(f"{len(subscription_orders)=} retrieved from Squarespace...")
     for subscription_order in subscription_orders:
         line_items = subscription_order.get("lineItems", [])
-        subscription_line_items = [i for i in line_items if i["sku"] == membership_sku]
+        subscription_line_items = [i for i in line_items if i["sku"] in membership_skus]
         for subscription_line_item in subscription_line_items:
 
             fulfilled_on = None
