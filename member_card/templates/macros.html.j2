@@ -78,7 +78,6 @@ show_card_actions_bar=True
 
           <!-- Small bottom-left corner. Normally hidden, shows up when saving card as a screenshot -->
           <div class="mdl-cell mdl-cell--4-col mdl-cell--2-col-tablet mdl-cell--1-col-phone qr-code mdl-cell--bottom mdl-typography--text-right">
-            <small>{{ serial_number }}</small>
             <img id="card-qr-code" alt='QR code for card verification' src='data:image/png;base64,{{ qr_code_b64_png | default("")}}' />
             <!-- <pre class="qr-code">
               {{ qr_code_ascii | default("blah")}}
@@ -95,12 +94,6 @@ show_card_actions_bar=True
   <!-- Buttons enable various card-saving actions shown under the main card design -->
   <div class="mdl-card__actions mdl-card--border mdl-typography--text-right">
     {% if not validation_msg %}
-    <button id="toggle-qr-code-btn" class="mdl-button mdl-button--icon mdl-button--fab" title="Toggle QR code display">
-      <i class="material-icons">qr_code</i>
-    </button>
-    <button id="save-as-screenshot-menu" class="mdl-button mdl-button--icon mdl-button--fab mdl-button--colored" title="Save as image (.png)">
-      <i class="material-icons">screenshot</i>
-    </button>
     <ul class="mdl-menu mdl-menu--top-right mdl-js-menu mdl-js-ripple-effect" data-mdl-for="save-as-screenshot-menu">
       <li id="save-as-screenshot-btn" class="mdl-menu__item">Save card as image (.png)</li>
     </ul>
@@ -110,6 +103,10 @@ show_card_actions_bar=True
     <a class="save-pass-button save-google-pass-button" href="https://pay.google.com/gp/v/save/{{ google_pay_jwt }}" target="_blank">
       <img class="mdl-js-button mdl-js-ripple-effect" src="{{ url_for('static', filename='save_to_google_pay.svg') }}">
     </a>
+    <button id="save-as-screenshot-menu" class="mdl-button" title="Save as image (.png)">
+      <span class="material-icons">screenshot</span>
+      Save
+    </button>
     {% else %}
     <a class="mdl-button mdl-js-button mdl-js-ripple-effect" href="{{ url_for('home') }}">
       Back to Home

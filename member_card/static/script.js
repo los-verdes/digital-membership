@@ -11,24 +11,7 @@ Array.from(disconnectAuthButtons).forEach(function (element) {
   element.addEventListener('click', disconnectAuthFunc)
 })
 
-const qrCode = document.getElementById('card-qr-code')
-if (qrCode) {
-  qrCode.style.display = 'none'
-}
-const toggleQrCodeBtn = document.getElementById('toggle-qr-code-btn')
-if (toggleQrCodeBtn && qrCode) {
-  toggleQrCodeBtn.addEventListener('click', function () {
-    if (qrCode.style.display === 'none') {
-      qrCode.style.display = 'block'
-    } else {
-      qrCode.style.display = 'none'
-    }
-  })
-}
-// document.getElementsByClassName("disconnect-form").addEventListener("click", function (event) {
-//   event.preventDefault();
-//   $(event.target).closest('form').submit();
-// });
+
 const saveScreenshotBtn = document.getElementById('save-as-screenshot-btn')
 if (saveScreenshotBtn) {
   saveScreenshotBtn.addEventListener('click', function () {
