@@ -412,6 +412,34 @@ def upload_statics():
     )
 
 
+@app.cli.command("insert-google-pass-class")
+def insert_google_pass_class():
+    from member_card import gpay
+
+    class_id = app.config["GOOGLE_PAY_PASS_CLASS_ID"]
+    pass_class_payload = gpay.GooglePayPassClass(class_id).to_dict()
+
+    insert_class_response = gpay.new_client().insert_class(
+        class_id=class_id,
+        payload=pass_class_payload,
+    )
+    logger.debug(f"Class ID: {class_id} insert response: {insert_class_response=}")
+
+
+@app.cli.command("update-google-pass-class")
+def update_google_pass_class():
+    from member_card import gpay
+
+    class_id = app.config["GOOGLE_PAY_PASS_CLASS_ID"]
+    pass_class_payload = gpay.GooglePayPassClass(class_id).to_dict()
+
+    update_class_response = gpay.new_client().patch_class(
+        class_id=class_id,
+        payload=pass_class_payload,
+    )
+    logger.debug(f"Class ID: {class_id} update response: {update_class_response=}")
+
+
 @app.cli.command("demo-google-pay-pass")
 @click.argument("email")
 def demo_google_pay_pass(email):

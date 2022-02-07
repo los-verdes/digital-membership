@@ -33,8 +33,11 @@ class Settings(object):
     GOOGLE_PAY_ISSUER_ID: str = os.environ.get(
         "GOOGLE_PAY_ISSUER_ID", "3388000000022031577"
     )
+    GOOGLE_PAY_PASS_CLASS_ID: str = os.environ.get(
+        "GOOGLE_PAY_PASS_CLASS_ID", f"{GOOGLE_PAY_ISSUER_ID}.membership-card-2021-v0"
+    )
     GOOGLE_PAY_PROGRAM_NAME: str = os.environ.get(
-        "GOOGLE_PAY_PROGRAM_NAME", "Los Verdes Membership Cards"
+        "GOOGLE_PAY_PROGRAM_NAME", "Membership Card"
     )
     GOOGLE_PAY_SERVICE_ACCOUNT_EMAIL_ADDRESS: str = os.getenv(
         "GOOGLE_PAY_SERVICE_ACCOUNT_EMAIL_ADDRESS", ""
