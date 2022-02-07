@@ -222,10 +222,6 @@ class GooglePayPassObject(object):
         self.member_since = membership_card.user.member_since.strftime("%b %Y")
         self.good_until = membership_card.user.membership_expiry.strftime("%b %d, %Y")
 
-    @property
-    def hero_image_uri(self):
-        return f"{current_app.config['STATIC_ASSET_BASE_URL']}/{self.hero_image}"
-
     def to_dict(self):
         # below defines an loyalty object. For more properties, check:
         # https://developers.google.com/pay/passes/reference/v1/loyaltyobject/insert
