@@ -20,12 +20,12 @@ resource "google_sql_database_instance" "digital_membership" {
     }
 
     backup_configuration {
-      enabled    = false
+      enabled    = true
       location   = var.gcp_region
       start_time = "07:00"
 
       backup_retention_settings {
-        retained_backups = 3
+        retained_backups = 1
       }
     }
 
