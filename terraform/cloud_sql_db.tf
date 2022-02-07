@@ -12,6 +12,7 @@ resource "google_sql_database_instance" "digital_membership" {
 
   settings {
     tier = "db-f1-micro"
+    # disk_size = "2"
 
     database_flags {
       name  = "cloudsql.iam_authentication"
@@ -24,7 +25,7 @@ resource "google_sql_database_instance" "digital_membership" {
       start_time = "07:00"
 
       backup_retention_settings {
-        retained_backups = 3
+        retained_backups = 1
       }
     }
 

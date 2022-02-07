@@ -11,24 +11,7 @@ Array.from(disconnectAuthButtons).forEach(function (element) {
   element.addEventListener('click', disconnectAuthFunc)
 })
 
-const qrCode = document.getElementById('card-qr-code')
-if (qrCode) {
-  qrCode.style.display = 'none'
-}
-const toggleQrCodeBtn = document.getElementById('toggle-qr-code-btn')
-if (toggleQrCodeBtn && qrCode) {
-  toggleQrCodeBtn.addEventListener('click', function () {
-    if (qrCode.style.display === 'none') {
-      qrCode.style.display = 'block'
-    } else {
-      qrCode.style.display = 'none'
-    }
-  })
-}
-// document.getElementsByClassName("disconnect-form").addEventListener("click", function (event) {
-//   event.preventDefault();
-//   $(event.target).closest('form').submit();
-// });
+
 const saveScreenshotBtn = document.getElementById('save-as-screenshot-btn')
 if (saveScreenshotBtn) {
   saveScreenshotBtn.addEventListener('click', function () {
@@ -70,8 +53,20 @@ function sendFormErrorToast(msg, timeout = 5000) {
   var data = { message: msg, timeout: timeout };
   formToastContainer.MaterialSnackbar.showSnackbar(data);
   // Re-enable the form if we encounter an error so folks can resubmit
-  document.getElementById("emailDistributionSubmitBtn").disabled = false;
-  document.getElementById("emailDistributionProgressBar").style.display = "none";
+  var emailSubmitBtn = document.getElementById("emailDistributionSubmitBtn");
+  var emailProgressBar = document.getElementById("emailDistributionProgressBar");
+  if (emailSubmitBtn && emailProgressBar) {
+    emailSubmitBtn.disabled = false;
+    emailProgressBar.style.display = "none";
+  }
+}
+
+function gpaySaveSuccessHandler() {
+  sendFormErrorToast('Membership card saved as GPay Pass! :D')
+}
+
+function gpaySaveFailureHandler(err) {
+  sendFormErrorToast('GPay Pass save error: ' + err.errorCode + ': ' + err.errorMessage);
 }
 
 function onCaptchaExpired() {

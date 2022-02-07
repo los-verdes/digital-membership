@@ -25,6 +25,7 @@ primary_info_text,
 secondary_info_text,
 aux_info_text,
 serial_number,
+google_pay_jwt="",
 qr_code_b64_png="",
 validation_msg="",
 above_card_heading="",
@@ -77,7 +78,6 @@ show_card_actions_bar=True
 
           <!-- Small bottom-left corner. Normally hidden, shows up when saving card as a screenshot -->
           <div class="mdl-cell mdl-cell--4-col mdl-cell--2-col-tablet mdl-cell--1-col-phone qr-code mdl-cell--bottom mdl-typography--text-right">
-            <small>{{ serial_number }}</small>
             <img id="card-qr-code" alt='QR code for card verification' src='data:image/png;base64,{{ qr_code_b64_png | default("")}}' />
             <!-- <pre class="qr-code">
               {{ qr_code_ascii | default("blah")}}
@@ -94,21 +94,19 @@ show_card_actions_bar=True
   <!-- Buttons enable various card-saving actions shown under the main card design -->
   <div class="mdl-card__actions mdl-card--border mdl-typography--text-right">
     {% if not validation_msg %}
-    <button class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" disabled>
-      <i class="material-icons">download</i> Google Pay
-    </button>
-    <a class="mdl-button mdl-js-button mdl-js-ripple-effect" href="{{ url_for('passes_apple_pay') }}">
-      <img src="{{ url_for('static', filename='Add_to_Apple_Wallet_rgb_US-UK.svg') }}">
-    </a>
-    <button id="toggle-qr-code-btn" class="mdl-button mdl-button--icon mdl-button--fab" title="Toggle QR code display">
-      <i class="material-icons">qr_code</i>
-    </button>
-    <button id="save-as-screenshot-menu" class="mdl-button mdl-button--icon mdl-button--fab mdl-button--colored" title="Save as image (.png)">
-      <i class="material-icons">screenshot</i>
-    </button>
     <ul class="mdl-menu mdl-menu--top-right mdl-js-menu mdl-js-ripple-effect" data-mdl-for="save-as-screenshot-menu">
       <li id="save-as-screenshot-btn" class="mdl-menu__item">Save card as image (.png)</li>
     </ul>
+    <a class="save-pass-button save-apple-pass-button" href="{{ url_for('passes_apple_pay') }}">
+      <img class="mdl-js-button mdl-js-ripple-effect" src="{{ url_for('static', filename='Add_to_Apple_Wallet_rgb_US-UK.svg') }}">
+    </a>
+    <a class="save-pass-button save-google-pass-button" href="https://pay.google.com/gp/v/save/{{ google_pay_jwt }}" target="_blank">
+      <img class="mdl-js-button mdl-js-ripple-effect" src="{{ url_for('static', filename='save_to_google_pay.svg') }}">
+    </a>
+    <button id="save-as-screenshot-menu" class="mdl-button" title="Save as image (.png)">
+      <span class="material-icons">screenshot</span>
+      Save
+    </button>
     {% else %}
     <a class="mdl-button mdl-js-button mdl-js-ripple-effect" href="{{ url_for('home') }}">
       Back to Home
@@ -123,54 +121,47 @@ show_card_actions_bar=True
     </button>
   </div> -->
 </div>
+
 {% endmacro %}
 
 {% macro troubleshooting_list() %}
-<ul class="mdl-list troubleshooting-list">
-  <li class="mdl-list__item mdl-list__item--three-line">
-    <span class="mdl-list__item-primary-content">
-      <i class="material-icons">email</i>
-      <span>Validate Email Address</span>
-      <span class="mdl-list__item-text-body">
-        Check that the email address you signed in with matches the email used to purchase your membership.
-      </span>
-    </span>
-    <span class="mdl-list__item-secondary-content">
-      <a class="mdl-list__item-secondary-action mdl-button mdl-js-button mdl-button--icon mdl-button--colored" href="{{ url_for('logout') }}"
-         title="If needed, logout now and log back in with an account whose email address matches the one used on our LV membership purchase."><i
-           class="material-icons">logout</i></a>
-    </span>
-  </li>
-  <hr>
-  <li class="mdl-list__item mdl-list__item--three-line">
-    <span class="mdl-list__item-primary-content">
-      <i class="material-icons">contact_support</i>
-      <span>Contact Support</span>
-      <span class="mdl-list__item-text-body">
-        Otherwise, please feel free to contact <a href="mailto:los-verdes-tech-support@googlegroups.com">tech
-          support</a>, with any relevant details, for assistance.
-      </span>
-    </span>
-    <span class="mdl-list__item-secondary-content">
-      <a class="mdl-list__item-secondary-action mdl-button mdl-js-button mdl-button--icon mdl-button--colored" href="mailto:los-verdes-tech-support@googlegroups.com"
-         title="Email los-verdes-tech-support@googlegroups.com"><i class="material-icons">support_agent</i></a>
-    </span>
-  </li>
-  <hr>
-  <li class="mdl-list__item mdl-list__item--three-line">
-    <span class="mdl-list__item-primary-content">
-      <i class="material-icons">store</i>
-      <span>Purchase a Membership</span>
-      <span class="mdl-list__item-text-body">
-        Or! If you're legit not a member, but would like to be, go grab a membership over at the Los Verdes store!
-      </span>
-    </span>
-    <span class="mdl-list__item-secondary-content">
-      <a class="mdl-list__item-secondary-action mdl-button mdl-js-button mdl-button--icon mdl-button--colored" href="https://www.losverdesatx.org/lv-store/membership"
-         target="_blank" title="Click here to open the membership store in a new tab"><i class="material-icons">storefront</i></a>
-    </span>
-  </li>
-</ul>
+<span class="mdl-list__item-primary-content">
+  <i class="material-icons">email</i>
+  <strong>Verify Email Address</strong>
+  <br>
+  <span class="mdl-list__item-text-body">
+    Check that the email address you signed in with matches the email used to purchase your membership.
+    <br>
+    <br>
+    If needed, <a href="{{ url_for('logout') }}">logout</a> now, and then back in, with an account whose email address matches the one used on our LV membership purchase.
+  </span>
+</span>
+<hr>
+<span class="mdl-list__item-primary-content">
+  <i class="material-icons">store</i>
+  <strong>Purchase a Membership</strong>
+  <br>
+  <span class="mdl-list__item-text-body">
+    Or! If you're legit not a member, but would like to be, go grab a membership over at the Los Verdes store!
+    <br>
+    <br>
+    <div class="mdl-card__actions mdl-typography--text-right">
+      <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--raised" href="https://www.losverdesatx.org/lv-store/membership" target="_blank"
+         title="Click here to open the membership store in a new tab"><i class="material-icons">storefront</i>&nbsp;Visit Membership Store</a>
+    </div>
+
+  </span>
+</span>
+<hr>
+<span class="mdl-list__item-primary-content">
+  <i class="material-icons">contact_support</i>
+  <strong>Support Available</strong>
+  <br>
+  <span class="mdl-list__item-text-body">
+    Otherwise, please feel free to contact <a href="mailto:los-verdes-tech-support@googlegroups.com">tech
+      support</a>, with any relevant details, for assistance.
+  </span>
+</span>
 {% endmacro %}
 
 {% macro help_content() %}
@@ -190,3 +181,10 @@ This site's privacy policy can be view here: <a href="{{ url_for('privacy_policy
 <hr>
 {% endmacro %}
 
+
+{% macro snackbar() %}
+<div id="toastSnackbar" class="mdl-js-snackbar mdl-snackbar">
+  <div id="toastSnackbarContent" class="mdl-snackbar__text"></div>
+  <button class="mdl-snackbar__action" type="button"></button>
+</div>
+{% endmacro %}

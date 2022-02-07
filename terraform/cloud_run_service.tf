@@ -112,6 +112,16 @@ resource "google_cloud_run_service" "digital_membership" {
           value = upper(var.app_log_level)
         }
 
+        env {
+          name  = "GOOGLE_PAY_SERVICE_ACCOUNT_EMAIL_ADDRESS"
+          value = each.value.service_account_name
+        }
+
+        env {
+          name  = "GOOGLE_PAY_SERVICE_ACCOUNT_FILE"
+          value = "/secrets/service-account-key.json"
+        }
+
         ports {
           name = "http1"
           # protocol       = "TCP"
@@ -129,9 +139,15 @@ resource "google_cloud_run_service" "digital_membership" {
           for_each = each.value.mount_apple_private_key == true ? [1] : []
           content {
             name       = "apple_developer_private_key"
-            mount_path = "/secrets"
+            mount_path = "/apple-secrets"
           }
         }
+
+        volume_mounts {
+          name       = "service_account_key"
+          mount_path = "/secrets"
+        }
+
       }
 
       dynamic "volumes" {
@@ -143,13 +159,28 @@ resource "google_cloud_run_service" "digital_membership" {
             default_mode = "0444" # 0444
             items {
               key  = local.apple_key_secret_version_key
-              path = "apple-private.key"
+              path = "private.key"
               # mode = "0444" # 0444
               # mode = 256 # 0400
             }
           }
         }
       }
+
+      volumes {
+        name = "service_account_key"
+        secret {
+          secret_name  = google_secret_manager_secret.service_accounts[each.key].secret_id
+          default_mode = "0444" # 0444
+          items {
+            key  = "latest"
+            path = "service-account-key.json"
+            # mode = "0444" # 0444
+            # mode = 256 # 0400
+          }
+        }
+      }
+
     }
   }
 }

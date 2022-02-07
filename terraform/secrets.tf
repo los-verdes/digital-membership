@@ -16,6 +16,24 @@ resource "google_secret_manager_secret" "digital_membership" {
   }
 }
 
+resource "google_secret_manager_secret" "service_accounts" {
+  for_each = toset([
+    "website",
+    "worker",
+  ])
+  secret_id = "${each.key}-service_account_key"
+
+  replication {
+    automatic = true
+  }
+}
+
+resource "google_secret_manager_secret_version" "service_accounts" {
+  for_each    = google_secret_manager_secret.service_accounts
+  secret      = each.value.id
+  secret_data = base64decode(google_service_account_key.digital_membership[each.key].private_key)
+}
+
 # We set up this secret outside of Terraform to minimize the possibility of inadvertent leakage...
 data "google_secret_manager_secret" "apple_private_key" {
   secret_id = var.apple_pass_private_key_secret_name

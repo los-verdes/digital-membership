@@ -22,10 +22,26 @@ locals {
   }
 }
 
+resource "time_rotating" "mykey_rotation" {
+  rotation_days = 30
+}
+
 resource "google_service_account" "digital_membership" {
   for_each     = local.service_account_ids
   account_id   = each.key
   display_name = each.value
+}
+
+resource "google_service_account_key" "digital_membership" {
+  for_each = toset([
+    "website",
+    "worker",
+  ])
+  service_account_id = google_service_account.digital_membership[each.value].name
+
+  keepers = {
+    rotation_time = time_rotating.mykey_rotation.rotation_rfc3339
+  }
 }
 
 resource "google_cloud_run_service_iam_policy" "digital_membership" {
@@ -60,6 +76,13 @@ data "google_iam_policy" "digital_membership_secret_access" {
       "serviceAccount:${google_service_account.digital_membership["worker"].email}",
     ]
   }
+}
+
+resource "google_secret_manager_secret_iam_policy" "service_account_keys" {
+  for_each    = google_secret_manager_secret.service_accounts
+  project     = each.value.project
+  secret_id   = each.value.id
+  policy_data = data.google_iam_policy.apple_private_key_secret_access.policy_data
 }
 
 resource "google_secret_manager_secret_iam_policy" "apple_private_key" {

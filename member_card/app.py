@@ -1,10 +1,17 @@
 #!/usr/bin/env python
-import json
 import os
 from datetime import datetime
 
 import click
-from flask import Flask, g, redirect, render_template, request, send_file, url_for
+from flask import (
+    Flask,
+    g,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    url_for,
+)
 from flask_cdn import CDN
 from flask_login import current_user as current_login_user
 from flask_login import login_required, logout_user
@@ -97,9 +104,10 @@ def home():
         return redirect("/login")
 
     if current_user.has_active_memberships:
-        from member_card.passes import get_or_create_membership_card
+        from member_card.models.membership_card import get_or_create_membership_card
 
         membership_card = get_or_create_membership_card(current_user)
+        # response_body = render_template(
         return render_template(
             "member_card_and_history.html.j2",
             membership_card=membership_card,
@@ -213,8 +221,7 @@ def verify_pass(serial_number):
     signature_verified = utils.verify(signature=signature, data=serial_number)
     if not signature_verified:
         return "Unable to verify signature!", 401
-    # current_user = g.user
-    # if current_user.is_authenticated:
+
     verified_card = (
         db.session.query(MembershipCard).filter_by(serial_number=serial_number).one()
     )
@@ -258,61 +265,6 @@ def about():
     return render_template(
         "about.html.j2",
     )
-
-
-@app.route("/pubsub", methods=["POST"])
-def pubsub_ingress():
-    import base64
-
-    envelope = request.get_json()
-    if not envelope:
-        msg = "no Pub/Sub message received"
-        print(f"error: {msg}")
-        return f"Bad Request: {msg}", 400
-
-    if not isinstance(envelope, dict) or "message" not in envelope:
-        msg = "invalid Pub/Sub message format"
-        print(f"error: {msg}")
-        return f"Bad Request: {msg}", 400
-
-    pubsub_message = envelope["message"]
-
-    print(f"{isinstance(pubsub_message, dict)=}")
-    print(f"{pubsub_message=}")
-    message = json.loads(
-        base64.b64decode(pubsub_message["data"]).decode("utf-8").strip()
-    )
-    if message.get("type") == "email_distribution_request":
-
-        from member_card.sendgrid import generate_and_send_email
-
-        email_distribution_recipient = message["email_distribution_recipient"]
-        log_extra = dict(email_distribution_recipient=email_distribution_recipient)
-        logger.debug("looking up user...", extra=log_extra)
-        try:
-            # BONUS TODO: make this case-insensitive
-            user = User.query.filter_by(email=email_distribution_recipient).one()
-            log_extra.update(dict(user=user))
-        except Exception as err:
-            log_extra.update(dict(user_query_err=err))
-            logger.warning(
-                f"no matching user found for {email_distribution_recipient=}",
-                extra=log_extra,
-            )
-            user = None
-
-        if user and user.has_active_memberships:
-            logger.info(
-                f"Found {user=} for {email_distribution_recipient=}. Generating and sending email now",
-                extra=log_extra,
-            )
-            generate_and_send_email(
-                user=user,
-                submitting_ip_address=message.get("remote_addr"),
-                submitted_on=message.get("submitted_on"),
-            )
-
-    return ("", 204)
 
 
 @app.cli.command("ensure-db-schemas")
@@ -399,7 +351,7 @@ def send_test_email(email):
 @click.argument("email")
 def generate_card_image(email):
     from member_card.image import generate_card_image
-    from member_card.passes import get_or_create_membership_card
+    from member_card.models.membership_card import get_or_create_membership_card
 
     user = User.query.filter_by(email=email).one()
     membership_card = get_or_create_membership_card(
@@ -457,3 +409,55 @@ def upload_statics():
         bucket_id=app.config["GCS_BUCKET_ID"],
         prefix="static",
     )
+
+
+@app.cli.command("insert-google-pass-class")
+def insert_google_pass_class():
+    from member_card import gpay
+
+    class_id = app.config["GOOGLE_PAY_PASS_CLASS_ID"]
+    pass_class_payload = gpay.GooglePayPassClass(class_id).to_dict()
+
+    insert_class_response = gpay.new_client().insert_class(
+        class_id=class_id,
+        payload=pass_class_payload,
+    )
+    logger.debug(f"Class ID: {class_id} insert response: {insert_class_response=}")
+
+
+@app.cli.command("update-google-pass-class")
+def update_google_pass_class():
+    from member_card import gpay
+
+    class_id = app.config["GOOGLE_PAY_PASS_CLASS_ID"]
+    pass_class_payload = gpay.GooglePayPassClass(class_id).to_dict()
+
+    update_class_response = gpay.new_client().patch_class(
+        class_id=class_id,
+        payload=pass_class_payload,
+    )
+    logger.debug(f"Class ID: {class_id} update response: {update_class_response=}")
+
+
+@app.cli.command("demo-google-pay-pass")
+@click.argument("email")
+def demo_google_pay_pass(email):
+    from member_card import gpay
+    from member_card.models.membership_card import get_or_create_membership_card
+
+    SAVE_LINK = "https://pay.google.com/gp/v/save/"
+
+    user = User.query.filter_by(email=email).one()
+    membership_card = get_or_create_membership_card(
+        user=user,
+    )
+
+    pass_jwt = gpay.generate_pass_jwt(
+        membership_card=membership_card,
+    )
+
+    print(f"This is an 'object' jwt:\n{pass_jwt.decode('UTF-8')}\n")
+    print(
+        "you can decode it with a tool to see the unsigned JWT representation:\nhttps://jwt.io\n"
+    )
+    print(f"Try this save link in your browser:\n{SAVE_LINK}{pass_jwt.decode('UTF-8')}")

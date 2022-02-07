@@ -1,10 +1,12 @@
 import contextlib
 import hashlib
 import hmac
+import json
 import logging
 import os
 import uuid
 from base64 import urlsafe_b64encode as b64e
+from typing import Any, Dict
 
 import flask
 from flask_assets import Bundle, Environment
@@ -224,3 +226,13 @@ def get_jinja_template(template_path):
         autoescape=select_autoescape(),
     )
     return env.get_template(template_path)
+
+
+def dict_hash(dictionary: Dict[str, Any]) -> str:
+    """MD5 hash of a dictionary."""
+    dhash = hashlib.md5()
+    # We need to sort arguments so {'a': 1, 'b': 2} is
+    # the same as {'b': 2, 'a': 1}
+    encoded = json.dumps(dictionary, sort_keys=True).encode()
+    dhash.update(encoded)
+    return dhash.hexdigest()

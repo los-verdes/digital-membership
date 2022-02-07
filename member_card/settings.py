@@ -20,10 +20,41 @@ class Settings(object):
     APPLE_DEVELOPER_TEAM_ID: str = "KJHZP635V9"
 
     APPLE_DEVELOPER_CERTIFICATE: str = os.environ.get("APPLE_DEVELOPER_CERTIFICATE", "")
+    APPLE_KEY_FILEPATH: str = os.environ.get(
+        "APPLE_KEY_FILEPATH", "/apple-secrets/private.key"
+    )
     APPLE_DEVELOPER_PRIVATE_KEY: str = os.environ.get("APPLE_DEVELOPER_PRIVATE_KEY", "")
+
     APPLE_PASS_PRIVATE_KEY_PASSWORD: str = os.environ.get(
         "APPLE_PASS_PRIVATE_KEY_PASSWORD", ""
     )
+
+    GOOGLE_PAY_ISSUER_NAME: str = os.environ.get("GOOGLE_PAY_ISSUER_NAME", "Los Verdes")
+    GOOGLE_PAY_ISSUER_ID: str = os.environ.get(
+        "GOOGLE_PAY_ISSUER_ID", "3388000000022031577"
+    )
+    GOOGLE_PAY_PASS_CLASS_ID: str = os.environ.get(
+        "GOOGLE_PAY_PASS_CLASS_ID", f"{GOOGLE_PAY_ISSUER_ID}.membership-card-2021-v0"
+    )
+    GOOGLE_PAY_PROGRAM_NAME: str = os.environ.get(
+        "GOOGLE_PAY_PROGRAM_NAME", "Membership Card"
+    )
+    GOOGLE_PAY_SERVICE_ACCOUNT_EMAIL_ADDRESS: str = os.getenv(
+        "GOOGLE_PAY_SERVICE_ACCOUNT_EMAIL_ADDRESS", ""
+    )
+    GOOGLE_PAY_SERVICE_ACCOUNT_FILE: str = os.getenv(
+        "GOOGLE_PAY_SERVICE_ACCOUNT_FILE", "/secrets/service-account-key.json"
+    )
+    GOOGLE_PAY_ORIGINS = [
+        "https://card.losverd.es",
+        "https://localcard.losverd.es:5000",
+        # "https://pay.google.com",
+    ]
+
+    # Constants that are application agnostic. Used for JWT
+    GOOGLE_PAY_AUDIENCE = "google"
+    GOOGLE_PAY_JWT_TYPE = "savetoandroidpay"
+    GOOGLE_PAY_SCOPES = ["https://www.googleapis.com/auth/wallet_object.issuer"]
 
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 

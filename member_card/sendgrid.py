@@ -4,10 +4,8 @@ from datetime import datetime
 
 import flask
 from member_card.image import generate_and_upload_card_image
-from member_card.passes import (
-    get_or_create_membership_card,
-    generate_and_upload_apple_pass,
-)
+from member_card.passes import generate_and_upload_apple_pass
+from member_card.models.membership_card import get_or_create_membership_card
 from member_card.storage import get_client as get_gcs_client
 from sendgrid import Asm, SendGridAPIClient
 from sendgrid.helpers.mail import Mail
@@ -66,6 +64,7 @@ def generate_and_send_email(
         "applePassUrl": apple_pass_url,
         "submitted_on": submitted_on,
         "submitting_ip_address": submitting_ip_address,  # TODO: propagate this information over here somehow...
+        "googlePassUrl": membership_card.google_pass_save_url,
     }
 
     logger.info(
