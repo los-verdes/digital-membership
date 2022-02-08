@@ -18,10 +18,6 @@ locals {
 #   value = google_sql_database_instance.digital_membership
 # }
 
-output "db_task_runner_service_account_email" {
-  value = google_service_account.digital_membership["db-task-runner"].email
-}
-
 output "gh_terraform_applier_service_account_email" {
   value = google_service_account.gh_terraform_applier.email
 }

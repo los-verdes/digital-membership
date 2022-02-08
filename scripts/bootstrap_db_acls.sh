@@ -29,7 +29,7 @@ export PGDATABASE
 # export DATABASE="lv-digital-membership"
 
 RO_USERS=""
-RW_USERS="tf-management db-task-runner@lv-digital-membership.iam website@lv-digital-membership.iam worker@lv-digital-membership.iam jeff.hogan1@gmail.com"
+RW_USERS="tf-management website@lv-digital-membership.iam worker@lv-digital-membership.iam jeff.hogan1@gmail.com"
 
 TABLE_NAMES="$(\
   echo "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname != 'pg_catalog' AND schemaname != 'information_schema'" \

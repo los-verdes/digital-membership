@@ -50,9 +50,8 @@ resource "google_sql_user" "mangement" {
 
 resource "google_sql_user" "service_accounts" {
   for_each = {
-    website        = google_service_account.digital_membership["website"].email,
-    db-task-runner = google_service_account.digital_membership["db-task-runner"].email,
-    worker         = google_service_account.digital_membership["worker"].email,
+    website = google_service_account.digital_membership["website"].email,
+    worker  = google_service_account.digital_membership["worker"].email,
   }
   name     = replace(each.value, ".gserviceaccount.com", "")
   instance = google_sql_database_instance.digital_membership.name

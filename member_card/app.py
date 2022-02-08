@@ -210,6 +210,8 @@ def passes_apple_pay():
 
 @login_required
 @app.route("/verify-pass/<serial_number>")
+# Note: get_or_create_membership_card() has this route hard-coded in it
+# TODO: ^ make that not the case
 def verify_pass(serial_number):
     from member_card.db import db
     from member_card.models import AnnualMembership, MembershipCard
@@ -277,9 +279,8 @@ def ensure_db_schemas(drop_first):
 
 
 @app.cli.command("sync-subscriptions")
-@click.option("-m", "--membership-sku", default="SQ3671268")
 @click.option("-l", "--load-all", default=False)
-def sync_subscriptions(membership_sku, load_all):
+def sync_subscriptions(load_all):
     from member_card.db import db
 
     membership_skus = app.config["SQUARESPACE_MEMBERSHIP_SKUS"]

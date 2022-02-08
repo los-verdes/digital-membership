@@ -10,7 +10,7 @@ from member_card.apple_wallet import with_apple_developer_key
 from member_card.db import db
 from member_card.models.membership_card import get_or_create_membership_card
 from member_card.storage import upload_file_to_gcs
-from member_card.utils import dict_hash, sign
+from member_card.utils import sign
 
 logger = logging.getLogger(__name__)
 
@@ -204,6 +204,9 @@ class GooglePayPassObject(object):
     def __init__(self, class_id, membership_card):
         self.class_id = class_id
         self.serial_number = str(membership_card.serial_number)
+        issuer_id = current_app.config["GOOGLE_PAY_ISSUER_ID"]
+        self.object_id = f"{issuer_id}.{self.serial_number}"
+        logger.debug(f"generated OBJECT id: {self.object_id=}")
 
         self.account_name = membership_card.user.fullname
         self.account_id = membership_card.user.email
@@ -229,7 +232,7 @@ class GooglePayPassObject(object):
 
         payload = {
             # required fields
-            # "id": self.object_id,
+            "id": self.object_id,
             "classId": self.class_id,
             "state": "active",  # optional
             "accountName": self.account_name,
@@ -260,13 +263,6 @@ class GooglePayPassObject(object):
                 },
             ],
         }
-        payload_hash = dict_hash(payload)
-        issuer_id = current_app.config["GOOGLE_PAY_ISSUER_ID"]
-
-        payload["id"] = f"{issuer_id}.TEST_{payload_hash}"
-        logger.debug(
-            f"generated id: {issuer_id=}.TEST_{payload_hash=} => {payload['id']}"
-        )
 
         return payload
 

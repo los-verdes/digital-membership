@@ -14,8 +14,6 @@ resource "google_project_iam_member" "project_editors" {
 
 locals {
   service_account_ids = {
-    # TODO: migrate this db-task-runner SA usage to a scheme where we publish a "sync-subscriptions" pubsub message rather than execute it here
-    "db-task-runner"        = "Database task runner"
     "website"               = "Digital membership frontend website"
     "worker-pubsub-invoker" = "Digital membership pubsub to worker invoker"
     "worker"                = "Digital membership background worker"
@@ -72,7 +70,6 @@ data "google_iam_policy" "digital_membership_secret_access" {
     role = "roles/secretmanager.secretAccessor"
     members = [
       "serviceAccount:${google_service_account.digital_membership["website"].email}",
-      "serviceAccount:${google_service_account.digital_membership["db-task-runner"].email}",
       "serviceAccount:${google_service_account.digital_membership["worker"].email}",
     ]
   }
@@ -132,7 +129,6 @@ resource "google_project_iam_binding" "digital_membership_cloudsql_clients" {
   members = [
     "serviceAccount:${google_service_account.digital_membership["website"].email}",
     "serviceAccount:${google_service_account.digital_membership["worker"].email}",
-    "serviceAccount:${google_service_account.digital_membership["db-task-runner"].email}",
 
   ]
 }
@@ -143,7 +139,6 @@ resource "google_project_iam_binding" "digital_membership_debugger_agents" {
   members = [
     "serviceAccount:${google_service_account.digital_membership["website"].email}",
     "serviceAccount:${google_service_account.digital_membership["worker"].email}",
-    "serviceAccount:${google_service_account.digital_membership["db-task-runner"].email}",
 
   ]
 }
@@ -154,19 +149,12 @@ resource "google_project_iam_binding" "digital_membership_trace_agents" {
   members = [
     "serviceAccount:${google_service_account.digital_membership["website"].email}",
     "serviceAccount:${google_service_account.digital_membership["worker"].email}",
-    "serviceAccount:${google_service_account.digital_membership["db-task-runner"].email}",
   ]
 }
 # resource "google_project_iam_member" "digital_membership_log_writer" {
 #   project = google_project.digital_membership.id
 #   role    = "roles/logging.logWriter"
 #   member  = "serviceAccount:${google_service_account.digital_membership["website"].email}"
-# }
-
-# resource "google_project_iam_member" "db_task_runner_log_writer" {
-#   project = google_project.digital_membership.id
-#   role    = "roles/logging.logWriter"
-#   member  = "serviceAccount:${google_service_account.digital_membership["db-task-runner"].email}"
 # }
 
 # resource "google_project_iam_member" "digital_membership_debugger_agent" {

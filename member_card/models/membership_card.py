@@ -45,7 +45,10 @@ def get_or_create_membership_card(user):
         logger.debug("generating QR code for message")
         serial_number = str(membership_card.serial_number)
         qr_code_signature = sign(serial_number)
-        qr_code_message = f"Content: {base_url}{flask.url_for('verify_pass', serial_number=serial_number)}?signature={qr_code_signature}"
+        verify_pass_url = (
+            f"{base_url}/verify-pass/{serial_number}?signature={qr_code_signature}"
+        )
+        qr_code_message = f"Content: {verify_pass_url}"
         logger.debug(f"{qr_code_message=}")
         setattr(membership_card, "qr_code_message", qr_code_message)
         db.session.add(membership_card)

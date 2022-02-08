@@ -167,7 +167,7 @@ class GooglePayApiClient(object):
         # see https://google-auth.readthedocs.io/en/latest/user-guide.html#making-authenticated-requests
 
         # make the GET request to make an get(); this returns a response object
-        # other methods require different http methods; for example, get() requires authed_Session.get(...)
+        # other methods require different http methods; for example, get() requires _session.get(...)
         # check the reference API to make the right REST call
         # https://developers.google.com/pay/passes/reference/v1/
         # https://google-auth.readthedocs.io/en/latest/user-guide.html#making-authenticated-requests
