@@ -277,9 +277,8 @@ def ensure_db_schemas(drop_first):
 
 
 @app.cli.command("sync-subscriptions")
-@click.option("-m", "--membership-sku", default="SQ3671268")
 @click.option("-l", "--load-all", default=False)
-def sync_subscriptions(membership_sku, load_all):
+def sync_subscriptions(load_all):
     from member_card.db import db
 
     membership_skus = app.config["SQUARESPACE_MEMBERSHIP_SKUS"]
