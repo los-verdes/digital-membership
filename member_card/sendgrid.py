@@ -67,11 +67,10 @@ def generate_and_send_email(
         "googlePassUrl": membership_card.google_pass_save_url,
     }
 
+    to_email = user.email
     logger.info(
-        f"sending '{subject}' email to: {user.email}",
-        extra=dict(
-            subject=subject, to_email=user.email, template_id=message.template_id
-        ),
+        f"sending '{subject}' email to: {to_email}",
+        extra=dict(subject=subject, to_email=to_email, template_id=message.template_id),
     )
     send_card_email(message)
 
