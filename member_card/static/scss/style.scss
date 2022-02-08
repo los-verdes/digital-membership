@@ -310,7 +310,7 @@ div.membership-card > .membership-card-inner {
 }
 
 details {
-  padding-bottom: 5px;
+  padding-bottom: 15px;
 }
 
 details summary {
@@ -348,4 +348,23 @@ details > div {
   min-height: 32px;
   max-height: 64px;
   padding: 8px;
+}
+
+.lil-card-image.mdl-card {
+  width: 256px;
+  height: 256px;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  // background: url('../assets/lils/image_card.jpg') center / cover;
+}
+.lil-card-image > .mdl-card__actions {
+  height: 52px;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.2);
+}
+.lil-card-image__caption {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
 }
