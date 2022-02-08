@@ -56,6 +56,9 @@ resource "google_project_service" "digital_membership" {
 
     # Email distribution requests / background worker tasks generally
     "pubsub.googleapis.com",
+
+    # For scheduled ETL tasks and such
+    "cloudscheduler.googleapis.com",
   ])
 
   service                    = each.value
