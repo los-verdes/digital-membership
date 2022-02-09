@@ -51,19 +51,14 @@ def create_app():
     login_manager.init_app(app)
 
     from member_card.db import db
+    from social_flask_sqlalchemy.models import init_social
 
     db.init_app(app)
+    init_social(app, db.session)
 
     from social_flask.routes import social_auth
 
     app.register_blueprint(social_auth)
-
-    from social_flask_sqlalchemy.models import init_social
-
-    init_social(app, db.session)
-
-    with app.app_context():
-        db.create_all()
 
     from member_card.routes import passkit
 
