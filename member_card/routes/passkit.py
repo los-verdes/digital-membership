@@ -340,6 +340,10 @@ PASSKIT_LOG_REGEXPS = [
     re.compile(
         r"\[(?P<datetime_str>[0-9]{4}-[0-9]{2}-[0-9]{2}.*)\] (?P<task_name>[^(]+) \(pass type (?P<pass_type>[^,]+), serial number (?P<serial_num>[0-9]+), if-modified-since (?P<if_modified_since>[^;]+); with web service url (?P<service_url>[^)]+)\) encountered error: (?P<error_msg>.*)"  # noqa
     ),
+    # TODO: nother one to add here:
+    # [2022-02-10 14:35:57 -0600] Get serial #s task (for device 67cdbaff6b4fddc7df72e25e63d033f6, pass type
+    # pass.es.losverd.card, last updated (null); with web service url https://card.losverd.es/passkit) encountered
+    # error: Unexpected response code 500
 ]
 
 
