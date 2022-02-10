@@ -194,8 +194,13 @@ def get_serial_numbers_for_device_passes(
         logger.debug(
             f"after filtering registration with {passes_updated_since=}: {r=} ({p=}) "
         )
-
-    if r:
+    registration = r.first()
+    log_extra.update(dict(registration=registration))
+    if registration:
+        logger.debug(
+            f"found registration {registration=} ({p=}) for {device_library_identifier=} ({pass_type_identifier=})",
+            extra=log_extra,
+        )
         # XXX: Is this the correct return value for serial number?
         response = jsonify(
             {
@@ -205,14 +210,14 @@ def get_serial_numbers_for_device_passes(
         )
         last_last_updated = datetime.utcnow().replace(tzinfo=timezone.utc)
         logger.debug(
-            f"Updating existing device registration for {device_library_identifier} from {r.last_updated=} => {last_last_updated=}",
+            f"Updating existing device registration for {device_library_identifier} from {registration.last_updated=} => {last_last_updated=}",
             extra=log_extra,
         )
-        r.last_updated = last_last_updated
-        db.session.add(r)
+        registration.last_updated = last_last_updated
+        db.session.add(registration)
         db.session.commit()
         logger.info(
-            f"{r=} ({p=}) being returned for {device_library_identifier=} ({pass_type_identifier=}): {response=}",
+            f"{registration=} ({p=}) being returned for {device_library_identifier=} ({pass_type_identifier=}): {response=}",
             extra=log_extra,
         )
         return response

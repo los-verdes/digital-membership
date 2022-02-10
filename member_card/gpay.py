@@ -300,6 +300,8 @@ def generate_pass_jwt(membership_card):
         object_id=object_id,
         account_name=pass_object.account_name,
         account_id=pass_object.account_id,
+        serial_number=str(membership_card.serial_number),
+        user_email=membership_card.user.email,
     )
     logger.debug(f"pass_object_payload => {object_id=}", extra=log_extra)
     # TODO: if this insert returns a 409, do we need to do a patch/update request in response?
