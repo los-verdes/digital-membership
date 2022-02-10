@@ -95,12 +95,13 @@ def passkit_register_device_for_pass_push_notifications(
         device_library_identifier=device_library_identifier,
         membership_card_pass=str(membership_card_pass),
         serial_number=str(membership_card_pass.serial_number),
+        request_json=request.json,
     )
     logger.info(
         f"registering passkit {device_library_identifier=} for {membership_card_pass=}",
         extra=log_extra,
     )
-    push_token = request.form["pushToken"]
+    push_token = request.json["pushToken"]
     # Next, see if we _already_ have a registration for this device
     logger.debug(
         f"Grabbed {push_token=}, looking up any existing registrations...",

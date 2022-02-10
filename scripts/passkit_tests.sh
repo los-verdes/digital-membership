@@ -13,7 +13,8 @@ echo "TEST_CARD_JSON: $TEST_CARD_JSON"
 
 curl -v \
   -H "Authorization: ApplePass $AUTH_TOKEN" \
-  -d 'pushToken=jhog-test' \
+  -H 'Content-Type: application/json' \
+  -d '{"pushToken": "jhog-test"}' \
   "https://localcard.losverd.es:5000/passkit/v1/devices/jhog-test/registrations/pass.es.losverd.card/$SERIAL_NUM"
 
 echo -e '\n\n'; read -pr "Press any key to resume ..."
