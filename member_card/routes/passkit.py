@@ -93,6 +93,7 @@ def passkit_register_device_for_pass_push_notifications(
     log_extra = dict(
         device_library_identifier=device_library_identifier,
         membership_card_pass=str(membership_card_pass),
+        serial_number=str(membership_card_pass.serial_number),
     )
     push_token = request.form["pushToken"]
     # Next, see if we _already_ have a registration for this device
@@ -162,6 +163,7 @@ def get_serial_numbers_for_device_passes(
     log_extra = dict(
         device_library_identifier=device_library_identifier,
         pass_type_identifier=pass_type_identifier,
+        serial_number=str(membership_card_pass.serial_number),
     )
     logger.debug(
         f"getting serial numbers for {device_library_identifier=} ({pass_type_identifier=})",
@@ -231,6 +233,7 @@ def passkit_get_latest_version_of_pass(membership_card_pass, device_library_iden
     log_extra = dict(
         device_library_identifier=device_library_identifier,
         membership_card_pass=str(membership_card_pass),
+        serial_number=str(membership_card_pass.serial_number),
     )
     if modified_since_header := request.headers.get("If-Modified-Since"):
         logger.debug(f"parsing modified since header: {modified_since_header}")
@@ -290,6 +293,7 @@ def passkit_unregister_a_device(membership_card_pass, device_library_identifier)
     log_extra = dict(
         device_library_identifier=device_library_identifier,
         membership_card_pass=str(membership_card_pass),
+        serial_number=str(membership_card_pass.serial_number),
     )
     registrations = membership_card_pass.apple_device_registrations.filter_by(
         device_library_identifier=device_library_identifier
@@ -318,6 +322,13 @@ def passkit_unregister_a_device(membership_card_pass, device_library_identifier)
 
 @app.route("/passkit/v1/log", methods=["POST"])
 def passkit_error_log():
+    # TODO: parse these out so we can filter better using log `extra`:
+    # 1. "passkit_log() => request.get_json()={'logs': ['[2022-02-10 12:49:07 -0600]
+    #   Register task (for device 67cdbaff6b4fddc7df72e25e63d033f6, pass type pass.es.losverd.card, serial number 309215912519139528122129481752503817974;
+    #   with web service url https://card.losverd.es/passkit) encountered error: Authentication failure']}"
+    # 2. {'logs': ['[2022-02-10 12:44:07 -0600] Get pass task (pass type pass.es.losverd.card, serial number 44396170818453607218698234240486608995,
+    #   if-modified-since (null); with web service url https://card.losverd.es/passkit) encountered error: Authentication failure']}"
+    # 3. [2022-02-10 12:34:16 -0600] Unregister task (for device 7c0cd34b7bcac27893ab2e576a0dbd2c, pass type pass.es.losverd.card, serial number 122890994920237774731868014825964879062; with web service url https://card.losverd.es/passkit) encountered error: Authentication failure
     logger.warning(
         f"passkit_log() => {request.get_json()=}",
         extra=dict(passkit_log_entry=request.get_json()),
