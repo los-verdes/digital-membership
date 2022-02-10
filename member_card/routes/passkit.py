@@ -1,4 +1,5 @@
 import logging
+import re
 from datetime import datetime, timezone
 from functools import wraps
 from uuid import UUID
@@ -163,7 +164,6 @@ def get_serial_numbers_for_device_passes(
     log_extra = dict(
         device_library_identifier=device_library_identifier,
         pass_type_identifier=pass_type_identifier,
-        serial_number=str(membership_card_pass.serial_number),
     )
     logger.debug(
         f"getting serial numbers for {device_library_identifier=} ({pass_type_identifier=})",
@@ -172,6 +172,7 @@ def get_serial_numbers_for_device_passes(
     p = MembershipCard.query.filter_by(
         apple_pass_type_identifier=pass_type_identifier
     ).first_or_404()
+    log_extra.update(dict(serial_number=str(p.serial_number)))
     logger.debug(
         f"found {p=} for {device_library_identifier=} ({pass_type_identifier=})",
         extra=log_extra,
@@ -320,6 +321,16 @@ def passkit_unregister_a_device(membership_card_pass, device_library_identifier)
     return ("OK", 200)
 
 
+PASSKIT_LOG_REGEXPS = [
+    re.compile(
+        r"\[(?P<datetime_str>[0-9]{4}-[0-9]{2}-[0-9]{2}.*)\] (?P<task_name>[^(]+) \(for device (?P<device_id>[^,]+), pass type (?P<pass_type>[^,]+), serial number (?P<serial_num>[0-9]+); with web service url (?P<service_url>[^)]+)\) encountered error: (?P<error_msg>.*)"
+    ),
+    re.compile(
+        r"\[(?P<datetime_str>[0-9]{4}-[0-9]{2}-[0-9]{2}.*)\] (?P<task_name>[^(]+) \(pass type (?P<pass_type>[^,]+), serial number (?P<serial_num>[0-9]+), if-modified-since (?P<if_modified_since>[^;]+); with web service url (?P<service_url>[^)]+)\) encountered error: (?P<error_msg>.*)"
+    ),
+]
+
+
 @app.route("/passkit/v1/log", methods=["POST"])
 def passkit_error_log():
     # TODO: parse these out so we can filter better using log `extra`:
@@ -329,8 +340,20 @@ def passkit_error_log():
     # 2. {'logs': ['[2022-02-10 12:44:07 -0600] Get pass task (pass type pass.es.losverd.card, serial number 44396170818453607218698234240486608995,
     #   if-modified-since (null); with web service url https://card.losverd.es/passkit) encountered error: Authentication failure']}"
     # 3. [2022-02-10 12:34:16 -0600] Unregister task (for device 7c0cd34b7bcac27893ab2e576a0dbd2c, pass type pass.es.losverd.card, serial number 122890994920237774731868014825964879062; with web service url https://card.losverd.es/passkit) encountered error: Authentication failure
+    parsed_log_entries = []
+    raw_log_entries = request.get_json().get("logs", [])
+    for raw_log_entry in raw_log_entries:
+        for regexp in PASSKIT_LOG_REGEXPS:
+            if matches := regexp.match(raw_log_entry):
+                parsed_log_entries.append(matches.groupdict())
+                break
+        else:
+            parsed_log_entries.append(raw_log_entry)
+
     logger.warning(
         f"passkit_log() => {request.get_json()=}",
-        extra=dict(passkit_log_entry=request.get_json()),
+        extra=dict(
+            parsed_log_entries=parsed_log_entries, raw_log_entries=raw_log_entries
+        ),
     )
     return "thanks!"
