@@ -38,7 +38,9 @@ def applepass_auth_token_required(f):
         ).first_or_404()
 
         # Then return a 401 unless the signed auth token from the request Auth header matches the indicated card:
-        token_verified = incoming_token == p.authentication_token_hex
+        token_verified = verify(
+            signature=incoming_token, data=p.authentication_token_hex
+        )
         if not token_verified:
             return "unable to verify auth token", 401
 
