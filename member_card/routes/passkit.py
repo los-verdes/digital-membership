@@ -21,10 +21,7 @@ def applepass_auth_token_required(f):
             "ApplePass",
         ]
         logger.debug(
-            f"{f.__name__} => {list(request.headers.keys())=} ==> {request.headers.get('Authorization', 'EMPTY!')[-4:]=}"
-        )
-        logger.debug(
-            f"{f.__name__} ==> {request.headers.get('If-Modified-Since', 'EMPTY!')=}"
+            f"{f.__name__} => entering applepass_auth_token_required() decorator..."
         )
 
         pass_type_identifier = kwargs["pass_type_identifier"]
@@ -54,7 +51,7 @@ def applepass_auth_token_required(f):
             apple_pass_type_identifier=pass_type_identifier, serial_number=serial_number
         ).first_or_404()
 
-        log_extra.update(dict(card=p))
+        log_extra.update(dict(card=p, user_email=p.user.email))
 
         # Then return a 401 unless the signed auth token from the request Auth header matches the indicated card:
         logger.debug(f"Verifying token for {p=}", extra=log_extra)
@@ -96,6 +93,7 @@ def passkit_register_device_for_pass_push_notifications(
         membership_card_pass=str(membership_card_pass),
         serial_number=str(membership_card_pass.serial_number),
         request_json=request.json,
+        user_email=membership_card_pass.user.email,
     )
     logger.info(
         f"registering passkit {device_library_identifier=} for {membership_card_pass=}",
@@ -177,7 +175,7 @@ def get_serial_numbers_for_device_passes(
     p = MembershipCard.query.filter_by(
         apple_pass_type_identifier=pass_type_identifier
     ).first_or_404()
-    log_extra.update(dict(serial_number=str(p.serial_number)))
+    log_extra.update(dict(serial_number=str(p.serial_number), user_email=p.user.email))
     logger.debug(
         f"found {p=} for {device_library_identifier=} ({pass_type_identifier=})",
         extra=log_extra,
@@ -240,9 +238,12 @@ def passkit_get_latest_version_of_pass(membership_card_pass, device_library_iden
         device_library_identifier=device_library_identifier,
         membership_card_pass=str(membership_card_pass),
         serial_number=str(membership_card_pass.serial_number),
+        user_email=membership_card_pass.user.email,
     )
     if modified_since_header := request.headers.get("If-Modified-Since"):
-        logger.debug(f"parsing modified since header: {modified_since_header}")
+        logger.debug(
+            f"parsing modified since header: {modified_since_header}", extra=log_extra
+        )
         if_modified_since = parse(modified_since_header).replace(tzinfo=timezone.utc)
         logger.debug(
             f"filtering {membership_card_pass=} ({membership_card_pass.time_updated=}) with {if_modified_since=}",
@@ -300,6 +301,7 @@ def passkit_unregister_a_device(membership_card_pass, device_library_identifier)
         device_library_identifier=device_library_identifier,
         membership_card_pass=str(membership_card_pass),
         serial_number=str(membership_card_pass.serial_number),
+        user_email=membership_card_pass.user.email,
     )
     registrations = membership_card_pass.apple_device_registrations.filter_by(
         device_library_identifier=device_library_identifier
