@@ -173,7 +173,7 @@ lint:
     github/super-linter
 
 sql-proxy:
-  ~/bin/cloud_sql_proxy \
+  ~/.local/bin/cloud_sql_proxy \
     -instances="$DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME=tcp:5432" \
     -enable_iam_login \
     ;

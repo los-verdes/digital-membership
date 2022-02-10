@@ -109,8 +109,17 @@ class GooglePayApiClient(object):
         if method != "post":
             path = f"{vertical_type}{resource_type.title()}/{resource_id}"
         url = f"{self.uri}/{path}"
+        log_extra = dict(
+            method=method,
+            url=url,
+            resource_type=resource_type,
+            resource_id=resource_id,
+        )
+        if json_payload is not None:
+            log_extra.update(dict(json_payload=json_payload))
         logger.debug(
-            f"Sending {method.upper()} request to {url=} (headers: {self.request_headers}, {json_payload=})"
+            f"Sending {method.upper()} request to {url=} (headers: {self.request_headers}, {json_payload=})",
+            extra=log_extra,
         )
         request_kwargs = dict(
             url=url,
@@ -135,7 +144,10 @@ class GooglePayApiClient(object):
     ###############################
     def get_pass_class(self, class_id, vertical_type="loyalty"):
         # see if Ids exist in Google backend
-        logger.debug(f"Making REST call to get {class_id=}")
+        logger.debug(
+            f"Making REST call to get {class_id=}",
+            extra=dict(class_id=class_id, vertical_type=vertical_type),
+        )
 
         return self.request(
             method="get",
@@ -155,7 +167,10 @@ class GooglePayApiClient(object):
     #
     ###############################
     def get_pass_object(self, object_id, vertical_type="loyalty"):
-        logger.debug(f"Making REST call to get {object_id=}")
+        logger.debug(
+            f"Making REST call to get {object_id=}",
+            extra=dict(object_id=object_id, vertical_type=vertical_type),
+        )
 
         # if it is a new object Id, expected status is 409
         # check object get response. Will print out if object exists or not.
@@ -191,7 +206,10 @@ class GooglePayApiClient(object):
     #
     ###############################
     def insert_class(self, class_id, payload, vertical_type="loyalty"):
-        logger.debug(f"Making REST call to insert class {class_id=}")
+        logger.debug(
+            f"Making REST call to insert class {class_id=}",
+            extra=dict(class_id=class_id, payload=payload, vertical_type=vertical_type),
+        )
         # make authorized REST call to explicitly insert class into Google server.
         # if this is successful, you can check/update class definitions in Merchant Center GUI: https://pay.google.com/gp/m/issuer/list
 
@@ -204,7 +222,10 @@ class GooglePayApiClient(object):
         )
 
     def patch_class(self, class_id, payload, vertical_type="loyalty"):
-        logger.debug(f"Making REST call to patch class {class_id=}")
+        logger.debug(
+            f"Making REST call to patch class {class_id=}",
+            extra=dict(class_id=class_id, payload=payload, vertical_type=vertical_type),
+        )
         # make authorized REST call to explicitly insert class into Google server.
         # if this is successful, you can check/update class definitions in Merchant Center GUI: https://pay.google.com/gp/m/issuer/list
 
@@ -228,7 +249,12 @@ class GooglePayApiClient(object):
     #
     ###############################
     def insert_object(self, object_id, payload, vertical_type="loyalty"):
-        logger.debug(f"Making REST call to insert object {object_id=}")
+        logger.debug(
+            f"Making REST call to insert object {object_id=}",
+            extra=dict(
+                object_id=object_id, payload=payload, vertical_type=vertical_type
+            ),
+        )
         # make authorized REST call to explicitly insert class into Google server.
         # if this is successful, you can check/update class definitions in Merchant Center GUI: https://pay.google.com/gp/m/issuer/list
 
@@ -266,18 +292,42 @@ def generate_pass_jwt(membership_card):
     class_id = current_app.config["GOOGLE_PAY_PASS_CLASS_ID"]
 
     pass_class_payload = GooglePayPassClass(class_id).to_dict()
-
-    pass_object_payload = GooglePayPassObject(class_id, membership_card).to_dict()
+    pass_object = GooglePayPassObject(class_id, membership_card)
+    pass_object_payload = pass_object.to_dict()
     object_id = pass_object_payload["id"]
-    logger.debug(f"pass_object_payload => {object_id=}")
-
+    log_extra = dict(
+        class_id=class_id,
+        object_id=object_id,
+        account_name=pass_object.account_name,
+        account_id=pass_object.account_id,
+        serial_number=str(membership_card.serial_number),
+        user_email=membership_card.user.email,
+    )
+    logger.debug(f"pass_object_payload => {object_id=}", extra=log_extra)
+    # TODO: if this insert returns a 409, do we need to do a patch/update request in response?
     insert_object_response = gpay_client.insert_object(
         object_id=object_id,
         payload=pass_object_payload,
     )
-    logger.debug(f"{insert_object_response=}")
+    response_body = insert_object_response.text
+    if "application/json" in insert_object_response.headers.get("Content-Type"):
+        response_body = insert_object_response.json()
+    log_extra.update(
+        dict(
+            insert_object_response=insert_object_response,
+            response_body=response_body,
+        )
+    )
 
-    logger.debug("Generating 'skinny' GPay pass JWT...")
+    logger.debug(
+        f"Insert object response {insert_object_response.status_code}: {response_body}",
+        extra=log_extra,
+    )
+
+    logger.debug(
+        f"Generating 'skinny' GPay pass JWT for {pass_object.account_id}...",
+        extra=log_extra,
+    )
     # put into JSON Web Token (JWT) format for Google Pay API for Passes
     google_pass_jwt = new_google_pass_jwt()
     google_pass_jwt.add_loyalty_class(pass_class_payload)
@@ -285,6 +335,10 @@ def generate_pass_jwt(membership_card):
 
     # sign JSON to make signed JWT
     signed_jwt = google_pass_jwt.generate_signed_jwt()
+    logger.debug(
+        f"Signed JWT generated for 'skinny' GPay pass JWT for {pass_object.account_id}...",
+        extra=log_extra,
+    )
 
     # See https://developers.google.com/pay/passes/guides/get-started/implementing-the-api/save-to-google-pay#add-link-to-email
     return signed_jwt

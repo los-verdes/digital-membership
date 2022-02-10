@@ -108,6 +108,7 @@ def home():
 
         membership_card = get_or_create_membership_card(current_user)
         # response_body = render_template(
+        # TODO: update this deal to only generate gpay pass JWTs upon demand instead of every request
         return render_template(
             "member_card_and_history.html.j2",
             membership_card=membership_card,
@@ -460,3 +461,11 @@ def demo_google_pay_pass(email):
         "you can decode it with a tool to see the unsigned JWT representation:\nhttps://jwt.io\n"
     )
     print(f"Try this save link in your browser:\n{SAVE_LINK}{pass_jwt.decode('UTF-8')}")
+
+
+@app.cli.command("apple-serial-num-to-hex")
+@click.argument("serial_num")
+def apple_serial_num_to_hex(serial_num):
+    from uuid import UUID
+
+    print(UUID(int=int(serial_num)))

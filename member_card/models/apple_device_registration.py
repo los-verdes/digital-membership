@@ -30,7 +30,9 @@ class AppleDeviceRegistration(db.Model):
     device_library_identifier = db.Column(db.String(255), unique=True)
     push_token = db.Column(db.String(255))
     time_created = db.Column(db.DateTime(timezone=True), server_default=func.now())
-    time_updated = db.Column(db.DateTime(timezone=True), onupdate=func.now())
+    time_updated = db.Column(
+        db.DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
     membership_card_id = db.Column(db.Integer, db.ForeignKey("membership_cards.id"))
     membership_card = relationship(
         "MembershipCard",
