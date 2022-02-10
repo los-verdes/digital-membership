@@ -16,6 +16,9 @@ logger = logging.getLogger(__name__)
 def applepass_auth_token_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        supported_auth_header_schemes = [
+            "ApplePass",
+        ]
         logger.debug(
             f"{f.__name__} => {list(request.headers.keys())=} ==> {request.headers.get('Authorization', 'EMPTY!')[-4:]=}"
         )
@@ -30,8 +33,10 @@ def applepass_auth_token_required(f):
         # 128-bit integer for our apple passes
         serial_number = UUID(int=int(serial_number))
         auth_header = request.headers.get("Authorization")
-        incoming_token = auth_header.lstrip("ApplePass ")
-
+        auth_header_scheme, incoming_token = auth_header.split(" ", 1)
+        assert (
+            auth_header_scheme in supported_auth_header_schemes
+        ), f"{auth_header_scheme=} not in {supported_auth_header_schemes=}"
         log_extra = dict(
             pass_type_identifier=pass_type_identifier,
             serial_number=str(serial_number),
