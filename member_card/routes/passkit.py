@@ -64,7 +64,7 @@ def applepass_auth_token_required(f):
         if not token_verified:
             logger.warning(f"Unable to verify token for {p=}", extra=log_extra)
             return "unable to verify auth token", 401
-
+        logger.debug(f"Token verified for {p=}!", extra=log_extra)
         return f(
             *args,
             membership_card_pass=p,
@@ -96,12 +96,13 @@ def passkit_register_device_for_pass_push_notifications(
         membership_card_pass=str(membership_card_pass),
         serial_number=str(membership_card_pass.serial_number),
     )
-    push_token = request.form["pushToken"]
-    # Next, see if we _already_ have a registration for this device
     logger.info(
         f"registering passkit {device_library_identifier=} for {membership_card_pass=}",
         extra=log_extra,
     )
+    push_token = request.form["pushToken"]
+    # Next, see if we _already_ have a registration for this device
+    logger.debug(f"Grabbed {push_token=}, looking up any existing registrations...", extra=log_extra)
 
     registration = membership_card_pass.apple_device_registrations.filter_by(
         device_library_identifier=device_library_identifier, push_token=push_token
