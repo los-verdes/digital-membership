@@ -71,7 +71,6 @@ def sign(data: str, algorithm=hashlib.sha256) -> str:
     assert len(key) >= algorithm().digest_size, (
         "Key must be at least as long as the digest size of the " "hashing algorithm"
     )
-    logging.debug(f"sign() => {data=} {algorithm=}")
     signed_digest = hmac.new(key, data.encode(), algorithm).digest()
     b64_digest = b64e(signed_digest).decode()
     return b64_digest

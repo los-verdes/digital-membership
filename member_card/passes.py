@@ -206,7 +206,6 @@ class GooglePayPassObject(object):
         self.serial_number = str(membership_card.serial_number)
         issuer_id = current_app.config["GOOGLE_PAY_ISSUER_ID"]
         self.object_id = f"{issuer_id}.{self.serial_number}"
-        logger.debug(f"generated OBJECT id: {self.object_id=}")
 
         self.account_name = membership_card.user.fullname
         self.account_id = membership_card.user.email
@@ -224,6 +223,11 @@ class GooglePayPassObject(object):
         # self.member_name = membership_card.user.fullname
         self.member_since = membership_card.user.member_since.strftime("%b %Y")
         self.good_until = membership_card.user.membership_expiry.strftime("%b %d, %Y")
+
+        logger.debug(
+            f"GooglePayPassObject initialized! ID: {self.object_id}",
+            extra=self.__dict__,
+        )
 
     def to_dict(self):
         # below defines an loyalty object. For more properties, check:
@@ -275,7 +279,10 @@ def hex2rgb(hex, alpha=None):
     try:
         rgb = tuple(int(h[i : i + 2], 16) for i in (0, 2, 4))  # noqa
     except Exception as err:
-        logger.exception(f"unable to convert {hex=} to rgb: {err}")
+        logger.exception(
+            f"unable to convert {hex=} to rgb: {err}",
+            extra=dict(hex=hex, alpha=alpha, err=err),
+        )
         return h
     if alpha is None:
         return f"rgb({rgb[0]}, {rgb[1]}, {rgb[2]})"
@@ -308,7 +315,11 @@ def create_passfile(membership_card):
         organizationName=membership_card.apple_organization_name,
         teamIdentifier=membership_card.apple_team_identifier,
     )
-    logger.debug(f"{pass_kwargs=}")
+    log_extra = pass_kwargs
+    logger.debug(
+        f"Generating Pass() for {membership_card.apple_pass_serial_number} ({str(membership_card.serial_number)})",
+        extra=log_extra,
+    )
     passfile = Pass(**pass_kwargs)
 
     qr_code = Barcode(format=BarcodeFormat.QR, message=membership_card.qr_code_message)
@@ -326,14 +337,8 @@ def create_passfile(membership_card):
         voided=membership_card.is_voided,
         userInfo=membership_card.user.to_dict(),
     )
-    # logger.debug(f"{passfile_attrs=}")
+    log_extra.update(dict(passfile_attrs=passfile_attrs))
     for attr_name, attr_value in passfile_attrs.items():
-        if type(attr_value) == str:
-            logger.debug(
-                f"Setting passfile attribute {attr_name} to: {attr_value[:3]=}...{attr_value[-2:]=}"
-            )
-        else:
-            logger.debug(f"Setting passfile attribute {attr_name} to: {attr_value=}")
         setattr(
             passfile,
             attr_name,
@@ -344,9 +349,15 @@ def create_passfile(membership_card):
     static_dir = join(current_app.config["BASE_DIR"], "static")
     for passfile_filename, local_filename in AppleWalletPass.passfile_files.items():
         file_path = join(static_dir, local_filename)
-        logger.debug(f"adding {file_path} as pass file: {passfile_filename}")
+        logger.debug(
+            f"adding {file_path} as pass file: {passfile_filename}", extra=log_extra
+        )
         passfile.addFile(passfile_filename, open(file_path, "rb"))
 
+    logger.debug(
+        f"Pass() for {membership_card.apple_pass_serial_number} ({str(membership_card.serial_number)}) successfully created!",
+        extra=log_extra,
+    )
     return passfile
 
 
@@ -358,9 +369,19 @@ def create_pkpass(membership_card, key_filepath, key_password, pkpass_out_path=N
     serial_number = membership_card.id
     cert_filepath = get_certificate_path("certificate.pem")
     wwdr_cert_filepath = get_certificate_path("wwdr.pem")
-    logger.debug(f"{cert_filepath=}")
+    log_extra = dict(
+        apple_serial_number=membership_card.apple_pass_serial_number,
+        serial_number=membership_card.serial_number_hex,
+        pass_type_identifier=membership_card.apple_pass_type_identifier,
+        signing_cert_details=dict(
+            cert_filepath=cert_filepath,
+            key_filepath=key_filepath,
+            wwdr_cert_filepath=wwdr_cert_filepath,
+        ),
+    )
     logger.debug(
-        f"Creating passfile with {membership_card.apple_pass_type_identifier=} {serial_number=} (Signing details: {cert_filepath=} {key_filepath=} {wwdr_cert_filepath=}"
+        f"Creating passfile with {membership_card.apple_pass_type_identifier=} {serial_number=}",
+        extra=log_extra,
     )
     passfile = create_passfile(membership_card)
     pkpass_string_buffer = passfile.create(
@@ -405,6 +426,13 @@ def generate_and_upload_apple_pass(user, membership_card, bucket):
         content_type="application/vnd.apple.pkpass",
     )
     logger.info(
-        f"{local_apple_pass_path=} uploaded for {user=}: {apple_pass_url=} ({blob=})"
+        f"{local_apple_pass_path=} uploaded for {membership_card.apple_pass_serial_number} ({str(membership_card.serial_number)})",
+        extra=dict(
+            bucket=str(bucket),
+            local_apple_pass_path=local_apple_pass_path,
+            remote_apple_pass_path=remote_apple_pass_path,
+            apple_pass_url=apple_pass_url,
+            blob=str(blob),
+        ),
     )
     return apple_pass_url

@@ -102,7 +102,10 @@ def passkit_register_device_for_pass_push_notifications(
     )
     push_token = request.form["pushToken"]
     # Next, see if we _already_ have a registration for this device
-    logger.debug(f"Grabbed {push_token=}, looking up any existing registrations...", extra=log_extra)
+    logger.debug(
+        f"Grabbed {push_token=}, looking up any existing registrations...",
+        extra=log_extra,
+    )
 
     registration = membership_card_pass.apple_device_registrations.filter_by(
         device_library_identifier=device_library_identifier, push_token=push_token
