@@ -328,23 +328,16 @@ def passkit_unregister_a_device(membership_card_pass, device_library_identifier)
 
 PASSKIT_LOG_REGEXPS = [
     re.compile(
-        r"\[(?P<datetime_str>[0-9]{4}-[0-9]{2}-[0-9]{2}.*)\] (?P<task_name>[^(]+) \(for device (?P<device_id>[^,]+), pass type (?P<pass_type>[^,]+), serial number (?P<serial_num>[0-9]+); with web service url (?P<service_url>[^)]+)\) encountered error: (?P<error_msg>.*)"
+        r"\[(?P<datetime_str>[0-9]{4}-[0-9]{2}-[0-9]{2}.*)\] (?P<task_name>[^(]+) \(for device (?P<device_id>[^,]+), pass type (?P<pass_type>[^,]+), serial number (?P<serial_num>[0-9]+); with web service url (?P<service_url>[^)]+)\) encountered error: (?P<error_msg>.*)"  # noqa
     ),
     re.compile(
-        r"\[(?P<datetime_str>[0-9]{4}-[0-9]{2}-[0-9]{2}.*)\] (?P<task_name>[^(]+) \(pass type (?P<pass_type>[^,]+), serial number (?P<serial_num>[0-9]+), if-modified-since (?P<if_modified_since>[^;]+); with web service url (?P<service_url>[^)]+)\) encountered error: (?P<error_msg>.*)"
+        r"\[(?P<datetime_str>[0-9]{4}-[0-9]{2}-[0-9]{2}.*)\] (?P<task_name>[^(]+) \(pass type (?P<pass_type>[^,]+), serial number (?P<serial_num>[0-9]+), if-modified-since (?P<if_modified_since>[^;]+); with web service url (?P<service_url>[^)]+)\) encountered error: (?P<error_msg>.*)"  # noqa
     ),
 ]
 
 
 @app.route("/passkit/v1/log", methods=["POST"])
 def passkit_error_log():
-    # TODO: parse these out so we can filter better using log `extra`:
-    # 1. "passkit_log() => request.get_json()={'logs': ['[2022-02-10 12:49:07 -0600]
-    #   Register task (for device 67cdbaff6b4fddc7df72e25e63d033f6, pass type pass.es.losverd.card, serial number 309215912519139528122129481752503817974;
-    #   with web service url https://card.losverd.es/passkit) encountered error: Authentication failure']}"
-    # 2. {'logs': ['[2022-02-10 12:44:07 -0600] Get pass task (pass type pass.es.losverd.card, serial number 44396170818453607218698234240486608995,
-    #   if-modified-since (null); with web service url https://card.losverd.es/passkit) encountered error: Authentication failure']}"
-    # 3. [2022-02-10 12:34:16 -0600] Unregister task (for device 7c0cd34b7bcac27893ab2e576a0dbd2c, pass type pass.es.losverd.card, serial number 122890994920237774731868014825964879062; with web service url https://card.losverd.es/passkit) encountered error: Authentication failure
     parsed_log_entries = []
     raw_log_entries = request.get_json().get("logs", [])
     for raw_log_entry in raw_log_entries:
