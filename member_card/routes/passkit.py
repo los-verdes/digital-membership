@@ -1,6 +1,6 @@
 import logging
 import re
-from datetime import datetime, timezone
+from datetime import timezone
 from functools import wraps
 from uuid import UUID
 
@@ -172,59 +172,55 @@ def get_serial_numbers_for_device_passes(
         f"getting serial numbers for {device_library_identifier=} ({pass_type_identifier=})",
         extra=log_extra,
     )
-    p = MembershipCard.query.filter_by(
-        apple_pass_type_identifier=pass_type_identifier
-    ).first_or_404()
-    log_extra.update(dict(serial_number=str(p.serial_number), user_email=p.user.email))
-    logger.debug(
-        f"found {p=} for {device_library_identifier=} ({pass_type_identifier=})",
-        extra=log_extra,
-    )
-    r = p.apple_device_registrations.filter_by(
+    registration = AppleDeviceRegistration.query.filter_by(
         device_library_identifier=device_library_identifier
-    )
+    ).first_or_404()
+    membership_cards = [registration.membership_card]
+    log_extra.update(dict(registration=registration, membership_cards=membership_cards))
     logger.debug(
-        f"found registration {r=} ({p=}) for {device_library_identifier=} ({pass_type_identifier=})",
+        f"found {registration=} for {device_library_identifier=}",
         extra=log_extra,
     )
+
+    passes = membership_cards
     if "passesUpdatedSince" in request.args:
         passes_updated_since = request.args["passesUpdatedSince"]
-        logger.debug(f"filtering registration {r=} ({p=}) with {passes_updated_since=}")
-        r = r.filter(AppleDeviceRegistration.time_updated >= passes_updated_since)
+        passes = []
         logger.debug(
-            f"after filtering registration with {passes_updated_since=}: {r=} ({p=}) "
+            f"filtering registered passes ({registration=}) with {passes_updated_since=}"
         )
-    registration = r.first()
-    log_extra.update(dict(registration=registration))
-    if registration:
+        for membership_card in membership_cards:
+            if membership_card.time_updated >= passes_updated_since:
+                passes.append(membership_card)
+                logger.debug(
+                    f"{membership_card.time_updated} >= {passes_updated_since}"
+                )
+            else:
+                logger.debug(f"{membership_card.time_updated} < {passes_updated_since}")
         logger.debug(
-            f"found registration {registration=} ({p=}) for {device_library_identifier=} ({pass_type_identifier=})",
+            f"after filtering registration with {passes_updated_since=}: {passes=}) "
+        )
+
+    if passes:
+        logger.debug(
+            f"found passes for {registration=}: {passes=}",
             extra=log_extra,
         )
-        # XXX: Is this the correct return value for serial number?
         response = jsonify(
             {
-                "lastUpdated": p.time_updated,
-                "serialNumbers": [p.apple_pass_serial_number],
+                "lastUpdated": passes[0].time_updated,
+                "serialNumbers": [p.apple_pass_serial_number for p in passes],
             }
         )
-        last_last_updated = datetime.utcnow().replace(tzinfo=timezone.utc)
         logger.debug(
-            f"Updating existing device registration for {device_library_identifier} from {registration.last_updated=} => {last_last_updated=}",
-            extra=log_extra,
-        )
-        registration.last_updated = last_last_updated
-        db.session.add(registration)
-        db.session.commit()
-        logger.info(
-            f"{registration=} ({p=}) being returned for {device_library_identifier=} ({pass_type_identifier=}): {response=}",
+            f"sending response: {response}",
             extra=log_extra,
         )
         return response
 
     else:
         logger.info(
-            f"no {r=} ({p=}) left to return for {device_library_identifier=} ({pass_type_identifier=})!",
+            f"no {passes=} left to return for {device_library_identifier=} ({pass_type_identifier=})!",
             extra=log_extra,
         )
         return ("No Content", 204)

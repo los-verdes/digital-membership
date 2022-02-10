@@ -108,6 +108,7 @@ def home():
 
         membership_card = get_or_create_membership_card(current_user)
         # response_body = render_template(
+        # TODO: update this deal to only generate gpay pass JWTs upon demand instead of every request
         return render_template(
             "member_card_and_history.html.j2",
             membership_card=membership_card,
