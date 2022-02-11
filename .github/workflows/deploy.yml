@@ -80,10 +80,17 @@ jobs:
           # TODO: do this better
           FLASK_APP: wsgi:create_cli_app()
 
+      - name: Create Google application creds secret
+        id: google-app-creds
+        run: |
+          creds="$(cat '${{ env.GOOGLE_APPLICATION_CREDENTIALS }}')"
+          echo "::add-mask::$creds"
+          echo "::set-output name=creds::$creds"
+
       - name: Start Google Cloud SQL Proxy
         uses: mattes/gce-cloudsql-proxy-action@v1
         with:
-          creds: ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+          creds: ${{ steps.google-app-creds.outputs.creds }}
           # TODO: load instance from TF outputs...
           instance: lv-digital-membership:us-central1:lv-digital-membership-6b6a7153
 
