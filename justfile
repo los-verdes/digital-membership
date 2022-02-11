@@ -195,6 +195,21 @@ remote-psql:
   export PGDATABASE
   psql
 
+remote-pg-dump:
+  #!/bin/bash
+  PGHOST='127.0.0.1'
+  PGPORT='5432'
+  gcloud_user=`gcloud auth list 2>/dev/null | grep -E '^\*' | awk '{print $2;}'`
+  gcloud_access_token="$(gcloud auth print-access-token)"
+  PGUSER="${PGUSER-"$gcloud_user"}"
+  PGPASSWORD="${PGPASSWORD-"$gcloud_access_token"}"
+  PGDATABASE='lv-digital-membership'
+  export PGHOST
+  export PGPORT
+  export PGUSER
+  export PGPASSWORD
+  export PGDATABASE
+  pg_dump --data-only --column-inserts lv-digital-membership > data.sql
 
 gunicorn:
   gunicorn \
