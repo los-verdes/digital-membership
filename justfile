@@ -1,4 +1,5 @@
 tf_subdir      := "./terraform"
+db_tf_subdir   := "./terraform/database"
 tfvars_file    := "lv-digital-membership.tfvars"
 
 gcr_repo := "gcr.io/lv-digital-membership"
@@ -16,7 +17,7 @@ export FLASK_ENV := env_var_or_default("FLASK_ENV", "developement")
 export FLASK_DEBUG := "true"
 export LOG_LEVEL := env_var_or_default("LOG_LEVEL", "debug")
 export DOCKER_BUILDKIT := "1"
-export DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME := "lv-digital-membership:us-central1:lv-digital-membership-30c67c90"
+export DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME := "lv-digital-membership:us-central1:lv-digital-membership-6b6a7153"
 export DIGITAL_MEMBERSHIP_DB_USERNAME := env_var_or_default("DIGITAL_MEMBERSHIP_DB_USERNAME", `gcloud auth list 2>/dev/null | grep -E '^\*' | awk '{print $2;}'`)
 export DIGITAL_MEMBERSHIP_DB_DATABASE_NAME := "lv-digital-membership"
 export DIGITAL_MEMBERSHIP_BASE_URL := "localcard.losverd.es:5000"
@@ -24,6 +25,11 @@ export GCS_BUCKET_ID := "cstatic.losverd.es"
 
 set-tf-ver-output:
   echo "::set-output name=terraform_version::$(cat {{ tf_subdir }}/.terraform-version)"
+
+tf-db +CMD:
+  terraform -chdir="{{ justfile_directory() + "/" + db_tf_subdir }}" \
+    {{ CMD }} \
+    {{ if CMD =~ "(plan|apply)" { "-var-file=../" + tfvars_file } else { "" }  }}
 
 tf +CMD:
   terraform -chdir="{{ justfile_directory() + "/" + tf_subdir }}" \
@@ -102,7 +108,7 @@ serve:
   # export DIGITAL_MEMBERSHIP_GCP_SECRET_NAME="projects/567739286055/secrets/digital-membership/versions/latest"
   # ~/bin/cloud_sql_proxy -instances='lv-digital-membership:us-central1:lv-digital-membership=tcp:5432'  -enable_iam_login
   # export DIGITAL_MEMBERSHIP_DB_USERNAME="$(gcloud auth list 2>/dev/null | egrep '^\*' | awk '{print $2;}')"
-  flask run --cert=tmp-certs/cert.pem --key=tmp-certs/key.pem --host=0.0.0.0
+  just flask run --cert=tmp-certs/cert.pem --key=tmp-certs/key.pem --host=0.0.0.0
 
 build-website:
   docker build . --target website --tag '{{ website_image_name }}:{{ image_tag }}'
@@ -147,6 +153,14 @@ deploy: ci-install-python-reqs build push
     -var='website_image={{ website_gcr_image_name }}:{{ image_tag }}' \
     -var='worker_image={{ worker_gcr_image_name }}:{{ image_tag }}'
 
+configure-database: ci-install-python-reqs
+  just tf-db init
+  just tf-db apply \
+    -auto-approve
+  export DIGITAL_MEMBERSHIP_DB_USERNAME="$(just tf output -raw postgres_management_user_name)"
+  export DIGITAL_MEMBERSHIP_DB_ACCESS_TOKEN="$(just tf output -raw postgres_management_user_password)"
+  just flask db upgrade
+
 sync-subscriptions: ci-install-python-reqs
   @echo "DIGITAL_MEMBERSHIP_DB_DATABASE_NAME: $DIGITAL_MEMBERSHIP_DB_DATABASE_NAME"
   @echo "DIGITAL_MEMBERSHIP_DB_USERNAME: $DIGITAL_MEMBERSHIP_DB_USERNAME"
@@ -175,8 +189,8 @@ lint:
 sql-proxy:
   ~/.local/bin/cloud_sql_proxy \
     -instances="$DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME=tcp:5432" \
-    -enable_iam_login \
     ;
+  # -enable_iam_login \
   # -token="$(gcloud auth print-access-token --impersonate-service-account=website@lv-digital-membership.iam.gserviceaccount.com)"
 
 remote-psql:
@@ -195,6 +209,21 @@ remote-psql:
   export PGDATABASE
   psql
 
+remote-pg-dump:
+  #!/bin/bash
+  PGHOST='127.0.0.1'
+  PGPORT='5432'
+  gcloud_user=`gcloud auth list 2>/dev/null | grep -E '^\*' | awk '{print $2;}'`
+  gcloud_access_token="$(gcloud auth print-access-token)"
+  PGUSER="${PGUSER-"$gcloud_user"}"
+  PGPASSWORD="${PGPASSWORD-"$gcloud_access_token"}"
+  PGDATABASE='lv-digital-membership'
+  export PGHOST
+  export PGPORT
+  export PGUSER
+  export PGPASSWORD
+  export PGDATABASE
+  pg_dump --data-only --column-inserts lv-digital-membership > data.sql
 
 gunicorn:
   gunicorn \

@@ -50,11 +50,6 @@ resource "google_secret_manager_secret_version" "digital_membership" {
     apple_pass_certificate          = var.apple_pass_certificate
     apple_pass_private_key_password = var.apple_pass_private_key_password
 
-    # Cloud SQL connection details:
-    # db_connection_name = google_sql_database_instance.digital_membership.connection_name
-    # db_database_name   = google_sql_database.database.name
-    # db_username        = google_sql_user.service_account.name
-
     recaptcha_secret_key = var.recaptcha_secret_key
 
     # Flask's secret key: https://flask.palletsprojects.com/en/2.0.x/config/#SECRET_KEY

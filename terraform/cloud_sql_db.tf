@@ -2,8 +2,6 @@ resource "random_id" "db_name_suffix" {
   byte_length = 4
 }
 
-
-# TODO: give this fella a private IP only and hook up things eventually
 resource "google_sql_database_instance" "digital_membership" {
   name                = "${var.gcp_project_id}-${random_id.db_name_suffix.hex}"
   region              = var.gcp_region
@@ -11,8 +9,8 @@ resource "google_sql_database_instance" "digital_membership" {
   deletion_protection = "true"
 
   settings {
-    tier = "db-f1-micro"
-    # disk_size = "2"
+    tier      = "db-f1-micro"
+    disk_size = "10"
 
     database_flags {
       name  = "cloudsql.iam_authentication"
@@ -41,7 +39,7 @@ resource "google_sql_database" "database" {
   instance = google_sql_database_instance.digital_membership.name
 }
 
-resource "google_sql_user" "mangement" {
+resource "google_sql_user" "management" {
   name     = "tf-management"
   password = random_password.sql_password.result
   instance = google_sql_database_instance.digital_membership.name
@@ -64,6 +62,3 @@ resource "google_sql_user" "users" {
   instance = google_sql_database_instance.digital_membership.name
   type     = "CLOUD_IAM_USER"
 }
-
-# TODO: move SQL roles bootstrap script from bash to a subsequent TF apply w/ postgres provider
-# (maybe can wrap the two deals in: https://github.com/mitchellh/terraform-provider-multispace?)

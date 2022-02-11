@@ -50,20 +50,16 @@ def create_app():
     logger.debug("login_manager.init_app")
     login_manager.init_app(app)
 
-    from member_card.db import db
+    from social_flask_sqlalchemy.models import init_social
+    from member_card.db import db, migrate
 
     db.init_app(app)
+    init_social(app, db.session)
+    migrate.init_app(app, db)
 
     from social_flask.routes import social_auth
 
     app.register_blueprint(social_auth)
-
-    from social_flask_sqlalchemy.models import init_social
-
-    init_social(app, db.session)
-
-    with app.app_context():
-        db.create_all()
 
     from member_card.routes import passkit
 
@@ -83,11 +79,4 @@ def create_app():
 
     recaptcha.init_app(app)
 
-    # with app.app_context():
-    #     app.config.update(
-    #         dict(
-    #             SOCIAL_AUTH_LOGIN_URL=url_for("login"),
-    #             SOCIAL_AUTH_LOGIN_REDIRECT_URL=url_for("home"),
-    #         )
-    #     )
     return app

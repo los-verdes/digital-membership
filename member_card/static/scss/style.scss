@@ -182,6 +182,10 @@ div.membership-card > .membership-card-inner {
   }
 }
 
+.mdl-button {
+  cursor: pointer;
+}
+
 .mdl-button--fab.mdl-button--colored {
   background-color: $bright-verde;
 }
@@ -348,6 +352,7 @@ details > div {
   min-height: 32px;
   max-height: 64px;
   padding: 8px;
+  cursor: pointer;
 }
 
 .lil-card-image.mdl-card {

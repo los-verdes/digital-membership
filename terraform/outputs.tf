@@ -3,7 +3,7 @@ locals {
     "",
     [
       "postgres://",
-      google_sql_user.mangement.name,
+      google_sql_user.management.name,
       ":",
       random_password.sql_password.result,
       "@",
@@ -13,10 +13,6 @@ locals {
     ]
   )
 }
-
-# output "postgres_connection" {
-#   value = google_sql_database_instance.digital_membership
-# }
 
 output "gh_terraform_applier_service_account_email" {
   value = google_service_account.gh_terraform_applier.email
@@ -33,6 +29,27 @@ output "postgres_connection_name" {
 output "postgres_connection_url" {
   value     = local.postgres_connection_url
   sensitive = true
+}
+
+output "postgres_public_ip_address" {
+  value = google_sql_database_instance.digital_membership.public_ip_address
+}
+
+output "postgres_database_name" {
+  value = google_sql_database.database.name
+}
+
+output "postgres_management_user_name" {
+  value = google_sql_user.management.name
+}
+
+output "postgres_management_user_password" {
+  value     = google_sql_user.management.password
+  sensitive = true
+}
+
+output "sql_usernames" {
+  value = [for u in concat(values(google_sql_user.service_accounts), values(google_sql_user.users)) : u.name]
 }
 
 output "project_number" {

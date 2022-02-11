@@ -273,6 +273,9 @@ ignored-modules=flask,
                 googleapiclient.discovery,
                 google.oauth2,
                 flask_cdn,
+                flask_migrate,
+                alembic,
+                social_sqlalchemy,
                 click
 
 # Show a hint with possible names when a member name was not found. The aspect

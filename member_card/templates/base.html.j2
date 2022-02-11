@@ -50,10 +50,10 @@
       <div class="mdl-layout__header-row">
         <span class="mdl-layout-title mdl-layout--large-screen-only">{{ title_str }}</span>
         <div class="mdl-layout-spacer"></div>
-        <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon" id="hdrbtn">
+        <button class="mdl-button mdl-js-button mdl-button--icon" id="hdrbtn">
           <i class="material-icons">more_vert</i>
         </button>
-        <ul class="mdl-menu mdl-js-menu mdl-js-ripple-effect mdl-menu--bottom-right" for="hdrbtn">
+        <ul class="mdl-menu mdl-js-menu mdl-menu--bottom-right" for="hdrbtn">
           <a class="mdl-menu__item" href="https://github.com/los-verdes/digital-membership" target="_blank">
             Edit on GitHub
             &nbsp;&nbsp;&nbsp;
@@ -90,11 +90,11 @@
         <div class="lv-avatar-dropdown">
           <span>{{ current_user.email }}</span>
           <div class="mdl-layout-spacer"></div>
-          <button id="accbtn" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon">
+          <button id="accbtn" class="mdl-button mdl-js-button mdl-button--icon">
             <i class="material-icons" role="presentation">arrow_drop_down</i>
             <span class="visuallyhidden">Accounts</span>
           </button>
-          <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu mdl-js-ripple-effect" for="accbtn">
+          <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu" for="accbtn">
 
             <a id="logout" class="mdl-menu__item mdl-navigation__link " href="{{ url_for('logout') }}">
               <i class="material-icons">logout</i>

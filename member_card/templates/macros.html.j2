@@ -117,17 +117,17 @@ show_qr_code_on_card=False
       <span class="material-icons">screenshot</span>
       Save
     </button>
-    <ul class="mdl-menu mdl-menu--top-right mdl-js-menu mdl-js-ripple-effect" data-mdl-for="save-as-screenshot-menu">
+    <ul class="mdl-menu mdl-menu--top-right mdl-js-menu" data-mdl-for="save-as-screenshot-menu">
       <li id="save-as-screenshot-btn" class="mdl-menu__item">Save card as image (.png)</li>
     </ul> -->
     <a class="save-pass-button save-google-pass-button" href="https://pay.google.com/gp/v/save/{{ google_pay_jwt }}" target="_blank">
-      <img class="mdl-js-button mdl-js-ripple-effect" src="{{ url_for('static', filename='save_to_google_pay.svg') }}">
+      <img class="mdl-js-button" src="{{ url_for('static', filename='save_to_google_pay.svg') }}">
     </a>
     <a class="save-pass-button save-apple-pass-button" href="{{ url_for('passes_apple_pay') }}">
-      <img class="mdl-js-button mdl-js-ripple-effect" src="{{ url_for('static', filename='Add_to_Apple_Wallet_rgb_US-UK.svg') }}">
+      <img class="mdl-js-button" src="{{ url_for('static', filename='Add_to_Apple_Wallet_rgb_US-UK.svg') }}">
     </a>
     {% else %}
-    <a class="mdl-button mdl-js-button mdl-js-ripple-effect" href="{{ url_for('home') }}">
+    <a class="mdl-button mdl-js-button" href="{{ url_for('home') }}">
       Back to Home
     </a>
     {% endif %}
@@ -135,7 +135,7 @@ show_qr_code_on_card=False
   {% endif %}
   <!-- <div class="mdl-card__menu">
     <button id="download" data-html2canvas-ignore="true" title="Save as image (.png)"
-      class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect mdl-button--fab mdl-button--colored">
+      class="mdl-button mdl-button--icon mdl-js-button mdl-button--fab mdl-button--colored">
       <i class="material-icons">screenshot</i>
     </button>
   </div> -->
@@ -165,7 +165,7 @@ show_qr_code_on_card=False
     <br>
     <br>
     <div class="mdl-card__actions mdl-typography--text-right">
-      <a class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--raised" href="https://www.losverdesatx.org/lv-store/membership" target="_blank"
+      <a class="mdl-button mdl-js-button mdl-button--raised" href="https://www.losverdesatx.org/lv-store/membership" target="_blank"
          title="Click here to open the membership store in a new tab"><i class="material-icons">storefront</i>&nbsp;Visit Membership Store</a>
     </div>
 
@@ -193,7 +193,8 @@ The Los Verdes Verde membership card is used for <strong>discounts</strong> at p
 {% endcall %}
 
 {% call verde_box("How can I save my card?") %}
-Your can either view your membership card directly on <a href="https://card.losverd.es/">card.losverd.es</a> (this website) or download an offline copy as an image or to Google Pay / Apple wallet.
+Your can either view your membership card directly on <a href="https://card.losverd.es/">card.losverd.es</a> (this website) or download an offline copy as an image or to Google Pay
+/ Apple wallet.
 <br>
 <br>
 Download links can be sent via email to any Los Verdes member's address upon request as well!
