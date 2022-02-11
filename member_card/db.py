@@ -5,9 +5,10 @@ from zoneinfo import ZoneInfo
 
 from dateutil.parser import parse
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 
 db = SQLAlchemy()
-
+migrate = Migrate()
 logger = logging.getLogger(__name__)
 
 

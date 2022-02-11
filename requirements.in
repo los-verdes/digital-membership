@@ -1,5 +1,6 @@
 Flask-Assets
 Flask-Gravatar
+Flask-Migrate
 Flask-SQLAlchemy
 Flask-reCaptcha
 M2Crypto
