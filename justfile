@@ -1,4 +1,5 @@
 tf_subdir      := "./terraform"
+db_tf_subdir   := "./terraform/database"
 tfvars_file    := "lv-digital-membership.tfvars"
 
 gcr_repo := "gcr.io/lv-digital-membership"
@@ -24,6 +25,11 @@ export GCS_BUCKET_ID := "cstatic.losverd.es"
 
 set-tf-ver-output:
   echo "::set-output name=terraform_version::$(cat {{ tf_subdir }}/.terraform-version)"
+
+tf-db +CMD:
+  terraform -chdir="{{ justfile_directory() + "/" + db_tf_subdir }}" \
+    {{ CMD }} \
+    {{ if CMD =~ "(plan|apply)" { "-var-file=../" + tfvars_file } else { "" }  }}
 
 tf +CMD:
   terraform -chdir="{{ justfile_directory() + "/" + tf_subdir }}" \
@@ -146,6 +152,14 @@ deploy: ci-install-python-reqs build push
     -auto-approve \
     -var='website_image={{ website_gcr_image_name }}:{{ image_tag }}' \
     -var='worker_image={{ worker_gcr_image_name }}:{{ image_tag }}'
+
+configure-database: ci-install-python-reqs
+  just tf-db init
+  just tf-db apply \
+    -auto-approve
+  export DIGITAL_MEMBERSHIP_DB_USERNAME="$(just tf output -raw postgres_management_user_name)"
+  export DIGITAL_MEMBERSHIP_DB_ACCESS_TOKEN="$(just tf output -raw postgres_management_user_password)"
+  just flask db upgrade
 
 sync-subscriptions: ci-install-python-reqs
   @echo "DIGITAL_MEMBERSHIP_DB_DATABASE_NAME: $DIGITAL_MEMBERSHIP_DB_DATABASE_NAME"

@@ -59,6 +59,7 @@ jobs:
         with:
           workload_identity_provider: "projects/567739286055/locations/global/workloadIdentityPools/los-verdes-digital-membership/providers/los-verdes-digital-membership"
           service_account: "gh-terraform-applier@lv-digital-membership.iam.gserviceaccount.com"
+          access_token_scopes: "https://www.googleapis.com/auth/cloud-platform,https://www.googleapis.com/auth/sqlservice.admin"
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v0
@@ -78,3 +79,17 @@ jobs:
           TF_VAR_recaptcha_secret_key: ${{ secrets.recaptcha_secret_key }}
           # TODO: do this better
           FLASK_APP: wsgi:create_cli_app()
+
+      - name: Start Google Cloud SQL Proxy
+        uses: mattes/gce-cloudsql-proxy-action@v1
+        with:
+          creds: ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+          # TODO: load instance from TF outputs...
+          instance: lv-digital-membership:us-central1:lv-digital-membership-6b6a7153
+
+      - name: Configure Database
+        run: just configure-database
+        env:
+          DIGITAL_MEMBERSHIP_GCP_SECRET_NAME: "projects/567739286055/secrets/digital-membership/versions/latest"
+          FLASK_ENV: "remote-sql"
+          LOG_LEVEL: "info"
