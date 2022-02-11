@@ -469,3 +469,19 @@ def apple_serial_num_to_hex(serial_num):
     from uuid import UUID
 
     print(UUID(int=int(serial_num)))
+
+
+@app.cli.command("publish-sync-subscriptions-msg")
+def publish_sync_subscriptions_msg():
+
+    from member_card.pubsub import publish_message
+
+    topic_id = app.config["GCLOUD_PUBSUB_TOPIC_ID"]
+    logger.info(f"publishing sync_subscriptions_etl message to pubsub {topic_id=}")
+    publish_message(
+        project_id=app.config["GCLOUD_PROJECT"],
+        topic_id=topic_id,
+        message_data=dict(
+            type="sync_subscriptions_etl",
+        ),
+    )
