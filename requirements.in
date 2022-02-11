@@ -3,7 +3,7 @@ Flask-Gravatar
 Flask-SQLAlchemy
 Flask-reCaptcha
 M2Crypto
-cloud-sql-python-connector[pg8000]
+cloud-sql-python-connector[pg8000]>=0.5.1
 email-validator
 flask
 flask-cdn

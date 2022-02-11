@@ -199,14 +199,17 @@ class Settings(object):
                 db=db_name,
                 enable_iam_auth=True,
             )
+
             if db_pass:
                 conn_kwargs["password"] = db_pass
-                conn_kwargs["enable_iam_auth"] = False
+
             conn: "dbapi.Connection" = connector.connect(
                 instance_connection_string,
                 "pg8000",
                 **conn_kwargs,
             )
+            # TODO: drop this kludge pending release of https://github.com/GoogleCloudPlatform/cloud-sql-python-connector/pull/273
+            conn._enable_iam_auth = not db_pass
             return conn
 
         engine_creator = partial(get_db_connector, **db_connection_kwargs)
