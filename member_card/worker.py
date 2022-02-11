@@ -48,22 +48,31 @@ def process_email_distribution_request(message):
         log_extra.update(dict(user=user))
     except Exception as err:
         log_extra.update(dict(user_query_err=err))
-        logger.warning(
-            f"no matching user found for {email_distribution_recipient=}",
-            extra=log_extra,
-        )
         user = None
 
-    if user and user.has_active_memberships:
-        logger.info(
-            f"Found {user=} for {email_distribution_recipient=}. Generating and sending email now",
+    if user is None:
+        logger.warning(
+            f"no matching user found for {email_distribution_recipient=}. Exiting early...",
             extra=log_extra,
         )
-        generate_and_send_email(
-            user=user,
-            submitting_ip_address=message.get("remote_addr"),
-            submitted_on=message.get("submitted_on"),
+        return
+
+    if not user.has_active_memberships:
+        logger.warning(
+            f"{user=} has not active memberships! Exiting early...",
+            extra=log_extra,
         )
+        return
+
+    logger.info(
+        f"Found {user=} for {email_distribution_recipient=}. Generating and sending email now",
+        extra=log_extra,
+    )
+    generate_and_send_email(
+        user=user,
+        submitting_ip_address=message.get("remote_addr"),
+        submitted_on=message.get("submitted_on"),
+    )
 
 
 def sync_subscriptions_etl(message):
