@@ -96,10 +96,12 @@ jobs:
           # TODO: load instance from TF outputs...
           instance: lv-digital-membership:us-central1:lv-digital-membership-6b6a7153
 
-      - name: Configure Database
+      - name: Configure Database ACLs
         run: just configure-database
+
+      - name: Ensure Database Migrations Applied
+        run: just apply-migrations
         env:
           DIGITAL_MEMBERSHIP_GCP_SECRET_NAME: "projects/567739286055/secrets/digital-membership/versions/latest"
           FLASK_ENV: "remote-sql"
-          GOOGLE_OAUTH_ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
           LOG_LEVEL: "info"
