@@ -153,15 +153,13 @@ deploy: ci-install-python-reqs build push
     -var='worker_image={{ worker_gcr_image_name }}:{{ image_tag }}'
 
 configure-database:
-  #!/bin/bash
-  gcloud auth login --brief --cred-file="$GOOGLE_APPLICATION_CREDENTIALS"
   just tf-db init
-  export GOOGLE_OAUTH_ACCESS_TOKEN="$(gcloud auth print-access-token)"
-  echo "::add-mask::$GOOGLE_OAUTH_ACCESS_TOKEN"
   just tf-db apply \
     -auto-approve
 
 apply-migrations: ci-install-python-reqs
+  #!/bin/bash
+  just tf output -raw postgres_management_user_name
   export DIGITAL_MEMBERSHIP_DB_USERNAME="$(just tf output -raw postgres_management_user_name)"
   export DIGITAL_MEMBERSHIP_DB_ACCESS_TOKEN="$(just tf output -raw postgres_management_user_password)"
   just flask db upgrade
