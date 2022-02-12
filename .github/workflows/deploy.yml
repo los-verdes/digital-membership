@@ -56,6 +56,7 @@ jobs:
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v0
+        id: auth
         with:
           workload_identity_provider: "projects/567739286055/locations/global/workloadIdentityPools/los-verdes-digital-membership/providers/los-verdes-digital-membership"
           service_account: "gh-terraform-applier@lv-digital-membership.iam.gserviceaccount.com"
@@ -100,4 +101,5 @@ jobs:
         env:
           DIGITAL_MEMBERSHIP_GCP_SECRET_NAME: "projects/567739286055/secrets/digital-membership/versions/latest"
           FLASK_ENV: "remote-sql"
+          GOOGLE_OAUTH_ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
           LOG_LEVEL: "info"
