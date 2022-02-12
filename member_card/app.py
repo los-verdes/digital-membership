@@ -3,21 +3,14 @@ import os
 from datetime import datetime
 
 import click
-from flask import (
-    Flask,
-    g,
-    redirect,
-    render_template,
-    request,
-    send_file,
-    url_for,
-)
+from flask import Flask, g, redirect, render_template, request, send_file, url_for
 from flask_cdn import CDN
 from flask_login import current_user as current_login_user
 from flask_login import login_required, logout_user
 from flask_recaptcha import ReCaptcha
 from social_flask.template_filters import backends
 from social_flask.utils import load_strategy
+from sqlalchemy.sql import func
 
 from member_card import utils
 from member_card.db import squarespace_orders_etl
@@ -371,17 +364,16 @@ def query_db(email):
     from member_card.models import AnnualMembership
 
     memberships = (
-        AnnualMembership.query.filter_by(customer_email=email)
+        AnnualMembership.query.filter_by(customer_email=func.lower(email))
         .order_by(AnnualMembership.created_on.desc())
         .all()
     )
-    member_name = None
-    member_since_dt = None
-    if memberships:
-        member_since_dt = memberships[-1].created_on
-        member_name = memberships[-1].full_name
-    logger.debug(f"{member_name=} => {member_since_dt=}")
-    logger.debug(f"{memberships=}")
+
+    logger.info(f"memberships matching {email}:\n{memberships}")
+    user = User.query.filter_by(email=func.lower(email)).one()
+    logger.info(f"user matching {email}:\n{user}")
+    logger.info(f"user memberships:\n{user.annual_memberships}")
+    logger.info(f"user membership cards:\n{user.membership_cards}")
 
 
 @app.cli.command("create-apple-pass")
@@ -485,3 +477,51 @@ def publish_sync_subscriptions_msg():
             type="sync_subscriptions_etl",
         ),
     )
+
+
+@app.cli.command("add-memberships-to-user-email")
+@click.argument("order_email")
+@click.argument("user_email")
+def add_memberships_to_user_email(order_email, user_email):
+    logger.debug(f"{order_email=} => {user_email=}")
+    from member_card.db import db
+    from member_card.models import AnnualMembership
+
+    memberships = (
+        AnnualMembership.query.filter_by(customer_email=order_email)
+        .order_by(AnnualMembership.created_on.desc())
+        .all()
+    )
+    logger.debug(f"memberships matching {order_email}: {memberships}")
+
+    user = User.query.filter_by(email=user_email).one()
+    logger.debug(f"user returned for {user_email}: {user=}")
+    logger.info(f"Adding memberships orders from {order_email} to: {user_email}")
+    for membership in memberships:
+        logger.debug(
+            f"setting user_id attribute on {membership=} from {membership.user_id} to: {user.id}"
+        )
+        setattr(membership, "user_id", user.id)
+        db.session.add(membership)
+        db.session.commit()
+
+
+@app.cli.command("update-user-name")
+@click.argument("user_email")
+@click.argument("first_name")
+@click.argument("last_name")
+def update_user_name(user_email, first_name, last_name):
+    logger.debug(f"{user_email=} => {first_name=} {last_name=}")
+    from member_card.db import db
+
+    user = User.query.filter_by(email=func.lower(user_email)).one()
+    logger.debug(f"user returned for {user_email}: {user=}")
+    logger.info(
+        f"Update name for {user} from {user.fullname} to: {first_name} {last_name}"
+    )
+    setattr(user, "fullname", " ".join([first_name, last_name]))
+    setattr(user, "first_name", first_name)
+    setattr(user, "last_name", last_name)
+    db.session.add(user)
+    db.session.commit()
+    logger.debug(f"post-commit: {user=}")

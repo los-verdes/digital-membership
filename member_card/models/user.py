@@ -32,6 +32,9 @@ class User(db.Model, UserMixin):
     def is_active(self):
         return self.active
 
+    def __str__(self):
+        return f"<User {self.id} {self.fullname=} ({self.first_name=} {self.last_name=}) {self.email=} {self.active=} >"
+
     @property
     def has_active_memberships(self):
         if not self.annual_memberships:
