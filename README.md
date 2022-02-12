@@ -2,7 +2,7 @@
 
 [![Deploy](https://github.com/los-verdes/digital-membership/actions/workflows/deploy.yml/badge.svg)](https://github.com/los-verdes/digital-membership/actions/workflows/deploy.yml)
 
-Digital membership card website with Squarespace-sourced membership database.
+Digital membership card site with Squarespace-sourced membership database.
 
 A live production version of this site (directed at members of the [Los Verdes supporters group](https://www.losverdesatx.org/)) may be viewed at: [card.losverd.es](https://card.losverd.es/).
 
@@ -10,7 +10,7 @@ A live production version of this site (directed at members of the [Los Verdes s
 
 The core components of the application are:
 
-- **[flask](https://flask.palletsprojects.com/en/2.0.x/)** - Used to construct both the frontend ("website") app that serves requests to [card.losverd.es](https://card.losverd.es/) and a background tasks ("worker") app responsible for generating Google Pay / Apple Wallet passes, sending out emails, etc.
+- **[flask](https://flask.palletsprojects.com/en/2.0.x/)** - Used to construct both the frontend ("site") app that serves requests to [card.losverd.es](https://card.losverd.es/) and a background tasks ("worker") app responsible for generating Google Pay / Apple Wallet passes, sending out emails, etc.
 - **[Squarespace's Commerce APIs](https://developers.squarespace.com/commerce-apis/overview)** - Source of truth for membership orders. Which are then loaded into to...:
 - **[GCP Cloud SQL for PostgreSQL](https://cloud.google.com/sql)** - User and membership database.
 
@@ -47,7 +47,7 @@ TODO: `<fill this bit in>`
 
 ### Development
 
-For development against the [card.losverd.es production website](https://card.losverd.es), you will need:
+For development against the [card.losverd.es production site](https://card.losverd.es), you will need:
 
 - Access to the associated GCP project. This is done by inserting whatever username is associated with your [gcloud application-default credentials](https://cloud.google.com/sdk/gcloud/reference/auth/application-default/login) in the `gcp_project_editors` (or `gcp_project_owners`) lists defined in [lv-digital-membership.tfvars](lv-digital-membership.tfvars)
 - Afterwards, be sure to set up `gcloud` and configure it for this project:
