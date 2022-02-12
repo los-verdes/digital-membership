@@ -61,7 +61,8 @@ jobs:
           workload_identity_provider: "projects/567739286055/locations/global/workloadIdentityPools/los-verdes-digital-membership/providers/los-verdes-digital-membership"
           service_account: "gh-terraform-applier@lv-digital-membership.iam.gserviceaccount.com"
           access_token_scopes: "https://www.googleapis.com/auth/cloud-platform,https://www.googleapis.com/auth/sqlservice.admin"
-          token_format: "access_token"
+          token_format: access_token
+          access_token_lifetime: 900s
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v0

@@ -154,7 +154,7 @@ deploy: ci-install-python-reqs build push
 
 configure-database:
   #!/bin/bash
-
+  gcloud auth login --brief --cred-file="$GOOGLE_APPLICATION_CREDENTIALS"
   just tf-db init
   export GOOGLE_OAUTH_ACCESS_TOKEN="$(gcloud auth print-access-token)"
   echo "::add-mask::$GOOGLE_OAUTH_ACCESS_TOKEN"

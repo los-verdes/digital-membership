@@ -35,8 +35,8 @@ locals {
 }
 
 provider "postgresql" {
-  scheme          = "gcppostgres"
-  host            = local.database_host
+  # scheme          = "gcppostgres"
+  host            = "127.0.0.1"
   port            = 5432
   database        = local.database_name
   username        = local.management_user_name
