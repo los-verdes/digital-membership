@@ -153,6 +153,8 @@ deploy: ci-install-python-reqs build push
     -var='worker_image={{ worker_gcr_image_name }}:{{ image_tag }}'
 
 configure-database:
+  #!/bin/bash
+
   just tf-db init
   export GOOGLE_OAUTH_ACCESS_TOKEN="$(gcloud auth print-access-token)"
   echo "::add-mask::$GOOGLE_OAUTH_ACCESS_TOKEN"
