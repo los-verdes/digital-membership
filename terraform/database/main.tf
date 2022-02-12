@@ -42,6 +42,7 @@ provider "postgresql" {
   username        = local.management_user_name
   password        = local.management_user_password
   sslmode         = "disable"
+  superuser       = false
   connect_timeout = 15
 }
 
