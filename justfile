@@ -159,6 +159,9 @@ configure-database:
 
 apply-migrations: ci-install-python-reqs
   #!/bin/bash
+
+  set -eou pipefail
+
   just tf init
   just tf output -raw postgres_management_user_name
   export DIGITAL_MEMBERSHIP_DB_USERNAME="$(just tf output -raw postgres_management_user_name)"
