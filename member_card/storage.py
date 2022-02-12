@@ -87,7 +87,6 @@ def upload_local_directory_to_gcs(
                 ignored_files=ignored_files,
             )
         else:
-            print(f"imma uploading {local_file}")
             upload_file_to_gcs(
                 bucket=bucket,
                 local_file=local_file,
