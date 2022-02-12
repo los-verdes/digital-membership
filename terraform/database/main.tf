@@ -85,7 +85,7 @@ resource "postgresql_grant" "read_write_crud_public" {
   database    = local.database_name
   schema      = "public"
   object_type = "table"
-  privileges  = ["SELECT", "INSERT", "UPDATE", "DELETE"]
+  privileges  = ["SELECT", "INSERT", "UPDATE", "DELETE", "REFERENCES", "TRIGGER", "TRUNCATE"]
 }
 
 resource "postgresql_default_privileges" "read_write_tables" {
@@ -105,7 +105,7 @@ resource "postgresql_default_privileges" "read_write_usage_seqs" {
 
   owner       = local.management_user_name
   object_type = "sequence"
-  privileges  = ["USAGE"]
+  privileges  = ["SELECT", "UPDATE", "USAGE"]
 }
 
 # resource "postgresql_role" "read_only" {
