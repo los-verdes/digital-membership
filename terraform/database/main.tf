@@ -43,7 +43,6 @@ provider "postgresql" {
   password        = local.management_user_password
   sslmode         = "disable"
   connect_timeout = 15
-  max_connections = 1
 }
 
 resource "postgresql_role" "read_write" {
