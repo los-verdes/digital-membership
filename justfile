@@ -28,8 +28,7 @@ set-tf-ver-output:
 
 tf-db +CMD:
   terraform -chdir="{{ justfile_directory() + "/" + db_tf_subdir }}" \
-    {{ CMD }} \
-    {{ if CMD =~ "(plan|apply)" { "-var-file=../" + tfvars_file } else { "" }  }}
+    {{ CMD }}
 
 tf +CMD:
   terraform -chdir="{{ justfile_directory() + "/" + tf_subdir }}" \
