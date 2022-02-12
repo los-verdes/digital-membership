@@ -159,10 +159,12 @@ configure-database:
 
 apply-migrations: ci-install-python-reqs
   #!/bin/bash
+  just tf init
   just tf output -raw postgres_management_user_name
   export DIGITAL_MEMBERSHIP_DB_USERNAME="$(just tf output -raw postgres_management_user_name)"
   export DIGITAL_MEMBERSHIP_DB_ACCESS_TOKEN="$(just tf output -raw postgres_management_user_password)"
   just flask db upgrade
+  echo 'Any outstanding migrations have now been applied! :D'
 
 
 sync-subscriptions: ci-install-python-reqs

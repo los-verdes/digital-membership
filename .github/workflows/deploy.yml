@@ -105,4 +105,4 @@ jobs:
         env:
           DIGITAL_MEMBERSHIP_GCP_SECRET_NAME: "projects/567739286055/secrets/digital-membership/versions/latest"
           FLASK_ENV: "remote-sql"
-          LOG_LEVEL: "debug"
+          LOG_LEVEL: "info"
