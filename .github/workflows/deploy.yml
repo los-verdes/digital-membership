@@ -60,25 +60,26 @@ jobs:
           workload_identity_provider: "projects/567739286055/locations/global/workloadIdentityPools/los-verdes-digital-membership/providers/los-verdes-digital-membership"
           service_account: "gh-terraform-applier@lv-digital-membership.iam.gserviceaccount.com"
           access_token_scopes: "https://www.googleapis.com/auth/cloud-platform,https://www.googleapis.com/auth/sqlservice.admin"
+          token_format: "access_token"
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v0
 
-      - name: Configure docker for GCR auth
-        run: gcloud auth configure-docker -q
+      # - name: Configure docker for GCR auth
+      #   run: gcloud auth configure-docker -q
 
-      - name: Deploy
-        run: just deploy
-        env:
-          TF_VAR_squarespace_api_key: ${{ secrets.squarespace_api_key }}
-          TF_VAR_sendgrid_api_key: ${{ secrets.sendgrid_api_key }}
-          TF_VAR_oauth_client_id: ${{ secrets.oauth_client_id }}
-          TF_VAR_oauth_client_secret: ${{ secrets.oauth_client_secret }}
-          TF_VAR_apple_pass_certificate: ${{ secrets.apple_pass_certificate }}
-          TF_VAR_apple_pass_private_key_password: ${{ secrets.apple_pass_private_key_password }}
-          TF_VAR_recaptcha_secret_key: ${{ secrets.recaptcha_secret_key }}
-          # TODO: do this better
-          FLASK_APP: wsgi:create_cli_app()
+      # - name: Deploy
+      #   run: just deploy
+      #   env:
+      #     TF_VAR_squarespace_api_key: ${{ secrets.squarespace_api_key }}
+      #     TF_VAR_sendgrid_api_key: ${{ secrets.sendgrid_api_key }}
+      #     TF_VAR_oauth_client_id: ${{ secrets.oauth_client_id }}
+      #     TF_VAR_oauth_client_secret: ${{ secrets.oauth_client_secret }}
+      #     TF_VAR_apple_pass_certificate: ${{ secrets.apple_pass_certificate }}
+      #     TF_VAR_apple_pass_private_key_password: ${{ secrets.apple_pass_private_key_password }}
+      #     TF_VAR_recaptcha_secret_key: ${{ secrets.recaptcha_secret_key }}
+      #     # TODO: do this better
+      #     FLASK_APP: wsgi:create_cli_app()
 
       - name: Create Google application creds secret
         id: google-app-creds
