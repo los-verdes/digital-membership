@@ -81,6 +81,7 @@ google-api-core[grpc]==2.4.0
     # via
     #   google-api-python-client
     #   google-cloud-appengine-logging
+    #   google-cloud-build
     #   google-cloud-core
     #   google-cloud-firestore
     #   google-cloud-logging
@@ -104,6 +105,8 @@ google-cloud-appengine-logging==1.1.0
     # via google-cloud-logging
 google-cloud-audit-log==0.2.0
     # via google-cloud-logging
+google-cloud-build==3.7.1
+    # via -r requirements.in
 google-cloud-core==2.2.1
     # via
     #   google-cloud-firestore
@@ -240,6 +243,7 @@ pillow==9.0.0
 proto-plus==1.19.8
     # via
     #   google-cloud-appengine-logging
+    #   google-cloud-build
     #   google-cloud-firestore
     #   google-cloud-logging
     #   google-cloud-pubsub

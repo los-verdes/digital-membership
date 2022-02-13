@@ -394,12 +394,14 @@ def force_assets_bundle_build():
 
 @app.cli.command("upload-statics")
 def upload_statics():
-    from member_card.storage import get_client, upload_statics_to_gcs
+    from member_card import cloudbuild
 
-    upload_statics_to_gcs(
-        client=get_client(),
+    client = cloudbuild.get_client()
+    cloudbuild.create_upload_statics_build(
+        client=client,
+        project_id=app.config["GCLOUD_PROJECT"],
+        repo_name=app.config["GCP_REPO_NAME"],
         bucket_id=app.config["GCS_BUCKET_ID"],
-        prefix="static",
     )
 
 

@@ -1,48 +1,20 @@
 #!/usr/bin/env python
 import glob
-import json
 import logging
 import os
-from base64 import b64decode as b64d
 from datetime import timedelta
-
+from member_card.utils import load_gcp_credentials
 import flask
-import google.auth
-from google.auth import impersonated_credentials
 from google.cloud import storage
-from google.oauth2 import service_account
 
 logger = logging.getLogger(__name__)
 
 # BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 
-DEFAULT_SCOPES = [
-    "https://www.googleapis.com/auth/cloud-platform",
-]
-
-
-def load_credentials(scopes=DEFAULT_SCOPES):
-    credentials, _ = google.auth.default(scopes=scopes)
-    if service_account_info := flask.current_app.config["SERVICE_ACCOUNT_KEY"]:
-        credentials = service_account.Credentials.from_service_account_info(
-            json.loads(b64d(service_account_info).decode()), scopes=scopes
-        )
-    if sa_email := os.getenv("DIGITAL_MEMBERSHIP_SA_EMAIL"):
-        logger.info(f"Impersonating service account: {sa_email}")
-        source_credentials = credentials
-        target_principal = sa_email
-        credentials = impersonated_credentials.Credentials(
-            source_credentials=source_credentials,
-            target_principal=target_principal,
-            target_scopes=scopes,
-            lifetime=500,
-        )
-    return credentials
-
 
 def get_client(credentials=None):
     if credentials is None:
-        credentials = load_credentials()
+        credentials = load_gcp_credentials()
     return storage.Client()
 
 
@@ -112,7 +84,7 @@ def get_presigned_url(blob, expiration: "timedelta"):
         expiration=expiration,
         # Allow GET requests using this URL.
         method="GET",
-        credentials=load_credentials(),
+        credentials=load_gcp_credentials(),
     )
     logger.info(f"GCS signed URL for {blob=}: {url=}")
     return url
