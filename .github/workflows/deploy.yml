@@ -2,17 +2,37 @@
 name: Deploy
 
 concurrency:
-  group: "deploy-infrastructure"
+  group: "deploy"
   cancel-in-progress: false
 
 on:
   push:
     branches: [main]
 
+# jscpd:ignore-start
 jobs:
-  deploy-infrastructure:
+  build-website-image:
+    name: Build Website Image
+    permissions:
+      contents: "read"
+      id-token: "write"
+    uses: los-verdes/digital-membership/.github/workflows/flask_command.yml@main
+    with:
+      command: build-website-image
+
+  build-worker-image:
+    name: Build Worker Image
+    permissions:
+      contents: "read"
+      id-token: "write"
+    uses: los-verdes/digital-membership/.github/workflows/flask_command.yml@main
+    with:
+      command: build-worker-image
+
+  apply-terraform:
     name: Deploy
     runs-on: ubuntu-latest
+    needs: [build-website-image, build-worker-image]
     environment:
       name: production
       url: "https://card.losverd.es"
@@ -27,17 +47,6 @@ jobs:
 
       - name: Setup just
         uses: extractions/setup-just@v1
-
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.9
-
-      - name: Utilize pip cache
-        uses: actions/cache@v2
-        with:
-          path: ~/.cache/pip
-          key: ${{ env.pythonLocation }}-${{ hashFiles('requirements.txt') }}
 
       - name: Utilize .terraform cache
         uses: actions/cache@v2
@@ -60,20 +69,19 @@ jobs:
         id: auth
         with:
           workload_identity_provider: "projects/567739286055/locations/global/workloadIdentityPools/los-verdes-digital-membership/providers/los-verdes-digital-membership"
-          service_account: "gh-terraform-applier@lv-digital-membership.iam.gserviceaccount.com"
+          service_account: "github-deployer@lv-digital-membership.iam.gserviceaccount.com"
           access_token_scopes: "https://www.googleapis.com/auth/cloud-platform,https://www.googleapis.com/auth/sqlservice.admin"
           token_format: access_token
           access_token_lifetime: 1800s
 
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v0
-
-      - name: Configure docker for GCR auth
-        run: gcloud auth configure-docker -q
-
       - name: Deploy
-        run: just deploy
+        run: |
+          just tf init
+          just tf apply -auto-approve
         env:
+          TF_VAR_website_image: ${{ needs.build-website-image.outputs.image }}
+          TF_VAR_worker_image: ${{ needs.build-worker-image.outputs.image }}
+
           TF_VAR_squarespace_api_key: ${{ secrets.squarespace_api_key }}
           TF_VAR_sendgrid_api_key: ${{ secrets.sendgrid_api_key }}
           TF_VAR_oauth_client_id: ${{ secrets.oauth_client_id }}
@@ -81,8 +89,67 @@ jobs:
           TF_VAR_apple_pass_certificate: ${{ secrets.apple_pass_certificate }}
           TF_VAR_apple_pass_private_key_password: ${{ secrets.apple_pass_private_key_password }}
           TF_VAR_recaptcha_secret_key: ${{ secrets.recaptcha_secret_key }}
-          # TODO: do this better
-          FLASK_APP: wsgi:create_cli_app()
+
+  upload-statics-to-gcs:
+    name: Upload Statics to GCS
+    needs: apply-terraform
+    permissions:
+      contents: "read"
+      id-token: "write"
+    uses: los-verdes/digital-membership/.github/workflows/flask_command.yml@main
+    with:
+      command: upload-statics
+
+  apply-database-config:
+    name: Apple Database Configuration
+    runs-on: ubuntu-latest
+    needs: apply-terraform
+    permissions:
+      contents: "read"
+      id-token: "write"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup just
+        uses: extractions/setup-just@v1
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Utilize pip cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ hashFiles('requirements.txt') }}
+
+      - name: Utilize .terraform cache
+        uses: actions/cache@v2
+        with:
+          path: terraform/.terraform
+          key: ${{ hashFiles('terraform/.terraform.lock.hcl') }}
+
+      - name: Read .terraform-version
+        id: read_tf_version
+        run: just set-tf-ver-output
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: ${{ steps.read_tf_version.outputs.terraform_version }}
+          terraform_wrapper: false
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v0
+        id: auth
+        with:
+          workload_identity_provider: "projects/567739286055/locations/global/workloadIdentityPools/los-verdes-digital-membership/providers/los-verdes-digital-membership"
+          service_account: "github-deployer@lv-digital-membership.iam.gserviceaccount.com"
+          access_token_scopes: "https://www.googleapis.com/auth/cloud-platform,https://www.googleapis.com/auth/sqlservice.admin"
+          token_format: access_token
+          access_token_lifetime: 1800s
 
       - name: Create Google application creds secret
         id: google-app-creds
@@ -107,3 +174,5 @@ jobs:
           DIGITAL_MEMBERSHIP_GCP_SECRET_NAME: "projects/567739286055/secrets/digital-membership/versions/latest"
           FLASK_ENV: "remote-sql"
           LOG_LEVEL: "info"
+
+  # jscpd:ignore-end
