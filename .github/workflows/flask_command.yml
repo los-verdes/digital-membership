@@ -41,6 +41,8 @@ jobs:
         with:
           workload_identity_provider: "projects/567739286055/locations/global/workloadIdentityPools/los-verdes-digital-membership/providers/los-verdes-digital-membership"
           service_account: "github-deployer@lv-digital-membership.iam.gserviceaccount.com"
+          token_format: access_token
+          access_token_lifetime: 1800s
 
       - name: Run Flask Command
         id: flask-command
