@@ -394,13 +394,19 @@ def force_assets_bundle_build():
 
 @app.cli.command("upload-statics")
 def upload_statics():
-    from member_card.storage import get_client, upload_statics_to_gcs
+    from member_card.cloudbuild import create_upload_statics_build
 
-    upload_statics_to_gcs(
-        client=get_client(),
-        bucket_id=app.config["GCS_BUCKET_ID"],
-        prefix="static",
-    )
+    create_upload_statics_build()
+
+
+@app.cli.command("build-image")
+@click.argument("image_name")
+def build_image(image_name):
+    from member_card.cloudbuild import create_docker_image_build
+
+    build_result = create_docker_image_build(image_name=image_name)
+    breakpoint()
+    print(f"::set-output name=image::{build_result['artifacts']}")
 
 
 @app.cli.command("insert-google-pass-class")

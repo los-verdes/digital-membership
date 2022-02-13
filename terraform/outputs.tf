@@ -14,8 +14,8 @@ locals {
   )
 }
 
-output "gh_terraform_applier_service_account_email" {
-  value = google_service_account.gh_terraform_applier.email
+output "github_deployer_service_account_email" {
+  value = google_service_account.github_deployer.email
 }
 
 output "github_oidc_provider_name" {

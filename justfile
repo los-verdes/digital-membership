@@ -119,6 +119,12 @@ build: build-website build-worker
   echo "Building statics..."
   just flask assets build
 
+build-website-image: ci-install-python-reqs
+  just flask build-image website
+
+build-worker-image: ci-install-python-reqs
+  just flask build-image worker
+
 run-worker: build-worker
   docker run -it --rm '{{ worker_image_name }}:{{ image_tag }}'
 shell-worker: build-worker
@@ -145,6 +151,10 @@ push: build
   echo "Uploading statics..."
   just flask upload-statics
 
+set-tf-output-output output_name:
+  output_value="$(just tf output -raw {{ output_name }})"
+  echo "::set-output name=output::$output_value"
+
 deploy: ci-install-python-reqs build push
   just tf init
   just tf apply \
@@ -164,6 +174,7 @@ apply-migrations: ci-install-python-reqs
 
   just tf init
   just tf output -raw postgres_management_user_name
+  # TODO: maybe move these tf output calls to a TF -> secret manager -> python path instead...
   export DIGITAL_MEMBERSHIP_DB_USERNAME="$(just tf output -raw postgres_management_user_name)"
   export DIGITAL_MEMBERSHIP_DB_ACCESS_TOKEN="$(just tf output -raw postgres_management_user_password)"
   just flask db upgrade

@@ -1,0 +1,47 @@
+name: Flask Command
+
+on:
+  workflow_call:
+    inputs:
+      command:
+        description: "The justfile + flask-related recipe to run"
+        required: true
+        type: string
+    outputs:
+      image:
+        description: "GCR image produced by the command where applicable"
+        value: ${{ jobs.run_flask_command.outputs.image }}
+
+jobs:
+  run_flask_command:
+    name: Run Flask Command
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.flask-command.outputs.image }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup just
+        uses: extractions/setup-just@v1
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Utilize pip cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ hashFiles('requirements.txt') }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v0
+        with:
+          workload_identity_provider: "projects/567739286055/locations/global/workloadIdentityPools/los-verdes-digital-membership/providers/los-verdes-digital-membership"
+          service_account: "github-deployer@lv-digital-membership.iam.gserviceaccount.com"
+
+      - name: Run Flask Command
+        id: flask-command
+        run: just ${{ inputs.command }}

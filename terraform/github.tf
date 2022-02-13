@@ -20,20 +20,20 @@ module "github_oidc" {
   }
   attribute_condition = "assertion.repository=='${var.github_repo}'"
   sa_mapping = {
-    "gh-terraform-applier" = {
-      sa_name   = google_service_account.gh_terraform_applier.name
-      attribute = "attribute.environment/production"
+    "github-deployer" = {
+      sa_name   = google_service_account.github_deployer.name
+      attribute = "attribute.job_workflow_ref/${var.github_repo}/.github/workflows/deploy.yml@refs/heads/main"
     }
   }
 }
 
-resource "google_service_account" "gh_terraform_applier" {
-  account_id   = "gh-terraform-applier"
+resource "google_service_account" "github_deployer" {
+  account_id   = "github-deployer"
   display_name = "Identity used for privileged deploys within GitHub Actions workflow runs"
 }
 
-resource "google_project_iam_member" "gh_terraform_applier" {
+resource "google_project_iam_member" "github_deployer" {
   project = google_project.digital_membership.id
   role    = "roles/owner"
-  member  = "serviceAccount:${google_service_account.gh_terraform_applier.email}"
+  member  = "serviceAccount:${google_service_account.github_deployer.email}"
 }

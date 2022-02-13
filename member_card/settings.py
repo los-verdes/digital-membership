@@ -56,6 +56,19 @@ class Settings(object):
     GOOGLE_PAY_JWT_TYPE = "savetoandroidpay"
     GOOGLE_PAY_SCOPES = ["https://www.googleapis.com/auth/wallet_object.issuer"]
 
+    GOOGLE_DISCOVERY_URL: str = (
+        "https://accounts.google.com/.well-known/openid-configuration"
+    )
+    SERVICE_ACCOUNT_KEY: str = os.getenv("SERVICE_ACCOUNT_KEY", "")
+    GCS_BUCKET_ID: str = os.getenv("GCS_BUCKET_ID", "")
+    GCLOUD_PROJECT: str = os.getenv("GCLOUD_PROJECT", "")
+    GCP_REPO_NAME: str = os.getenv(
+        "GCP_REPO_NAME", "github_los-verdes_digital-membership"
+    )
+    GCLOUD_PUBSUB_TOPIC_ID: str = os.getenv(
+        "GCLOUD_PUBSUB_TOPIC_ID", "digital-membership"
+    )
+
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
     CLOUD_RUN_SERVICE: str = os.getenv("K_SERVICE", "N/A")
@@ -89,16 +102,6 @@ class Settings(object):
     EMAIL_FROM_NAME: str = os.getenv("EMAIL_FROM_NAME", "Los Verdes (verde-bot)")
     EMAIL_SUBJECT_TEXT: str = os.getenv(
         "EMAIL_SUBJECT_TEXT", "Los Verdes Membership Card Details"
-    )
-
-    GOOGLE_DISCOVERY_URL: str = (
-        "https://accounts.google.com/.well-known/openid-configuration"
-    )
-    SERVICE_ACCOUNT_KEY: str = os.getenv("SERVICE_ACCOUNT_KEY", "")
-    GCS_BUCKET_ID: str = os.getenv("GCS_BUCKET_ID", "")
-    GCLOUD_PROJECT: str = os.getenv("GCLOUD_PROJECT", "")
-    GCLOUD_PUBSUB_TOPIC_ID: str = os.getenv(
-        "GCLOUD_PUBSUB_TOPIC_ID", "digital-membership"
     )
 
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "info")
