@@ -22,7 +22,7 @@ module "github_oidc" {
   sa_mapping = {
     "github-deployer" = {
       sa_name   = google_service_account.github_deployer.name
-      attribute = "attribute.job_workflow_ref/${var.github_repo}/.github/workflows/deploy.yml@refs/heads/main"
+      attribute = "attribute.ref/refs/heads/main"
     }
   }
 }
