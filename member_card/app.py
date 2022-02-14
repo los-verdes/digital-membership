@@ -405,8 +405,7 @@ def build_image(image_name):
     from member_card.cloudbuild import create_docker_image_build
 
     build_result = create_docker_image_build(image_name=image_name)
-    breakpoint()
-    print(f"::set-output name=image::{build_result['artifacts']}")
+    print(f"::set-output name=image::{build_result.images[0]}")
 
 
 @app.cli.command("insert-google-pass-class")
