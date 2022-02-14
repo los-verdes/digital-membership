@@ -101,7 +101,7 @@ jobs:
       command: upload-statics
 
   apply-database-config:
-    name: Apple Database Configuration
+    name: Apply Database Configuration
     runs-on: ubuntu-latest
     needs: apply-terraform
     permissions:
