@@ -49,7 +49,7 @@ RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable 
     && apt-get update \
     && apt-get install --no-install-recommends -y \
         fonts-liberation=1:1.07.4-11 \
-        google-chrome-stable=98.0.4758.80-1 \
+        google-chrome-stable=98.0.4758.102-1 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=base /opt/venv /opt/venv
