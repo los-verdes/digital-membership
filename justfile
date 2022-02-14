@@ -135,6 +135,9 @@ shell-website: build-website
 
 shell: shell-website
 
+upload-statics:
+  just flask upload-statics
+
 push: build
   echo "Pushing website image..."
   docker tag '{{ website_image_name }}:{{ image_tag }}' '{{ website_gcr_image_name }}:{{ image_tag }}'
