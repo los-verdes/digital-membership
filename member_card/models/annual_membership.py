@@ -1,4 +1,6 @@
 import re
+import logging
+from datetime import timezone
 from collections import OrderedDict
 from datetime import datetime, timedelta
 
@@ -26,7 +28,7 @@ membership_card_to_membership_assoc_table = db.Table(
 class AnnualMembership(db.Model):
     __tablename__ = "annual_membership"
 
-    one_year_ago = datetime.now() - timedelta(days=366)
+    one_year_ago = (datetime.utcnow() - timedelta(days=366)).replace(tzinfo=timezone.utc)
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
@@ -118,7 +120,12 @@ class AnnualMembership(db.Model):
             return False
         if not self.created_on:
             return False
-        if self.created_on <= self.one_year_ago:
+
+        # TODO: figure out whats going down here...
+        created_on = self.created_on
+        if created_on.tzinfo is None:
+            created_on = created_on.replace(tzinfo=timezone.utc)
+        if created_on <= self.one_year_ago:
             return False
 
         return True
