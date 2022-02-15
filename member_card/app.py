@@ -376,6 +376,25 @@ def query_db(email):
     logger.info(f"user membership cards:\n{user.membership_cards}")
 
 
+@app.cli.command("query-order-num")
+@click.argument("order_num")
+def query_order_num(order_num):
+    from member_card.models import AnnualMembership
+
+    memberships = (
+        AnnualMembership.query.filter_by(order_number=order_num)
+        .order_by(AnnualMembership.created_on.desc())
+        .all()
+    )
+
+    logger.info(f"memberships matching {order_num}:\n{memberships}")
+    users = [m.user for m in memberships]
+    logger.info(f"user matching {order_num}:\n{users}")
+    for user in users:
+        logger.info(f"user memberships:\n{user.annual_memberships}")
+        logger.info(f"user membership cards:\n{user.membership_cards}")
+
+
 @app.cli.command("create-apple-pass")
 @click.argument("email")
 @click.option("-z", "--zip-file-path")
