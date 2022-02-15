@@ -164,7 +164,9 @@ def squarespace_orders_etl(squarespace_client, db_session, membership_skus, load
             memberships.append(membership)
 
             if not membership.user_id:
-                logger.debug(f"No user_id set for {membership=}! Setting to: {member_user_id=}")
+                logger.debug(
+                    f"No user_id set for {membership=}! Setting to: {member_user_id=}"
+                )
                 setattr(membership, "user_id", member_user_id)
 
             if not member_user.fullname:
