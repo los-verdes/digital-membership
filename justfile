@@ -135,7 +135,7 @@ shell-website: build-website
 
 shell: shell-website
 
-upload-statics:
+upload-statics: ci-install-python-reqs
   just flask upload-statics
 
 push: build
