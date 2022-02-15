@@ -28,7 +28,9 @@ membership_card_to_membership_assoc_table = db.Table(
 class AnnualMembership(db.Model):
     __tablename__ = "annual_membership"
 
-    one_year_ago = (datetime.utcnow() - timedelta(days=366)).replace(tzinfo=timezone.utc)
+    one_year_ago = (datetime.utcnow() - timedelta(days=366)).replace(
+        tzinfo=timezone.utc
+    )
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))

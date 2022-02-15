@@ -163,6 +163,8 @@ class Settings(object):
     )
 
     SQUARESPACE_API_KEY: str = os.getenv("SQUARESPACE_API_KEY", "")
+    SQUARESPACE_CLIENT_ID: str = os.getenv("SQUARESPACE_CLIENT_ID", "")
+    SQUARESPACE_CLIENT_SECRET: str = os.getenv("SQUARESPACE_CLIENT_SECRET", "")
     SQUARESPACE_MEMBERSHIP_SKUS = os.getenv(
         "SQUARESPACE_MEMBERSHIP_SKUS", "SQ3671268,SQ6438806"
     ).split(",")

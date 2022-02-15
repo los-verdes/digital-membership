@@ -216,6 +216,37 @@ def passes_apple_pay():
     return redirect(url_for("home"))
 
 
+# TODO: implement some sort of "member_of => admin" check here as well?
+@login_required
+@app.route("/squarespace/oauth/login")
+def squarespace_oauth_login():
+    import urllib.parse
+
+    url = "https://login.squarespace.com/api/1/login/oauth/provider/authorize"
+
+    params = {
+        "client_id": app.config["SQUARESPACE_CLIENT_ID"],
+        # "redirect_uri": "https://card.losverd.es/squarespace/oauth/connect",
+        "redirect_uri": f"{app.config['BASE_URL']}/squarespace/oauth/connect",
+        # "redirect_uri": url_for("squarespace_oauth_callback"),
+        "scope": "website.orders,website.orders.read",
+        "access_type": "offline",
+        "state": "meow",
+    }
+    url_params = urllib.parse.urlencode(params)
+    authorize_url = f"{url}?{url_params}"
+    logger.debug(f"{url=} + {url_params=} => {authorize_url}")
+    return redirect(authorize_url)
+
+
+# @login_required
+@app.route("/squarespace/oauth/connect")
+def squarespace_oauth_callback():
+    logger.debug(f"squarespace_oauth_callback: {list(request.args)=}")
+    logger.debug(f"squarespace_oauth_callback: {list(request.headers)=}")
+    return "hi", 200
+
+
 @login_required
 @app.route("/verify-pass/<serial_number>")
 # Note: get_or_create_membership_card() has this route hard-coded in it

@@ -83,6 +83,8 @@ jobs:
           TF_VAR_worker_image: ${{ needs.build-worker-image.outputs.image }}
 
           TF_VAR_squarespace_api_key: ${{ secrets.squarespace_api_key }}
+          TF_VAR_squarespace_client_id: ${{ secrets.squarespace_client_id }}
+          TF_VAR_squarespace_client_secret: ${{ secrets.squarespace_client_secret }}
           TF_VAR_sendgrid_api_key: ${{ secrets.sendgrid_api_key }}
           TF_VAR_oauth_client_id: ${{ secrets.oauth_client_id }}
           TF_VAR_oauth_client_secret: ${{ secrets.oauth_client_secret }}

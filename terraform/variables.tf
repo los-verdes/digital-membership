@@ -68,6 +68,13 @@ variable "squarespace_api_key" {
   sensitive = true
 }
 
+variable "squarespace_client_id" {}
+
+
+variable "squarespace_client_secret" {
+  sensitive = true
+}
+
 variable "recaptcha_secret_key" {
   sensitive = true
 }
