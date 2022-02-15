@@ -182,6 +182,20 @@ def email_distribution_request():
 
 
 @login_required
+@app.route("/passes/google-pay")
+def passes_google_pay():
+
+    current_user = g.user
+    if current_user.is_authenticated:
+        from member_card.models.membership_card import get_or_create_membership_card
+
+        membership_card = get_or_create_membership_card(current_user)
+        return redirect(membership_card.google_pass_save_url)
+
+    return redirect("/")
+
+
+@login_required
 @app.route("/passes/apple-pay")
 def passes_apple_pay():
 
