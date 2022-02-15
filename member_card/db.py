@@ -134,7 +134,6 @@ def squarespace_orders_etl(squarespace_client, db_session, membership_skus, load
             membership_kwargs = dict(
                 order_id=subscription_order["id"],
                 order_number=subscription_order["orderNumber"],
-                user_id=member_user_id,
                 channel=subscription_order["channel"],
                 channel_name=subscription_order["channelName"],
                 billing_address_first_name=subscription_order["billingAddress"][
@@ -163,6 +162,11 @@ def squarespace_orders_etl(squarespace_client, db_session, membership_skus, load
                 kwargs=membership_kwargs,
             )
             memberships.append(membership)
+
+            if not membership.user_id:
+                logger.debug(f"No user_id set for {membership=}! Setting to: {member_user_id=}")
+                setattr(membership, "user_id", member_user_id)
+
             if not member_user.fullname:
                 member_name = f"{membership.billing_address_first_name} {membership.billing_address_last_name}"
                 logger.debug(
@@ -179,6 +183,7 @@ def squarespace_orders_etl(squarespace_client, db_session, membership_skus, load
                 logger.warning(
                     f"{member_user.fullname=} does not match {membership.billing_address_first_name} {membership.billing_address_last_name} for some reason..."
                 )
+
             db.session.add(membership)
             db.session.commit()
 
