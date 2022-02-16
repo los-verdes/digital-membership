@@ -232,14 +232,14 @@ def squarespace_oauth_login():
     import urllib.parse
 
     url = "https://login.squarespace.com/api/1/login/oauth/provider/authorize"
-    session["oauth_state"] = utils.sign(datetime.utcnow().isoformat())
+    state = utils.sign(datetime.utcnow().isoformat())
+    session["oauth_state"] = state
     params = {
         "client_id": app.config["SQUARESPACE_CLIENT_ID"],
         "redirect_uri": app.config["SQUARESPACE_OAUTH_REDIRECT_URI"],
-        # "redirect_uri": url_for("squarespace_oauth_callback"),
         "scope": "website.orders,website.orders.read",
         "access_type": "offline",
-        "state": "meow",
+        "state": state,
     }
     url_params = urllib.parse.urlencode(params)
     authorize_url = f"{url}?{url_params}"
@@ -247,10 +247,12 @@ def squarespace_oauth_login():
     return redirect(authorize_url)
 
 
-# @login_required
+@login_required
 @app.route("/squarespace/oauth/connect")
 def squarespace_oauth_callback():
+    from member_card.db import db, get_or_create
     from member_card.squarespace import request_new_oauth_token, Squarespace
+    from member_card.models import SquarespaceWebhook
 
     if error := request.args.get("error"):
         logger.error(f"Squarespace oauth connect error: {error=}")
@@ -269,25 +271,47 @@ def squarespace_oauth_callback():
         client_id=app.config["SQUARESPACE_CLIENT_ID"],
         client_secret=app.config["SQUARESPACE_CLIENT_SECRET"],
         code=code,
-        # redirect_uri=app.config['SQUARESPACE_OAUTH_REDIRECT_URI'],
-        redirect_uri="https://card.losverd.es/squarespace/oauth/connect",
+        redirect_uri=app.config["SQUARESPACE_OAUTH_REDIRECT_URI"],
+        # redirect_uri="https://card.losverd.es/squarespace/oauth/connect",
     )
-
+    squarespace_account_id = token_resp["account_id"]
+    logger.debug(f"squarespace_account_id(): {squarespace_account_id=}")
     squarespace = Squarespace(api_key=token_resp["access_token"])
 
-    orders_webhook_resp = squarespace.create_orders_webhook(
-        endpoint_url=app.config["SQUARESPACE_ORDER_WEBHOOK_ENDPOINT"],
-    )
-    logger.debug(f"squarespace_oauth_callback(): {orders_webhook_resp=}")
+    orders_webhook_resp = None
+    list_webhooks_resp = squarespace.list_webhook_subscriptions()
+    webhook_subscriptions = list_webhooks_resp["webhookSubscriptions"]
+    logger.debug(f"squarespace_oauth_callback(): {webhook_subscriptions=}")
 
-    all_webhook_subscriptions = squarespace.get_webhook_subscriptions()
-    logger.debug(f"squarespace_oauth_callback(): {orders_webhook_resp=}")
-
-    return jsonify(
-        dict(
-            orders_webhook_resp=orders_webhook_resp,
-            all_webhook_subscriptions=all_webhook_subscriptions,
+    if not webhook_subscriptions:
+        logger.debug(f"Creating webhook for {squarespace_account_id} now...")
+        orders_webhook_resp = squarespace.create_orders_webhook(
+            endpoint_url=app.config["SQUARESPACE_ORDER_WEBHOOK_ENDPOINT"],
         )
+        logger.debug(f"squarespace_oauth_callback(): {orders_webhook_resp=}")
+
+        order_webhook = get_or_create(
+            session=db.session,
+            model=SquarespaceWebhook,
+            webhook_id=orders_webhook_resp["id"],
+            website_id=squarespace_account_id,
+            endpoint_url=orders_webhook_resp["endpointUrl"],
+            topics=orders_webhook_resp["topics"],
+            secret=orders_webhook_resp["secret"],
+            created_on=orders_webhook_resp["createdOn"],
+            updated_on=orders_webhook_resp["updatedOn"],
+        )
+        db.session.add(order_webhook)
+        db.session.commit()
+        logger.debug(f"order webhook created!: {order_webhook=}")
+        list_webhooks_resp = squarespace.list_webhook_subscriptions()
+        webhook_subscriptions = list_webhooks_resp["webhookSubscriptions"]
+        logger.debug(f"squarespace_oauth_callback(): {webhook_subscriptions=}")
+
+    return render_template(
+        "squarespace_connect.html.j2",
+        squarespace_account_id=squarespace_account_id,
+        webhook_subscriptions=webhook_subscriptions,
     )
 
 

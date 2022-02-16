@@ -260,7 +260,7 @@ class Squarespace(object):
         )
         return membership_orders
 
-    def get_webhook_subscriptions(
+    def list_webhook_subscriptions(
         self,
     ):
         return self.get(
