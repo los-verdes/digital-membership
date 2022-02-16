@@ -276,6 +276,7 @@ ignored-modules=flask,
                 flask_migrate,
                 alembic,
                 social_sqlalchemy,
+                flask_security,
                 click
 
 # Show a hint with possible names when a member name was not found. The aspect
