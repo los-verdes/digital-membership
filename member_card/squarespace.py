@@ -1,9 +1,9 @@
+import logging
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 import requests
-
-# from logzero import logger
-import logging
+from requests.auth import HTTPBasicAuth
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -11,6 +11,71 @@ if TYPE_CHECKING:
 __VERSION__ = "0.0.4"
 api_baseurl = "https://api.squarespace.com"
 api_version = "1.0"
+
+
+def perform_oauth_token_request(client_id, client_secret, token_request_body):
+    access_token_url = "https://login.squarespace.com/api/1/login/oauth/provider/tokens"
+
+    token_request_auth = HTTPBasicAuth(
+        username=client_id,
+        password=client_secret,
+    )
+
+    token_resp = requests.post(
+        url=access_token_url,
+        json=token_request_body,
+        auth=token_request_auth,
+        headers={
+            "Content-Type": "application/json",
+            "User-Agent": "lv-digital-membership",
+        },
+    )
+    logging.debug(f"perform_oauth_token_request(): {list(token_resp.headers)=}")
+    token_resp.raise_for_status()
+    resp_data = token_resp.json()
+    # {
+    #     "access_token": "<ACCESS-TOKEN>",
+    #     "access_token_expires_at": 1645033666.058,
+    #     "account_id": "61d0825ac2dd1a52b2e29b66",
+    #     "expires_in": 1799,
+    #     "refresh_token": "<REFRESH-TOKEN>",
+    #     "refresh_token_expires_at": 1645636666.053,
+    #     "session_expires_at": 1647555455.432,
+    #     "session_id": "620c267f1c5a7f6358b71e88",
+    #     "token": "<ACCESS-TOKEN>",
+    #     "token_type": "bearer",
+    # }
+    for k, v in resp_data.items():
+        if k.endswith("expires_at"):
+            expires_at_dt = datetime.fromtimestamp(v).strftime("%c")
+            logging.debug(f"perform_oauth_token_request(): {k} => {expires_at_dt}")
+            resp_data[k] = expires_at_dt
+    return resp_data
+
+
+def request_new_oauth_token(client_id, client_secret, code, redirect_uri):
+    token_request_body = dict(
+        grant_type="authorization_code",
+        redirect_uri=redirect_uri,
+        code=code,
+    )
+    return perform_oauth_token_request(
+        client_id=client_id,
+        client_secret=client_secret,
+        token_request_body=token_request_body,
+    )
+
+
+def refresh_oauth_token(client_id, client_secret, refresh_token):
+    token_request_body = dict(
+        grant_type="refresh_token",
+        refresh_token=refresh_token,
+    )
+    return perform_oauth_token_request(
+        client_id=client_id,
+        client_secret=client_secret,
+        token_request_body=token_request_body,
+    )
 
 
 class SquarespaceError(Exception):
@@ -194,3 +259,30 @@ class Squarespace(object):
             f"{len(all_orders)=} loaded with {len(membership_orders)=} and whatnot"
         )
         return membership_orders
+
+    def get_webhook_subscriptions(
+        self,
+    ):
+        return self.get(
+            path="webhook_subscriptions",
+        )
+
+    def create_orders_webhook(
+        self,
+        endpoint_url,
+    ):
+        # ) -> List[AnnualMembership]:
+        # "order.create"
+        # "order.update"
+        request_body = dict(
+            endpointUrl=endpoint_url,
+            topics=[
+                "order.create",
+                "order.update",
+            ],
+        )
+
+        return self.post(
+            path="webhook_subscriptions",
+            object=request_body,
+        )

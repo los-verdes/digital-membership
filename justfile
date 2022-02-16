@@ -161,6 +161,7 @@ set-tf-output-output output_name:
 deploy: ci-install-python-reqs build push
   just tf init
   just tf apply \
+    -auto-approve \
     -var='website_image={{ website_gcr_image_name }}:{{ image_tag }}' \
     -var='worker_image={{ worker_gcr_image_name }}:{{ image_tag }}'
 

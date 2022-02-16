@@ -3,7 +3,16 @@ import os
 from datetime import datetime
 
 import click
-from flask import Flask, g, redirect, render_template, request, send_file, url_for
+from flask import (
+    Flask,
+    g,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    url_for,
+    session,
+)
 from flask_cdn import CDN
 from flask_login import current_user as current_login_user
 from flask_login import login_required, logout_user
@@ -223,11 +232,10 @@ def squarespace_oauth_login():
     import urllib.parse
 
     url = "https://login.squarespace.com/api/1/login/oauth/provider/authorize"
-
+    session["oauth_state"] = utils.sign(datetime.utcnow().isoformat())
     params = {
         "client_id": app.config["SQUARESPACE_CLIENT_ID"],
-        # "redirect_uri": "https://card.losverd.es/squarespace/oauth/connect",
-        "redirect_uri": f"{app.config['BASE_URL']}/squarespace/oauth/connect",
+        "redirect_uri": app.config["SQUARESPACE_OAUTH_REDIRECT_URI"],
         # "redirect_uri": url_for("squarespace_oauth_callback"),
         "scope": "website.orders,website.orders.read",
         "access_type": "offline",
@@ -242,8 +250,66 @@ def squarespace_oauth_login():
 # @login_required
 @app.route("/squarespace/oauth/connect")
 def squarespace_oauth_callback():
+    from member_card.squarespace import request_new_oauth_token, Squarespace
+
+    if error := request.args.get("error"):
+        logger.error(f"Squarespace oauth connect error: {error=}")
+        return redirect("/")
+
+    if session.get("oauth_state") != request.args["state"]:
+        logger.error(
+            f"Squarespace oauth connect error: {session.get('oauth_state')=} does not match {request.args['state']=}"
+        )
+        return redirect("/")
+
+    code = request.args["code"]
     logger.debug(f"squarespace_oauth_callback: {list(request.args)=}")
     logger.debug(f"squarespace_oauth_callback: {list(request.headers)=}")
+    token_resp = request_new_oauth_token(
+        client_id=app.config["SQUARESPACE_CLIENT_ID"],
+        client_secret=app.config["SQUARESPACE_CLIENT_SECRET"],
+        code=code,
+        # redirect_uri=app.config['SQUARESPACE_OAUTH_REDIRECT_URI'],
+        redirect_uri="https://card.losverd.es/squarespace/oauth/connect",
+    )
+
+    squarespace = Squarespace(api_key=token_resp["access_token"])
+
+    orders_webhook_resp = squarespace.create_orders_webhook(
+        endpoint_url=app.config["SQUARESPACE_ORDER_WEBHOOK_ENDPOINT"],
+    )
+    logger.debug(f"squarespace_oauth_callback(): {orders_webhook_resp=}")
+
+    all_webhook_subscriptions = squarespace.get_webhook_subscriptions()
+    logger.debug(f"squarespace_oauth_callback(): {orders_webhook_resp=}")
+
+    return jsonify(
+        dict(
+            orders_webhook_resp=orders_webhook_resp,
+            all_webhook_subscriptions=all_webhook_subscriptions,
+        )
+    )
+
+
+@app.route("/squarespace/order-webhook")
+def squarespace_order_webhook():
+    logger.debug(f"squarespace_order_webhook(): {request.args=}")
+    webhook_payload = request.get_json()
+    logger.debug(f"squarespace_order_webhook(): {webhook_payload=}")
+    order_id = webhook_payload["data"]["orderId"]
+
+    from member_card.pubsub import publish_message
+
+    topic_id = app.config["GCLOUD_PUBSUB_TOPIC_ID"]
+    logger.info(f"publishing sync_order message to pubsub {topic_id=} for: {order_id=}")
+    publish_message(
+        project_id=app.config["GCLOUD_PROJECT"],
+        topic_id=topic_id,
+        message_data=dict(
+            type="sync_order",
+            order_id=order_id,
+        ),
+    )
     return "hi", 200
 
 

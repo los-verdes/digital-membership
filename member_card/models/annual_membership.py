@@ -1,5 +1,4 @@
 import re
-import logging
 from datetime import timezone
 from collections import OrderedDict
 from datetime import datetime, timedelta
