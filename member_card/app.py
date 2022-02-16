@@ -295,24 +295,60 @@ def squarespace_oauth_callback():
 
 @app.route("/squarespace/order-webhook")
 def squarespace_order_webhook():
-    logger.debug(f"squarespace_order_webhook(): {request.args=}")
-    webhook_payload = request.get_json()
-    logger.debug(f"squarespace_order_webhook(): {webhook_payload=}")
-    order_id = webhook_payload["data"]["orderId"]
+    from member_card.models import SquarespaceWebhook
 
     from member_card.pubsub import publish_message
+    import json
+
+    logger.debug(f"squarespace_order_webhook(): {request.args=}")
+    logger.debug(f"squarespace_order_webhook(): {request.form=}")
+    logger.debug(f"squarespace_order_webhook(): {request.data=}")
+    logger.debug(f"squarespace_order_webhook(): {request.json=}")
+
+    webhook_payload = request.get_json()
+    logger.debug(f"squarespace_order_webhook(): {webhook_payload=}")
+
+    webhook_id = webhook_payload["websiteId"]
+    website_id = webhook_payload["websiteId"]
+    logger.debug(
+        f"Query database for extant webhook matching {webhook_id=} ({website_id=})"
+    )
+    webhook = SquarespaceWebhook.query.filter_by(
+        webhook_id=webhook_id, website_id=website_id
+    ).one()
+    logger.debug(f"{webhook_id}: {webhook=}")
+
+    incoming_signature = request.headers.get("Squarespace-Signature")
+    logger.debug(f"Verifying webhook payload signature ({incoming_signature=})")
+    payload_verified = utils.verify(
+        signature=incoming_signature,
+        data=json.dumps(webhook_payload),
+        key=webhook.secret,
+    )
+    if not payload_verified:
+        logger.warning(
+            f"Unable to verify {incoming_signature} for {webhook_id} ({webhook=})"
+        )
+        return "unable to verify notification signature!", 401
+
+    message_data = dict(
+        type="sync_order",
+        notification_id=webhook_payload["id"],
+        order_id=webhook_payload["data"]["orderId"],
+        website_id=website_id,
+        created_on=webhook_payload["createdOn"],
+    )
 
     topic_id = app.config["GCLOUD_PUBSUB_TOPIC_ID"]
-    logger.info(f"publishing sync_order message to pubsub {topic_id=} for: {order_id=}")
+    logger.info(
+        f"publishing sync_order message to pubsub {topic_id=} with data: {message_data=}"
+    )
     publish_message(
         project_id=app.config["GCLOUD_PROJECT"],
         topic_id=topic_id,
-        message_data=dict(
-            type="sync_order",
-            order_id=order_id,
-        ),
+        message_data=message_data,
     )
-    return "hi", 200
+    return "thanks buds!", 200
 
 
 @login_required
