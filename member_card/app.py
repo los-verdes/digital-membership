@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os
 from datetime import datetime
-
+from flask_security.decorators import roles_required
 import click
 from flask import (
     Flask,
@@ -23,6 +23,7 @@ from sqlalchemy.sql import func
 
 from member_card import utils
 from member_card.db import squarespace_orders_etl
+from flask_security import Security
 from member_card.models import User
 from member_card.squarespace import Squarespace
 
@@ -36,6 +37,8 @@ logger = app.logger
 logger.propagate = False
 
 login_manager = utils.MembershipLoginManager()
+
+security = Security()
 
 recaptcha = ReCaptcha()
 
@@ -225,9 +228,8 @@ def passes_apple_pay():
     return redirect(url_for("home"))
 
 
-# TODO: implement some sort of "member_of => admin" check here as well?
-@login_required
 @app.route("/squarespace/oauth/login")
+@roles_required("admin")
 def squarespace_oauth_login():
     import urllib.parse
 
@@ -247,8 +249,8 @@ def squarespace_oauth_login():
     return redirect(authorize_url)
 
 
-@login_required
 @app.route("/squarespace/oauth/connect")
+@roles_required("admin")
 def squarespace_oauth_callback():
     from member_card.squarespace import (
         request_new_oauth_token,
@@ -711,3 +713,28 @@ def update_user_name(user_email, first_name, last_name):
     db.session.add(user)
     db.session.commit()
     logger.debug(f"post-commit: {user=}")
+
+
+@app.cli.command("add-role-to-user")
+@click.argument("user_email")
+@click.argument("role_name")
+def add_role_to_user(user_email, role_name):
+    from flask_security import SQLAlchemySessionUserDatastore
+    from member_card.db import db
+    from member_card.models.user import Role
+
+    logger.debug(f"{user_email=} => {role_name=}")
+    user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
+
+    user = user_datastore.get_user(user_email)
+    admin_role = user_datastore.find_or_create_role(
+        name="admin",
+        description="Administrators allowed to connect Squarespace extensions, etc.",
+    )
+    db.session.add(admin_role)
+    db.session.commit()
+    logger.info(f"Adding {admin_role=} to user: {user=}")
+    user_datastore.add_role_to_user(user=user, role=admin_role)
+    logger.info(f"{admin_role=} successfully added for {user=}!")
+    db.session.add(user)
+    db.session.commit()

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import logging
 import os
-
+from flask_security import SQLAlchemySessionUserDatastore
 from flask.logging import default_handler
 from flask_gravatar import Gravatar
 from opentelemetry.instrumentation.flask import FlaskInstrumentor
@@ -23,7 +23,7 @@ def create_cli_app():
 
 
 def create_app():
-    from member_card.app import login_manager, recaptcha, cdn
+    from member_card.app import login_manager, recaptcha, cdn, security
 
     logger = logging.getLogger(__name__)
 
@@ -56,6 +56,14 @@ def create_app():
     db.init_app(app)
     init_social(app, db.session)
     migrate.init_app(app, db)
+
+    from member_card.models.user import User, Role
+
+    user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
+    security.init_app(
+        app=app,
+        datastore=user_datastore,
+    )
 
     from social_flask.routes import social_auth
 
