@@ -238,7 +238,7 @@ def squarespace_oauth_login():
         "client_id": app.config["SQUARESPACE_CLIENT_ID"],
         "redirect_uri": app.config["SQUARESPACE_OAUTH_REDIRECT_URI"],
         "scope": "website.orders,website.orders.read",
-        "access_type": "offline",
+        # "access_type": "offline",
         "state": state,
     }
     url_params = urllib.parse.urlencode(params)
@@ -276,19 +276,18 @@ def squarespace_oauth_callback():
         code=code,
         redirect_uri=app.config["SQUARESPACE_OAUTH_REDIRECT_URI"],
     )
-
-    squarespace_account_id = token_resp["account_id"]
-    logger.debug(f"squarespace_account_id(): {squarespace_account_id=}")
+    token_account_id = token_resp["account_id"]
+    logger.debug(f"squarespace_oauth_callback(): {token_account_id=}")
 
     webhook_subscriptions = ensure_orders_webhook_subscription(
         squarespace=Squarespace(api_key=token_resp["access_token"]),
-        account_id=squarespace_account_id,
+        account_id=token_account_id,
         endpoint_url=app.config["SQUARESPACE_ORDER_WEBHOOK_ENDPOINT"],
     )
 
     return render_template(
         "squarespace_connect.html.j2",
-        squarespace_account_id=squarespace_account_id,
+        squarespace_account_id=token_account_id,
         webhook_subscriptions=webhook_subscriptions,
     )
 
@@ -304,12 +303,17 @@ def squarespace_order_webhook():
     logger.debug(f"squarespace_order_webhook(): {request.form=}")
     logger.debug(f"squarespace_order_webhook(): {request.data=}")
     logger.debug(f"squarespace_order_webhook(): {request.json=}")
-
     webhook_payload = request.get_json()
     logger.debug(f"squarespace_order_webhook(): {webhook_payload=}")
 
-    webhook_id = webhook_payload["websiteId"]
+    allowed_website_ids = app.config["SQUARESPACE_ALLOWED_WEBSITE_IDS"]
     website_id = webhook_payload["websiteId"]
+    if website_id not in allowed_website_ids:
+        error_msg = f"Refusing to process webhook payload for {website_id=} (not in {allowed_website_ids=})"
+        logger.warning(error_msg)
+        return error_msg, 403
+
+    webhook_id = webhook_payload["subscriptionId"]
     logger.debug(
         f"Query database for extant webhook matching {webhook_id=} ({website_id=})"
     )

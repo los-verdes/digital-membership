@@ -16,11 +16,13 @@ api_baseurl = "https://api.squarespace.com"
 api_version = "1.0"
 
 
-def ensure_orders_webhook_subscription(squarespace, account_id, endpoint_url, delete_extant_first=False):
+def ensure_orders_webhook_subscription(
+    squarespace, account_id, endpoint_url, delete_extant_first=False
+):
     if delete_extant_first:
         list_webhooks_resp = squarespace.list_webhook_subscriptions()
         webhook_subscriptions = list_webhooks_resp["webhookSubscriptions"]
-        logging.debug(f"squarespace_oauth_callback(): {webhook_subscriptions=}")
+        logging.debug(f"ensure_orders_webhook_subscription(): {webhook_subscriptions=}")
 
         for webhook_subscription in webhook_subscriptions:
             tmp_delete_resp = squarespace.delete_webhook(
@@ -30,7 +32,7 @@ def ensure_orders_webhook_subscription(squarespace, account_id, endpoint_url, de
 
     list_webhooks_resp = squarespace.list_webhook_subscriptions()
     webhook_subscriptions = list_webhooks_resp["webhookSubscriptions"]
-    logging.debug(f"squarespace_oauth_callback(): {webhook_subscriptions=}")
+    logging.debug(f"ensure_orders_webhook_subscription(): {webhook_subscriptions=}")
 
     if webhook_subscriptions:
         for webhook_subscription in webhook_subscriptions:
@@ -40,7 +42,7 @@ def ensure_orders_webhook_subscription(squarespace, account_id, endpoint_url, de
                 account_id=account_id,
             )
     else:
-        create_orders_webhook(
+        order_webhook = create_orders_webhook(
             squarespace=squarespace,
             account_id=account_id,
             endpoint_url=endpoint_url,
@@ -49,14 +51,21 @@ def ensure_orders_webhook_subscription(squarespace, account_id, endpoint_url, de
         logging.debug("Refreshing webhooks list post-webhook-creation...")
         list_webhooks_resp = squarespace.list_webhook_subscriptions()
         webhook_subscriptions = list_webhooks_resp["webhookSubscriptions"]
-        logging.debug(f"squarespace_oauth_callback(): {webhook_subscriptions=}")
+        webhook_subscriptions_by_id = {w["id"]: w for w in webhook_subscriptions}
+        logging.debug(f"after creating webhook: {webhook_subscriptions_by_id=}")
+        website_id = webhook_subscriptions_by_id[order_webhook.webhook_id]["websiteId"]
+        logging.debug(f"Setting website_id for {order_webhook} to: {website_id=}")
+        setattr(order_webhook, "website_id", website_id)
+        db.session.add(order_webhook)
+        db.session.commit()
+        logging.debug(f"order webhook committed!: {order_webhook=}")
     return webhook_subscriptions
 
 
 def rotate_secret_for_webhook(squarespace, webhook_id, account_id):
     logging.debug(f"Querying database for extant webhook ID: {webhook_id}...")
     extant_webhook = SquarespaceWebhook.query.filter_by(
-        webhook_id=webhook_id, website_id=account_id
+        webhook_id=webhook_id, account_id=account_id
     ).one()
 
     logging.debug(f"Rotating webhook subscription secret for {extant_webhook=}...")
@@ -81,13 +90,13 @@ def create_orders_webhook(squarespace, account_id, endpoint_url):
             "order.update",
         ],
     )
-    logging.debug(f"squarespace_oauth_callback(): {orders_webhook_resp=}")
+    logging.debug(f"create_orders_webhook(): {orders_webhook_resp=}")
 
     order_webhook = get_or_create(
         session=db.session,
         model=SquarespaceWebhook,
         webhook_id=orders_webhook_resp["id"],
-        website_id=account_id,
+        account_id=account_id,
         endpoint_url=orders_webhook_resp["endpointUrl"],
         # topics=orders_webhook_resp["topics"],
         secret=orders_webhook_resp["secret"],
@@ -96,9 +105,7 @@ def create_orders_webhook(squarespace, account_id, endpoint_url):
     )
     logging.debug(f"order webhook created!: {order_webhook=}")
     setattr(order_webhook, "topics", orders_webhook_resp["topics"])
-    db.session.add(order_webhook)
-    db.session.commit()
-    logging.debug(f"order webhook committed!: {order_webhook=}")
+    return order_webhook
 
 
 def perform_oauth_token_request(client_id, client_secret, token_request_body):

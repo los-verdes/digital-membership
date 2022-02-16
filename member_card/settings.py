@@ -166,6 +166,10 @@ class Settings(object):
     SQUARESPACE_CLIENT_ID: str = os.getenv("SQUARESPACE_CLIENT_ID", "")
     SQUARESPACE_CLIENT_SECRET: str = os.getenv("SQUARESPACE_CLIENT_SECRET", "")
     SQUARESPACE_OAUTH_REDIRECT_URI: str = f"{BASE_URL}/squarespace/oauth/connect"
+    SQUARESPACE_ALLOWED_WEBSITE_IDS = [
+        "620c2c763b1f5c0f1b713afe",  # JHOG's test site
+        "5ec4a139657fe864073c26e6",  # losverdesatx.org
+    ]
     SQUARESPACE_ORDER_WEBHOOK_ENDPOINT: str = f"{BASE_URL}/squarespace/order-webhook"
     SQUARESPACE_MEMBERSHIP_SKUS = os.getenv(
         "SQUARESPACE_MEMBERSHIP_SKUS", "SQ3671268,SQ6438806"
