@@ -88,6 +88,7 @@ def create_orders_webhook(squarespace, account_id, endpoint_url):
         topics=[
             "order.create",
             "order.update",
+            "extension.uninstall",
         ],
     )
     logging.debug(f"create_orders_webhook(): {orders_webhook_resp=}")

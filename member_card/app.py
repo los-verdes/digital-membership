@@ -295,6 +295,7 @@ def squarespace_oauth_callback():
 @app.route("/squarespace/order-webhook")
 def squarespace_order_webhook():
     from member_card.models import SquarespaceWebhook
+    from member_card.db import db
 
     from member_card.pubsub import publish_message
     import json
@@ -335,23 +336,31 @@ def squarespace_order_webhook():
         )
         return "unable to verify notification signature!", 401
 
-    message_data = dict(
-        type="sync_order",
-        notification_id=webhook_payload["id"],
-        order_id=webhook_payload["data"]["orderId"],
-        website_id=website_id,
-        created_on=webhook_payload["createdOn"],
-    )
+    webhook_topic = webhook_payload["topic"]
 
-    topic_id = app.config["GCLOUD_PUBSUB_TOPIC_ID"]
-    logger.info(
-        f"publishing sync_order message to pubsub {topic_id=} with data: {message_data=}"
-    )
-    publish_message(
-        project_id=app.config["GCLOUD_PROJECT"],
-        topic_id=topic_id,
-        message_data=message_data,
-    )
+    if webhook_topic == "extension.uninstall":
+        db.session.delete(webhook)
+        db.session.commit()
+    elif webhook_topic.startswith("order."):
+        message_data = dict(
+            type="sync_order",
+            notification_id=webhook_payload["id"],
+            order_id=webhook_payload["data"]["orderId"],
+            website_id=website_id,
+            created_on=webhook_payload["createdOn"],
+        )
+
+        topic_id = app.config["GCLOUD_PUBSUB_TOPIC_ID"]
+        logger.info(
+            f"publishing sync_order message to pubsub {topic_id=} with data: {message_data=}"
+        )
+        publish_message(
+            project_id=app.config["GCLOUD_PROJECT"],
+            topic_id=topic_id,
+            message_data=message_data,
+        )
+    else:
+        raise NotImplementedError(f"No handler available for {webhook_topic=}")
     return "thanks buds!", 200
 
 
