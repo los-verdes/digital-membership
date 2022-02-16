@@ -1,5 +1,5 @@
 from member_card.db import db
-from sqlalchemy.types import JSON
+from sqlalchemy.dialects.postgresql import JSON
 
 
 class SquarespaceWebhook(db.Model):
