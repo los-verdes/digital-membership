@@ -348,51 +348,67 @@ def squarespace_extension_details():
 
 @app.route("/squarespace/order-webhook", methods=["POST"])
 def squarespace_order_webhook():
-    import json
-
     from member_card.db import db
     from member_card.models import SquarespaceWebhook
     from member_card.pubsub import publish_message
 
-    logger.debug(f"squarespace_order_webhook(): {request.args=}")
-    logger.debug(f"squarespace_order_webhook(): {request.form=}")
-    logger.debug(f"squarespace_order_webhook(): {request.data=}")
-    logger.debug(f"squarespace_order_webhook(): {request.json=}")
     webhook_payload = request.get_json()
-    logger.debug(f"squarespace_order_webhook(): {webhook_payload=}")
 
-    allowed_website_ids = app.config["SQUARESPACE_ALLOWED_WEBSITE_IDS"]
+    incoming_signature = request.headers.get("Squarespace-Signature")
+    webhook_id = webhook_payload["subscriptionId"]
     website_id = webhook_payload["websiteId"]
+    allowed_website_ids = app.config["SQUARESPACE_ALLOWED_WEBSITE_IDS"]
+
+    log_extra = dict(
+        incoming_signature=incoming_signature,
+        webhook_payload=webhook_payload,
+        allowed_website_ids=allowed_website_ids,
+        website_id=website_id,
+    )
+    logger.debug(
+        f"squarespace_order_webhook(): INCOMING WEBHOOK YO {webhook_payload=}",
+        extra=log_extra,
+    )
+
     if website_id not in allowed_website_ids:
         error_msg = f"Refusing to process webhook payload for {website_id=} (not in {allowed_website_ids=})"
-        logger.warning(error_msg)
+        logger.warning(error_msg, extra=log_extra)
         return error_msg, 403
 
-    webhook_id = webhook_payload["subscriptionId"]
     logger.debug(
-        f"Query database for extant webhook matching {webhook_id=} ({website_id=})"
+        f"Query database for extant webhook matching {webhook_id=} ({website_id=})",
+        extra=log_extra,
     )
     webhook = SquarespaceWebhook.query.filter_by(
         webhook_id=webhook_id, website_id=website_id
     ).one()
-    logger.debug(f"{webhook_id}: {webhook=}")
-
-    incoming_signature = request.headers.get("Squarespace-Signature")
-    logger.debug(f"Verifying webhook payload signature ({incoming_signature=})")
+    log_extra["webhook"] = webhook
+    logger.debug(f"{webhook_id}: {webhook=}", extra=log_extra)
+    logger.debug(
+        f"Verifying webhook payload signature ({incoming_signature=})", extra=log_extra
+    )
     payload_verified = utils.verify(
         signature=incoming_signature,
-        data=json.dumps(webhook_payload),
+        data=request.data,
         key=webhook.secret.encode(),
     )
+    log_extra["payload_verified"] = payload_verified
     if not payload_verified:
+        expected_signature = utils.sign(
+            data=request.data,
+            key=webhook.secret.encode(),
+        )
+        log_extra["expected_signature"] = expected_signature
         logger.warning(
-            f"Unable to verify {incoming_signature} for {webhook_id} ({webhook=})"
+            f"Unable to verify {incoming_signature} for {webhook_id} ({expected_signature=}).",
+            extra=log_extra,
         )
         return "unable to verify notification signature!", 401
 
     webhook_topic = webhook_payload["topic"]
 
     if webhook_topic == "extension.uninstall":
+        logger.debug(f"{webhook_topic=} => deleting {webhook=} from database...")
         db.session.delete(webhook)
         db.session.commit()
     elif webhook_topic.startswith("order."):
@@ -405,8 +421,15 @@ def squarespace_order_webhook():
         )
 
         topic_id = app.config["GCLOUD_PUBSUB_TOPIC_ID"]
+        log_extra.update(
+            dict(
+                message_data=message_data,
+                topic_id=topic_id,
+            )
+        )
         logger.info(
-            f"publishing sync_order message to pubsub {topic_id=} with data: {message_data=}"
+            f"publishing sync_order message to pubsub {topic_id=} with data: {message_data=}",
+            extra=log_extra,
         )
         publish_message(
             project_id=app.config["GCLOUD_PROJECT"],
