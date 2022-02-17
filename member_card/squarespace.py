@@ -74,9 +74,13 @@ def rotate_secret_for_webhook(squarespace, webhook_subscription, account_id):
         account_id=account_id,
         endpoint_url=webhook_subscription["endpointUrl"],
         # topics=orders_webhook_resp["topics"],
-        created_on=webhook_subscription["createdOn"],
-        updated_on=webhook_subscription["updatedOn"],
+        # created_on=webhook_subscription["createdOn"],
+        # updated_on=webhook_subscription["updatedOn"],
     )
+
+    setattr(order_webhook, "topics", webhook_subscription["topics"])
+    setattr(order_webhook, "created_on", webhook_subscription["createdOn"])
+    setattr(order_webhook, "updated_on", webhook_subscription["updatedOn"])
     # order_webhook = SquarespaceWebhook.query.filter_by(
     #     webhook_id=webhook_id, account_id=account_id
     # ).one()
@@ -114,11 +118,13 @@ def create_orders_webhook(squarespace, account_id, endpoint_url):
         endpoint_url=orders_webhook_resp["endpointUrl"],
         # topics=orders_webhook_resp["topics"],
         secret=orders_webhook_resp["secret"],
-        created_on=orders_webhook_resp["createdOn"],
-        updated_on=orders_webhook_resp["updatedOn"],
+        # created_on=orders_webhook_resp["createdOn"],
+        # updated_on=orders_webhook_resp["updatedOn"],
     )
     logging.debug(f"order webhook created!: {order_webhook=}")
     setattr(order_webhook, "topics", orders_webhook_resp["topics"])
+    setattr(order_webhook, "created_on", orders_webhook_resp["createdOn"])
+    setattr(order_webhook, "updated_on", orders_webhook_resp["updatedOn"])
     return order_webhook
 
 
