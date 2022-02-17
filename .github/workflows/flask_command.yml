@@ -62,7 +62,7 @@ jobs:
           access_token_lifetime: 1800s
 
       - name: Create Google application creds secret
-        if: ${{ inputs.flask_env == "remote-sql" }}
+        if: ${{ inputs.flask_env == 'remote-sql' }}
         id: google-app-creds
         run: |
           creds="$(cat '${{ env.GOOGLE_APPLICATION_CREDENTIALS }}')"
@@ -70,7 +70,7 @@ jobs:
           echo "::set-output name=creds::$creds"
 
       - name: Start Google Cloud SQL Proxy
-        if: ${{ inputs.flask_env == "remote-sql" }}
+        if: ${{ inputs.flask_env == 'remote-sql' }}
         uses: mattes/gce-cloudsql-proxy-action@v1
         with:
           creds: ${{ steps.google-app-creds.outputs.creds }}
