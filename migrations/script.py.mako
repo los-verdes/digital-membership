@@ -20,7 +20,7 @@ def upgrade():
     # jscpd:ignore-start
     ${upgrades if upgrades else "pass"}
     # jscpd:ignore-end
-    sql = "REASSIGN OWNED BY current_user TO 'read_write'"
+    sql = 'REASSIGN OWNED BY current_user TO "read_write"'
     op.execute(sql)
 
 

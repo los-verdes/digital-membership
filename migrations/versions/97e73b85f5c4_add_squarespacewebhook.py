@@ -34,7 +34,7 @@ def upgrade():
     )
     # ### end Alembic commands ###
     # jscpd:ignore-end
-    sql = "REASSIGN OWNED BY current_user TO 'read_write'"
+    sql = 'REASSIGN OWNED BY current_user TO "read_write"'
     op.execute(sql)
 
 
