@@ -342,7 +342,7 @@ def squarespace_order_webhook():
     payload_verified = utils.verify(
         signature=incoming_signature,
         data=json.dumps(webhook_payload),
-        key=webhook.secret,
+        key=webhook.secret.encode(),
     )
     if not payload_verified:
         logger.warning(
