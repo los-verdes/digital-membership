@@ -10,7 +10,7 @@ on:
       flask_env:
         default: "development"
         description: "The environment specified for flask (used for settings, etc.)"
-        required: true
+        required: false
         type: string
       management_sql_user_name:
         default: "tf-management"
