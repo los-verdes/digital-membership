@@ -59,6 +59,7 @@ def create_upload_statics_build(client=None):
 
 
 def generate_docker_image_build(project_id, repo_name, image_name, branch_name="main"):
+    base_image_gcr_name = "gcr.io/$PROJECT_ID/base"
     gcr_name = f"gcr.io/$PROJECT_ID/{image_name}"
 
     build = cloudbuild_v1.Build()
@@ -76,7 +77,7 @@ def generate_docker_image_build(project_id, repo_name, image_name, branch_name="
             "entrypoint": "bash",
             "args": [
                 "-c",
-                f"docker pull {gcr_name}:latest || exit 0",
+                f"docker pull {base_image_gcr_name}:latest || exit 0",
             ],
         },
         {
@@ -84,7 +85,7 @@ def generate_docker_image_build(project_id, repo_name, image_name, branch_name="
             "args": [
                 "build",
                 "--cache-from",
-                f"{gcr_name}:latest",
+                f"{base_image_gcr_name}:latest",
                 "--target",
                 image_name,
                 "--tag",

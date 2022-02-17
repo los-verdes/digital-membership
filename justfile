@@ -125,6 +125,9 @@ build-website-image: ci-install-python-reqs
 build-worker-image: ci-install-python-reqs
   just flask build-image worker
 
+build-base-image: ci-install-python-reqs
+  just flask build-image base
+
 run-worker: build-worker
   docker run -it --rm '{{ worker_image_name }}:{{ image_tag }}'
 shell-worker: build-worker
