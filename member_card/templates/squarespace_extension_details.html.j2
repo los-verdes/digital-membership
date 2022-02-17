@@ -10,21 +10,21 @@
   </div>
   <div class="mdl-card__supporting-text">
     <h4>
-      Squarespace Webhooks
+      Squarespace Extension Details
     </h4>
 
     <br>
-    <h5>Webhook List (Squarespace account ID <strong>{{ squarespace_account_id }}</strong>)</h5>
+    <h5>Webhook List</h5>
     <hr>
 
-    {% for webhook_subscription in webhook_subscriptions %}
+    {% for webhook in webhooks %}
     <details>
-      <summary id="webhook-details-{{ webhook_subscription.id }}">
-        <h5>Webhook #{{ webhook_subscription.id }}</h5>
+      <summary id="webhook-details-{{ webhook.id }}">
+        <h5>Webhook #{{ webhook.id }}</h5>
       </summary>
       <div>
         <ul class="mdl-list">
-          {% for key, value in webhook_subscription.items() %}
+          {% for key, value in webhook.to_dict().items() %}
           <li class="mdl-list__item mdl-list__item--two-line">
             <span class="mdl-list__item-primary-content">
               <span class="mdl-list__item-sub-title"><strong>{{ key | replace("_", " ") | title }}</strong></span>

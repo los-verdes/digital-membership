@@ -38,7 +38,7 @@ def ensure_orders_webhook_subscription(
         for webhook_subscription in webhook_subscriptions:
             rotate_secret_for_webhook(
                 squarespace=squarespace,
-                webhook_id=webhook_subscription["id"],
+                webhook_subscription=webhook_subscription,
                 account_id=account_id,
             )
     else:
@@ -62,20 +62,33 @@ def ensure_orders_webhook_subscription(
     return webhook_subscriptions
 
 
-def rotate_secret_for_webhook(squarespace, webhook_id, account_id):
-    logging.debug(f"Querying database for extant webhook ID: {webhook_id}...")
-    extant_webhook = SquarespaceWebhook.query.filter_by(
-        webhook_id=webhook_id, account_id=account_id
-    ).one()
+def rotate_secret_for_webhook(squarespace, webhook_subscription, account_id):
+    webhook_id = webhook_subscription["id"]
+    logging.debug(
+        f"Querying database for extant webhook ID (or creating a new entry): {webhook_id}..."
+    )
+    order_webhook = get_or_create(
+        session=db.session,
+        model=SquarespaceWebhook,
+        webhook_id=webhook_id,
+        account_id=account_id,
+        endpoint_url=webhook_subscription["endpointUrl"],
+        # topics=orders_webhook_resp["topics"],
+        created_on=webhook_subscription["createdOn"],
+        updated_on=webhook_subscription["updatedOn"],
+    )
+    # order_webhook = SquarespaceWebhook.query.filter_by(
+    #     webhook_id=webhook_id, account_id=account_id
+    # ).one()
 
-    logging.debug(f"Rotating webhook subscription secret for {extant_webhook=}...")
+    logging.debug(f"Rotating webhook subscription secret for {order_webhook=}...")
     rotate_secret_resp = squarespace.rotate_webhook_subscription_secret(
-        webhook_id=extant_webhook.webhook_id
+        webhook_id=order_webhook.webhook_id
     )
 
     logging.debug(f"Updating secret attribute for webhook {webhook_id}...")
-    setattr(extant_webhook, "secret", rotate_secret_resp["secret"])
-    db.session.add(extant_webhook)
+    setattr(order_webhook, "secret", rotate_secret_resp["secret"])
+    db.session.add(order_webhook)
     db.session.commit()
     logging.debug(f"Secret attribute update for webhook {webhook_id} committed!")
 

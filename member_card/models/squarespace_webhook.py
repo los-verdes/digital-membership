@@ -12,3 +12,16 @@ class SquarespaceWebhook(db.Model):
     secret = db.Column(db.String)
     created_on = db.Column(db.DateTime)
     updated_on = db.Column(db.DateTime)
+
+    def to_dict(self):
+        return dict(
+            id=self.id,
+            webhook_id=self.webhook_id,
+            account_id=self.account_id,
+            website_id=self.website_id,
+            endpoint_url=self.endpoint_url,
+            topics=self.topics,
+            secret=self.secret,
+            created_on=self.created_on,
+            updated_on=self.updated_on,
+        )

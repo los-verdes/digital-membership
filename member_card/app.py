@@ -287,11 +287,22 @@ def squarespace_oauth_callback():
         account_id=token_account_id,
         endpoint_url=app.config["SQUARESPACE_ORDER_WEBHOOK_ENDPOINT"],
     )
+    logger.debug(f"Webhook listing (after ensuring webhooks): {webhook_subscriptions=}")
+    return redirect(url_for("squarespace_extension_details"))
 
+
+@app.route("/squarespace/extension-details")
+@roles_required("admin")
+def squarespace_extension_details():
+    from member_card.models import SquarespaceWebhook
+
+    webhooks = SquarespaceWebhook.query.order_by(
+        SquarespaceWebhook.created_on.desc()
+    ).all()
+    logger.debug(f"Webhook entries in the database: {webhooks=}")
     return render_template(
-        "squarespace_connect.html.j2",
-        squarespace_account_id=token_account_id,
-        webhook_subscriptions=webhook_subscriptions,
+        "squarespace_extension_details.html.j2",
+        webhooks=webhooks,
     )
 
 
