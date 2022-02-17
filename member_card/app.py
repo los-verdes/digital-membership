@@ -306,7 +306,7 @@ def squarespace_extension_details():
     )
 
 
-@app.route("/squarespace/order-webhook")
+@app.route("/squarespace/order-webhook", methods=["POST"])
 def squarespace_order_webhook():
     import json
 
