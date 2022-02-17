@@ -46,12 +46,12 @@ recaptcha = ReCaptcha()
 cdn = CDN()
 
 
-@login_manager.user_loader
-def load_user(userid):
-    try:
-        return User.query.get(int(userid))
-    except (TypeError, ValueError):
-        pass
+# @login_manager.user_loader
+# def load_user(userid):
+#     try:
+#         return User.query.get(int(userid))
+#     except (TypeError, ValueError):
+#         pass
 
 
 @app.before_request

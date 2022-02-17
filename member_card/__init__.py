@@ -22,6 +22,13 @@ def create_cli_app():
     return app
 
 
+class MemberCardDatastore(SQLAlchemySessionUserDatastore):
+    def find_user(self, **kwargs):
+        if "id" in kwargs:
+            kwargs["id"] = int(kwargs["id"])
+        return self.user_model.query.filter_by(**kwargs).first()
+
+
 def create_app():
     from member_card.app import login_manager, recaptcha, cdn, security
 
@@ -59,7 +66,7 @@ def create_app():
 
     from member_card.models.user import User, Role
 
-    user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
+    user_datastore = MemberCardDatastore(db.session, User, Role)
     security.init_app(
         app=app,
         datastore=user_datastore,
