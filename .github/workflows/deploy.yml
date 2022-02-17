@@ -13,7 +13,6 @@ on:
 jobs:
   build-base-image:
     name: Build Website Image
-    needs: [build-base-image]
     permissions:
       contents: "read"
       id-token: "write"
@@ -23,6 +22,7 @@ jobs:
 
   build-website-image:
     name: Build Website Image
+    needs: [build-base-image]
     permissions:
       contents: "read"
       id-token: "write"
