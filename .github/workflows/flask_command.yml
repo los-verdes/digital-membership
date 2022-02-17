@@ -49,8 +49,8 @@ jobs:
       - name: Utilize pip cache
         uses: actions/cache@v2
         with:
-          path: ~/.cache/pip
-          key: ${{ hashFiles('requirements.txt') }}
+          path: ${{ env.pythonLocation }}
+          key: ${{ env.pythonLocation }}-pip-${{ hashFiles('requirements.txt') }}
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v0
