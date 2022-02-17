@@ -12,7 +12,7 @@ on:
 # jscpd:ignore-start
 jobs:
   build-base-image:
-    name: Build Website Image
+    name: Build Base Image
     permissions:
       contents: "read"
       id-token: "write"
