@@ -9,6 +9,7 @@ email-validator
 flask
 flask-cdn
 flask-login
+flask-security
 google-auth
 google-cloud-build
 google-cloud-firestore

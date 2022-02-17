@@ -1,8 +1,22 @@
 from datetime import timedelta
 
-from flask_login import UserMixin
+# from flask_login import UserMixin
 from member_card.db import db
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
+from flask_security import UserMixin, RoleMixin
+
+
+roles_users = db.Table(
+    "roles_users",
+    db.Column("user_id", db.Integer(), db.ForeignKey("users.id")),
+    db.Column("role_id", db.Integer(), db.ForeignKey("role.id")),
+)
+
+
+class Role(db.Model, RoleMixin):
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(80), unique=True)
+    description = db.Column(db.String(255))
 
 
 class User(db.Model, UserMixin):
@@ -16,6 +30,9 @@ class User(db.Model, UserMixin):
     active = db.Column(db.Boolean, default=True)
     annual_memberships = relationship("AnnualMembership", back_populates="user")
     membership_cards = relationship("MembershipCard", back_populates="user")
+    roles = relationship(
+        "Role", secondary="roles_users", backref=backref("users", lazy="dynamic")
+    )
 
     def to_dict(self):
         return dict(

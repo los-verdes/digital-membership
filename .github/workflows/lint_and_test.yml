@@ -34,3 +34,7 @@ jobs:
           VALIDATE_CSS: false
           VALIDATE_JAVASCRIPT_STANDARD: false
           VALIDATE_PYTHON_ISORT: false
+          # TODO: toggle GITHUB_ACTIONS back on after one, or both, of these issues are resolved:
+          # https://github.com/github/super-linter/issues/1852
+          # https://github.com/rhysd/actionlint/issues/91
+          VALIDATE_GITHUB_ACTIONS: false

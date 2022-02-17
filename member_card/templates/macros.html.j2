@@ -25,7 +25,6 @@ primary_info_text,
 secondary_info_text,
 aux_info_text,
 serial_number,
-google_pay_jwt="",
 qr_code_b64_png="",
 validation_msg="",
 above_card_heading="",
@@ -120,7 +119,7 @@ show_qr_code_on_card=False
     <ul class="mdl-menu mdl-menu--top-right mdl-js-menu" data-mdl-for="save-as-screenshot-menu">
       <li id="save-as-screenshot-btn" class="mdl-menu__item">Save card as image (.png)</li>
     </ul> -->
-    <a class="save-pass-button save-google-pass-button" href="https://pay.google.com/gp/v/save/{{ google_pay_jwt }}" target="_blank">
+    <a class="save-pass-button save-google-pass-button" href="{{ url_for('passes_google_pay') }}" target="_blank">
       <img class="mdl-js-button" src="{{ url_for('static', filename='save_to_google_pay.svg') }}">
     </a>
     <a class="save-pass-button save-apple-pass-button" href="{{ url_for('passes_apple_pay') }}">

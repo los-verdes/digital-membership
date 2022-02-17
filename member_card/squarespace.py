@@ -1,9 +1,12 @@
+import logging
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 import requests
+from requests.auth import HTTPBasicAuth
 
-# from logzero import logger
-import logging
+from member_card.db import db, get_or_create
+from member_card.models import SquarespaceWebhook
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -11,6 +14,164 @@ if TYPE_CHECKING:
 __VERSION__ = "0.0.4"
 api_baseurl = "https://api.squarespace.com"
 api_version = "1.0"
+
+
+def ensure_orders_webhook_subscription(
+    squarespace, account_id, endpoint_url, delete_extant_first=False
+):
+    if delete_extant_first:
+        list_webhooks_resp = squarespace.list_webhook_subscriptions()
+        webhook_subscriptions = list_webhooks_resp["webhookSubscriptions"]
+        logging.debug(f"ensure_orders_webhook_subscription(): {webhook_subscriptions=}")
+
+        for webhook_subscription in webhook_subscriptions:
+            tmp_delete_resp = squarespace.delete_webhook(
+                webhook_id=webhook_subscription["id"]
+            )
+            logging.debug(f"{tmp_delete_resp=}")
+
+    list_webhooks_resp = squarespace.list_webhook_subscriptions()
+    webhook_subscriptions = list_webhooks_resp["webhookSubscriptions"]
+    logging.debug(f"ensure_orders_webhook_subscription(): {webhook_subscriptions=}")
+
+    if webhook_subscriptions:
+        for webhook_subscription in webhook_subscriptions:
+            rotate_secret_for_webhook(
+                squarespace=squarespace,
+                webhook_id=webhook_subscription["id"],
+                account_id=account_id,
+            )
+    else:
+        order_webhook = create_orders_webhook(
+            squarespace=squarespace,
+            account_id=account_id,
+            endpoint_url=endpoint_url,
+        )
+
+        logging.debug("Refreshing webhooks list post-webhook-creation...")
+        list_webhooks_resp = squarespace.list_webhook_subscriptions()
+        webhook_subscriptions = list_webhooks_resp["webhookSubscriptions"]
+        webhook_subscriptions_by_id = {w["id"]: w for w in webhook_subscriptions}
+        logging.debug(f"after creating webhook: {webhook_subscriptions_by_id=}")
+        website_id = webhook_subscriptions_by_id[order_webhook.webhook_id]["websiteId"]
+        logging.debug(f"Setting website_id for {order_webhook} to: {website_id=}")
+        setattr(order_webhook, "website_id", website_id)
+        db.session.add(order_webhook)
+        db.session.commit()
+        logging.debug(f"order webhook committed!: {order_webhook=}")
+    return webhook_subscriptions
+
+
+def rotate_secret_for_webhook(squarespace, webhook_id, account_id):
+    logging.debug(f"Querying database for extant webhook ID: {webhook_id}...")
+    extant_webhook = SquarespaceWebhook.query.filter_by(
+        webhook_id=webhook_id, account_id=account_id
+    ).one()
+
+    logging.debug(f"Rotating webhook subscription secret for {extant_webhook=}...")
+    rotate_secret_resp = squarespace.rotate_webhook_subscription_secret(
+        webhook_id=extant_webhook.webhook_id
+    )
+
+    logging.debug(f"Updating secret attribute for webhook {webhook_id}...")
+    setattr(extant_webhook, "secret", rotate_secret_resp["secret"])
+    db.session.add(extant_webhook)
+    db.session.commit()
+    logging.debug(f"Secret attribute update for webhook {webhook_id} committed!")
+
+
+def create_orders_webhook(squarespace, account_id, endpoint_url):
+    # I.e., if we have no extant webhook subscriptions for the targeted site / account ID...
+    logging.debug(f"Creating webhook for {account_id} now...")
+    orders_webhook_resp = squarespace.create_webhook(
+        endpoint_url=endpoint_url,
+        topics=[
+            "order.create",
+            "order.update",
+            "extension.uninstall",
+        ],
+    )
+    logging.debug(f"create_orders_webhook(): {orders_webhook_resp=}")
+
+    order_webhook = get_or_create(
+        session=db.session,
+        model=SquarespaceWebhook,
+        webhook_id=orders_webhook_resp["id"],
+        account_id=account_id,
+        endpoint_url=orders_webhook_resp["endpointUrl"],
+        # topics=orders_webhook_resp["topics"],
+        secret=orders_webhook_resp["secret"],
+        created_on=orders_webhook_resp["createdOn"],
+        updated_on=orders_webhook_resp["updatedOn"],
+    )
+    logging.debug(f"order webhook created!: {order_webhook=}")
+    setattr(order_webhook, "topics", orders_webhook_resp["topics"])
+    return order_webhook
+
+
+def perform_oauth_token_request(client_id, client_secret, token_request_body):
+    access_token_url = "https://login.squarespace.com/api/1/login/oauth/provider/tokens"
+
+    token_request_auth = HTTPBasicAuth(
+        username=client_id,
+        password=client_secret,
+    )
+
+    token_resp = requests.post(
+        url=access_token_url,
+        json=token_request_body,
+        auth=token_request_auth,
+        headers={
+            "Content-Type": "application/json",
+            "User-Agent": "lv-digital-membership",
+        },
+    )
+    logging.debug(f"perform_oauth_token_request(): {list(token_resp.headers)=}")
+    token_resp.raise_for_status()
+    resp_data = token_resp.json()
+    # {
+    #     "access_token": "<ACCESS-TOKEN>",
+    #     "access_token_expires_at": 1645033666.058,
+    #     "account_id": "61d0825ac2dd1a52b2e29b66",
+    #     "expires_in": 1799,
+    #     "refresh_token": "<REFRESH-TOKEN>",
+    #     "refresh_token_expires_at": 1645636666.053,
+    #     "session_expires_at": 1647555455.432,
+    #     "session_id": "620c267f1c5a7f6358b71e88",
+    #     "token": "<ACCESS-TOKEN>",
+    #     "token_type": "bearer",
+    # }
+    for k, v in resp_data.items():
+        if k.endswith("expires_at"):
+            expires_at_dt = datetime.fromtimestamp(v).strftime("%c")
+            logging.debug(f"perform_oauth_token_request(): {k} => {expires_at_dt}")
+            resp_data[k] = expires_at_dt
+    return resp_data
+
+
+def request_new_oauth_token(client_id, client_secret, code, redirect_uri):
+    token_request_body = dict(
+        grant_type="authorization_code",
+        redirect_uri=redirect_uri,
+        code=code,
+    )
+    return perform_oauth_token_request(
+        client_id=client_id,
+        client_secret=client_secret,
+        token_request_body=token_request_body,
+    )
+
+
+def refresh_oauth_token(client_id, client_secret, refresh_token):
+    token_request_body = dict(
+        grant_type="refresh_token",
+        refresh_token=refresh_token,
+    )
+    return perform_oauth_token_request(
+        client_id=client_id,
+        client_secret=client_secret,
+        token_request_body=token_request_body,
+    )
 
 
 class SquarespaceError(Exception):
@@ -77,6 +238,11 @@ class Squarespace(object):
         url = "%s/%s/%s" % (self.api_baseurl, self.api_version, path)
         # logging.debug("url:%s args:%s", url, args)
         return self.process_request(self.http.get(url, params=args))
+
+    def delete(self, path):
+        url = "%s/%s/%s" % (self.api_baseurl, self.api_version, path)
+        # logging.debug("url:%s object:%s", url, object)
+        return self.process_request(self.http.delete(url))
 
     def process_request(self, request) -> dict:
         """Process a request and return the data."""
@@ -194,3 +360,53 @@ class Squarespace(object):
             f"{len(all_orders)=} loaded with {len(membership_orders)=} and whatnot"
         )
         return membership_orders
+
+    def list_webhook_subscriptions(
+        self,
+    ):
+        logging.debug("Sending 'Retrieve all webhook subscriptions' request...")
+        return self.get(
+            path="webhook_subscriptions",
+        )
+
+    def delete_webhook(
+        self,
+        webhook_id,
+    ):
+        webhook_path = f"webhook_subscriptions/{webhook_id}"
+
+        logging.debug(
+            f"Sending 'Delete a webhook subscription' request for {webhook_id=}..."
+        )
+        return self.delete(
+            path=webhook_path,
+        )
+
+    def create_webhook(
+        self,
+        endpoint_url,
+        topics,
+    ):
+        request_body = dict(
+            endpointUrl=endpoint_url,
+            topics=topics,
+        )
+
+        logging.debug(
+            f"Sending 'Create a webhook subscription' request with {request_body=}..."
+        )
+        return self.post(
+            path="webhook_subscriptions",
+            object=request_body,
+        )
+
+    def rotate_webhook_subscription_secret(
+        self,
+        webhook_id,
+    ):
+        rotate_secret_path = f"webhook_subscriptions/{webhook_id}/actions/rotateSecret"
+
+        logging.debug(
+            f"Sending 'Rotate a subscription secret' request for {webhook_id=}..."
+        )
+        return self.post(path=rotate_secret_path, object=dict())

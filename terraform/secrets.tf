@@ -62,6 +62,8 @@ resource "google_secret_manager_secret_version" "digital_membership" {
     social_auth_google_oauth2_secret = var.oauth_client_secret
 
     # Used to for <Squarespace orders> => <AnnualMembership orders> ETL jobs:
-    squarespace_api_key = var.squarespace_api_key
+    squarespace_api_key       = var.squarespace_api_key
+    squarespace_client_id     = var.squarespace_client_id
+    squarespace_client_secret = var.squarespace_client_secret
   })
 }

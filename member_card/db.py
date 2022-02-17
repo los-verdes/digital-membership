@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from dateutil.parser import parse
@@ -112,7 +112,7 @@ def squarespace_orders_etl(squarespace_client, db_session, membership_skus, load
 
             fulfilled_on = None
             if fulfilled_on := subscription_order.get("fulfilledOn"):
-                fulfilled_on = parse(fulfilled_on)
+                fulfilled_on = parse(fulfilled_on).replace(tzinfo=timezone.utc)
 
             customer_email = subscription_order["customerEmail"]
             member_user_id = member_user_ids_by_email.get(customer_email)
@@ -143,8 +143,12 @@ def squarespace_orders_etl(squarespace_client, db_session, membership_skus, load
                     "lastName"
                 ],
                 external_order_reference=subscription_order["externalOrderReference"],
-                created_on=parse(subscription_order["createdOn"]),
-                modified_on=parse(subscription_order["modifiedOn"]),
+                created_on=parse(subscription_order["createdOn"]).replace(
+                    tzinfo=timezone.utc
+                ),
+                modified_on=parse(subscription_order["modifiedOn"]).replace(
+                    tzinfo=timezone.utc
+                ),
                 fulfilled_on=fulfilled_on,
                 customer_email=customer_email,
                 fulfillment_status=subscription_order["fulfillmentStatus"],
@@ -163,6 +167,22 @@ def squarespace_orders_etl(squarespace_client, db_session, membership_skus, load
             )
             memberships.append(membership)
 
+            # membership_datetime_attrs = [
+            #     "created_on",
+            #     "modified_on",
+            #     "fulfilled_on",
+            # ]
+            # for membership_datetime_attr in membership_datetime_attrs:
+            #     datetime_value = getattr(membership, membership_datetime_attr)
+            #     logger.debug(
+            #         f"{membership=}.{membership_datetime_attr} => {datetime_value=}"
+            #     )
+            #     if datetime_value is not None and datetime_value.tzinfo is None:
+            #         tz_datetime_value = datetime_value.replace(tzinfo=timezone.utc)
+            #         logger.debug(
+            #             f"Updating {membership_datetime_attr=} for {membership=} from {datetime_value=} to: {tz_datetime_value=}"
+            #         )
+            #         setattr(membership, membership_datetime_attr, tz_datetime_value)
             if not membership.user_id:
                 logger.debug(
                     f"No user_id set for {membership=}! Setting to: {member_user_id=}"

@@ -1,9 +1,18 @@
 #!/usr/bin/env python
 import os
 from datetime import datetime
-
+from flask_security.decorators import roles_required
 import click
-from flask import Flask, g, redirect, render_template, request, send_file, url_for
+from flask import (
+    Flask,
+    g,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    url_for,
+    session,
+)
 from flask_cdn import CDN
 from flask_login import current_user as current_login_user
 from flask_login import login_required, logout_user
@@ -14,6 +23,7 @@ from sqlalchemy.sql import func
 
 from member_card import utils
 from member_card.db import squarespace_orders_etl
+from flask_security import Security
 from member_card.models import User
 from member_card.squarespace import Squarespace
 
@@ -27,6 +37,8 @@ logger = app.logger
 logger.propagate = False
 
 login_manager = utils.MembershipLoginManager()
+
+security = Security()
 
 recaptcha = ReCaptcha()
 
@@ -182,6 +194,20 @@ def email_distribution_request():
 
 
 @login_required
+@app.route("/passes/google-pay")
+def passes_google_pay():
+
+    current_user = g.user
+    if current_user.is_authenticated:
+        from member_card.models.membership_card import get_or_create_membership_card
+
+        membership_card = get_or_create_membership_card(current_user)
+        return redirect(membership_card.google_pass_save_url)
+
+    return redirect("/")
+
+
+@login_required
 @app.route("/passes/apple-pay")
 def passes_apple_pay():
 
@@ -200,6 +226,144 @@ def passes_apple_pay():
             as_attachment=True,
         )
     return redirect(url_for("home"))
+
+
+@app.route("/squarespace/oauth/login")
+@roles_required("admin")
+def squarespace_oauth_login():
+    import urllib.parse
+
+    url = "https://login.squarespace.com/api/1/login/oauth/provider/authorize"
+    state = utils.sign(datetime.utcnow().isoformat())
+    session["oauth_state"] = state
+    params = {
+        "client_id": app.config["SQUARESPACE_CLIENT_ID"],
+        "redirect_uri": app.config["SQUARESPACE_OAUTH_REDIRECT_URI"],
+        "scope": "website.orders,website.orders.read",
+        # "access_type": "offline",
+        "state": state,
+    }
+    url_params = urllib.parse.urlencode(params)
+    authorize_url = f"{url}?{url_params}"
+    logger.debug(f"{url=} + {url_params=} => {authorize_url}")
+    return redirect(authorize_url)
+
+
+@app.route("/squarespace/oauth/connect")
+@roles_required("admin")
+def squarespace_oauth_callback():
+    from member_card.squarespace import (
+        request_new_oauth_token,
+        Squarespace,
+        ensure_orders_webhook_subscription,
+    )
+
+    if error := request.args.get("error"):
+        logger.error(f"Squarespace oauth connect error: {error=}")
+        return redirect("/")
+
+    if session.get("oauth_state") != request.args["state"]:
+        logger.error(
+            f"Squarespace oauth connect error: {session.get('oauth_state')=} does not match {request.args['state']=}"
+        )
+        return redirect("/")
+
+    code = request.args["code"]
+    logger.debug(f"squarespace_oauth_callback: {list(request.args)=}")
+    logger.debug(f"squarespace_oauth_callback: {list(request.headers)=}")
+
+    token_resp = request_new_oauth_token(
+        client_id=app.config["SQUARESPACE_CLIENT_ID"],
+        client_secret=app.config["SQUARESPACE_CLIENT_SECRET"],
+        code=code,
+        redirect_uri=app.config["SQUARESPACE_OAUTH_REDIRECT_URI"],
+    )
+    token_account_id = token_resp["account_id"]
+    logger.debug(f"squarespace_oauth_callback(): {token_account_id=}")
+
+    webhook_subscriptions = ensure_orders_webhook_subscription(
+        squarespace=Squarespace(api_key=token_resp["access_token"]),
+        account_id=token_account_id,
+        endpoint_url=app.config["SQUARESPACE_ORDER_WEBHOOK_ENDPOINT"],
+    )
+
+    return render_template(
+        "squarespace_connect.html.j2",
+        squarespace_account_id=token_account_id,
+        webhook_subscriptions=webhook_subscriptions,
+    )
+
+
+@app.route("/squarespace/order-webhook")
+def squarespace_order_webhook():
+    from member_card.models import SquarespaceWebhook
+    from member_card.db import db
+
+    from member_card.pubsub import publish_message
+    import json
+
+    logger.debug(f"squarespace_order_webhook(): {request.args=}")
+    logger.debug(f"squarespace_order_webhook(): {request.form=}")
+    logger.debug(f"squarespace_order_webhook(): {request.data=}")
+    logger.debug(f"squarespace_order_webhook(): {request.json=}")
+    webhook_payload = request.get_json()
+    logger.debug(f"squarespace_order_webhook(): {webhook_payload=}")
+
+    allowed_website_ids = app.config["SQUARESPACE_ALLOWED_WEBSITE_IDS"]
+    website_id = webhook_payload["websiteId"]
+    if website_id not in allowed_website_ids:
+        error_msg = f"Refusing to process webhook payload for {website_id=} (not in {allowed_website_ids=})"
+        logger.warning(error_msg)
+        return error_msg, 403
+
+    webhook_id = webhook_payload["subscriptionId"]
+    logger.debug(
+        f"Query database for extant webhook matching {webhook_id=} ({website_id=})"
+    )
+    webhook = SquarespaceWebhook.query.filter_by(
+        webhook_id=webhook_id, website_id=website_id
+    ).one()
+    logger.debug(f"{webhook_id}: {webhook=}")
+
+    incoming_signature = request.headers.get("Squarespace-Signature")
+    logger.debug(f"Verifying webhook payload signature ({incoming_signature=})")
+    payload_verified = utils.verify(
+        signature=incoming_signature,
+        data=json.dumps(webhook_payload),
+        key=webhook.secret,
+    )
+    if not payload_verified:
+        logger.warning(
+            f"Unable to verify {incoming_signature} for {webhook_id} ({webhook=})"
+        )
+        return "unable to verify notification signature!", 401
+
+    webhook_topic = webhook_payload["topic"]
+
+    if webhook_topic == "extension.uninstall":
+        db.session.delete(webhook)
+        db.session.commit()
+    elif webhook_topic.startswith("order."):
+        message_data = dict(
+            type="sync_order",
+            notification_id=webhook_payload["id"],
+            order_id=webhook_payload["data"]["orderId"],
+            website_id=website_id,
+            created_on=webhook_payload["createdOn"],
+        )
+
+        topic_id = app.config["GCLOUD_PUBSUB_TOPIC_ID"]
+        logger.info(
+            f"publishing sync_order message to pubsub {topic_id=} with data: {message_data=}"
+        )
+        publish_message(
+            project_id=app.config["GCLOUD_PROJECT"],
+            topic_id=topic_id,
+            message_data=message_data,
+        )
+    else:
+        raise NotImplementedError(f"No handler available for {webhook_topic=}")
+    return "thanks buds!", 200
 
 
 @login_required
@@ -376,6 +540,25 @@ def query_db(email):
     logger.info(f"user membership cards:\n{user.membership_cards}")
 
 
+@app.cli.command("query-order-num")
+@click.argument("order_num")
+def query_order_num(order_num):
+    from member_card.models import AnnualMembership
+
+    memberships = (
+        AnnualMembership.query.filter_by(order_number=order_num)
+        .order_by(AnnualMembership.created_on.desc())
+        .all()
+    )
+
+    logger.info(f"memberships matching {order_num}:\n{memberships}")
+    users = [m.user for m in memberships]
+    logger.info(f"user matching {order_num}:\n{users}")
+    for user in users:
+        logger.info(f"user memberships:\n{user.annual_memberships}")
+        logger.info(f"user membership cards:\n{user.membership_cards}")
+
+
 @app.cli.command("create-apple-pass")
 @click.argument("email")
 @click.option("-z", "--zip-file-path")
@@ -530,3 +713,28 @@ def update_user_name(user_email, first_name, last_name):
     db.session.add(user)
     db.session.commit()
     logger.debug(f"post-commit: {user=}")
+
+
+@app.cli.command("add-role-to-user")
+@click.argument("user_email")
+@click.argument("role_name")
+def add_role_to_user(user_email, role_name):
+    from flask_security import SQLAlchemySessionUserDatastore
+    from member_card.db import db
+    from member_card.models.user import Role
+
+    logger.debug(f"{user_email=} => {role_name=}")
+    user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
+
+    user = user_datastore.get_user(user_email)
+    admin_role = user_datastore.find_or_create_role(
+        name="admin",
+        description="Administrators allowed to connect Squarespace extensions, etc.",
+    )
+    db.session.add(admin_role)
+    db.session.commit()
+    logger.info(f"Adding {admin_role=} to user: {user=}")
+    user_datastore.add_role_to_user(user=user, role=admin_role)
+    logger.info(f"{admin_role=} successfully added for {user=}!")
+    db.session.add(user)
+    db.session.commit()

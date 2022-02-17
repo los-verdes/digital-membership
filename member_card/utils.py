@@ -71,8 +71,9 @@ def get_signing_key():
     return signing_key
 
 
-def sign(data: str, algorithm=hashlib.sha256) -> str:
-    key = get_signing_key()
+def sign(data: str, algorithm=hashlib.sha256, key=None) -> str:
+    if key is None:
+        key = get_signing_key()
     assert len(key) >= algorithm().digest_size, (
         "Key must be at least as long as the digest size of the " "hashing algorithm"
     )
@@ -81,8 +82,8 @@ def sign(data: str, algorithm=hashlib.sha256) -> str:
     return b64_digest
 
 
-def verify(signature: str, data: str, algorithm=hashlib.sha256) -> bool:
-    expected = sign(data, algorithm)
+def verify(signature: str, data: str, algorithm=hashlib.sha256, key=None) -> bool:
+    expected = sign(data, algorithm, key=key)
     logging.debug(f"{signature=}")
     logging.debug(f"{expected=}")
     return hmac.compare_digest(expected, signature)
