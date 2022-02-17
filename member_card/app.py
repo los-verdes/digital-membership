@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os
 from datetime import datetime
-from flask_security.decorators import roles_required
+
 import click
 from flask import (
     Flask,
@@ -10,20 +10,21 @@ from flask import (
     render_template,
     request,
     send_file,
-    url_for,
     session,
+    url_for,
 )
 from flask_cdn import CDN
-from flask_login import current_user as current_login_user
-from flask_login import login_required, logout_user
 from flask_recaptcha import ReCaptcha
+from flask_security import Security
+from flask_security.core import current_user as current_login_user
+from flask_security.decorators import login_required, roles_required
+from flask_security.utils import logout_user
 from social_flask.template_filters import backends
 from social_flask.utils import load_strategy
 from sqlalchemy.sql import func
 
 from member_card import utils
 from member_card.db import squarespace_orders_etl
-from flask_security import Security
 from member_card.models import User
 from member_card.squarespace import Squarespace
 
@@ -253,9 +254,9 @@ def squarespace_oauth_login():
 @roles_required("admin")
 def squarespace_oauth_callback():
     from member_card.squarespace import (
-        request_new_oauth_token,
         Squarespace,
         ensure_orders_webhook_subscription,
+        request_new_oauth_token,
     )
 
     if error := request.args.get("error"):
@@ -296,11 +297,11 @@ def squarespace_oauth_callback():
 
 @app.route("/squarespace/order-webhook")
 def squarespace_order_webhook():
-    from member_card.models import SquarespaceWebhook
-    from member_card.db import db
-
-    from member_card.pubsub import publish_message
     import json
+
+    from member_card.db import db
+    from member_card.models import SquarespaceWebhook
+    from member_card.pubsub import publish_message
 
     logger.debug(f"squarespace_order_webhook(): {request.args=}")
     logger.debug(f"squarespace_order_webhook(): {request.form=}")
@@ -720,6 +721,7 @@ def update_user_name(user_email, first_name, last_name):
 @click.argument("role_name")
 def add_role_to_user(user_email, role_name):
     from flask_security import SQLAlchemySessionUserDatastore
+
     from member_card.db import db
     from member_card.models.user import Role
 
