@@ -259,19 +259,33 @@ def squarespace_oauth_callback():
         request_new_oauth_token,
     )
 
+    log_extra = dict(request.args)
+    if "code" in log_extra:
+        del log_extra["code"]
+
     if error := request.args.get("error"):
-        logger.error(f"Squarespace oauth connect error: {error=}")
+        logger.error(
+            f"Squarespace oauth connect error: {error=}",
+            extra=log_extra,
+        )
         return redirect("/")
 
     if session.get("oauth_state") != request.args["state"]:
         logger.error(
-            f"Squarespace oauth connect error: {session.get('oauth_state')=} does not match {request.args['state']=}"
+            f"Squarespace oauth connect error: {session.get('oauth_state')=} does not match {request.args['state']=}",
+            extra=log_extra,
         )
         return redirect("/")
 
     code = request.args["code"]
-    logger.debug(f"squarespace_oauth_callback: {list(request.args)=}")
-    logger.debug(f"squarespace_oauth_callback: {list(request.headers)=}")
+    logger.debug(
+        f"squarespace_oauth_callback: {list(request.args)=}",
+        extra=log_extra,
+    )
+    logger.debug(
+        f"squarespace_oauth_callback: {list(request.headers)=}",
+        extra=log_extra,
+    )
 
     token_resp = request_new_oauth_token(
         client_id=app.config["SQUARESPACE_CLIENT_ID"],
@@ -279,8 +293,9 @@ def squarespace_oauth_callback():
         code=code,
         redirect_uri=app.config["SQUARESPACE_OAUTH_REDIRECT_URI"],
     )
+    log_extra.update({k: v for k, v in token_resp.items() if not k.endswith("_token")})
     token_account_id = token_resp["account_id"]
-    logger.debug(f"squarespace_oauth_callback(): {token_account_id=}")
+    logger.debug(f"squarespace_oauth_callback(): {token_account_id=}", extra=log_extra)
 
     squarespace = Squarespace(api_key=token_resp["access_token"])
     webhook_subscriptions = ensure_orders_webhook_subscription(
@@ -288,9 +303,20 @@ def squarespace_oauth_callback():
         account_id=token_account_id,
         endpoint_url=app.config["SQUARESPACE_ORDER_WEBHOOK_ENDPOINT"],
     )
-    logger.debug(f"Webhook listing (after ensuring webhooks): {webhook_subscriptions=}")
+    log_extra.update(
+        dict(
+            webhook_subscriptions=webhook_subscriptions,
+        )
+    )
+    logger.debug(
+        f"Webhook listing (after ensuring webhooks): {webhook_subscriptions=}",
+        extra=log_extra,
+    )
 
-    logger.debug("Sending test notifications for all configured webhooks now...")
+    logger.debug(
+        "Sending test notifications for all configured webhooks now...",
+        extra=log_extra,
+    )
     for webhook_subscription in webhook_subscriptions:
         webhook_id = webhook_subscription["id"]
         logger.debug(f"Sending test notifications for webhook {webhook_id}...")
@@ -299,7 +325,8 @@ def squarespace_oauth_callback():
             topic="order.create",
         )
         logger.debug(
-            f"Test notifications for webhook {webhook_id}: {test_notification_resp=}"
+            f"Test notifications for webhook {webhook_id}: {test_notification_resp=}",
+            extra=log_extra,
         )
     return redirect(url_for("squarespace_extension_details"))
 
