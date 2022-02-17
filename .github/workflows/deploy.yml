@@ -109,23 +109,15 @@ jobs:
     permissions:
       contents: "read"
       id-token: "write"
+    outputs:
+      management_sql_user_name: ${{ steps.just-configure-database.outputs.management_sql_user_name }}
+      management_sql_user_password: ${{ steps.just-configure-database.outputs.management_sql_user_password }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
       - name: Setup just
         uses: extractions/setup-just@v1
-
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.9
-
-      - name: Utilize pip cache
-        uses: actions/cache@v2
-        with:
-          path: ~/.cache/pip
-          key: ${{ hashFiles('requirements.txt') }}
 
       - name: Utilize .terraform cache
         uses: actions/cache@v2
@@ -168,13 +160,20 @@ jobs:
           instance: lv-digital-membership:us-central1:lv-digital-membership-6b6a7153
 
       - name: Configure Database ACLs
+        id: just-configure-database
         run: just configure-database
 
-      - name: Ensure Database Migrations Applied
-        run: just apply-migrations
-        env:
-          DIGITAL_MEMBERSHIP_GCP_SECRET_NAME: "projects/567739286055/secrets/digital-membership/versions/latest"
-          FLASK_ENV: "remote-sql"
-          LOG_LEVEL: "info"
-
+  apply-database-migrations:
+    name: Apple Database Migrations
+    needs: apply-database-config
+    permissions:
+      contents: "read"
+      id-token: "write"
+    uses: los-verdes/digital-membership/.github/workflows/flask_command.yml@main
+    with:
+      command: apply-migrations
+      flask_env: "remote-sql"
+      management_sql_user_name: ${{ needs.apply-database-config.outputs.management_sql_user_name }}
+    secrets:
+      management_sql_user_password: ${{ needs.apply-database-config.outputs.management_sql_user_password }}
   # jscpd:ignore-end
