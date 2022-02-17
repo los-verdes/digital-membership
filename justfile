@@ -180,6 +180,8 @@ configure-database:
   echo "::set-output name=management_sql_user_name::$creds"
 
 apply-migrations: ci-install-python-reqs
+  @echo "DIGITAL_MEMBERSHIP_DB_USERNAME: $DIGITAL_MEMBERSHIP_DB_USERNAME"
+  @echo "DIGITAL_MEMBERSHIP_DB_ACCESS_TOKEN: $(head -c 5 <<<"$DIGITAL_MEMBERSHIP_DB_ACCESS_TOKEN")"
   just flask db upgrade
   echo 'Any outstanding migrations have now been applied! :D'
 
