@@ -43,6 +43,9 @@ tf-auto-apply:
 
 ci-install-python-reqs:
   #!/bin/bash
+
+  set -eou pipefail
+
   if [[ '{{ env_var_or_default("CI", "false") }}' == "true" ]]
   then
     echo 'Installing python requirements from {{ python_reqs_file }}...'
@@ -168,6 +171,9 @@ deploy: ci-install-python-reqs build push
 
 configure-database:
   #!/bin/bash
+
+  set -eou pipefail
+
   just tf-db init
   just tf-db apply \
     -auto-approve
@@ -180,6 +186,9 @@ configure-database:
 
 apply-migrations: ci-install-python-reqs
   #!/bin/bash
+
+  set -eou pipefail
+
   echo "DIGITAL_MEMBERSHIP_DB_USERNAME: $DIGITAL_MEMBERSHIP_DB_USERNAME"
   echo "DIGITAL_MEMBERSHIP_DB_ACCESS_TOKEN: $(head -c 5 <<<"$DIGITAL_MEMBERSHIP_DB_ACCESS_TOKEN")"
   just flask db upgrade
@@ -220,6 +229,9 @@ sql-proxy:
 
 remote-psql:
   #!/bin/bash
+
+  set -eou pipefail
+
   PGHOST='127.0.0.1'
   PGPORT='5432'
   gcloud_user=`gcloud auth list 2>/dev/null | grep -E '^\*' | awk '{print $2;}'`
@@ -236,6 +248,9 @@ remote-psql:
 
 remote-pg-dump:
   #!/bin/bash
+
+  set -eou pipefail
+
   PGHOST='127.0.0.1'
   PGPORT='5432'
   gcloud_user=`gcloud auth list 2>/dev/null | grep -E '^\*' | awk '{print $2;}'`
