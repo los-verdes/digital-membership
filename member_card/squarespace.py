@@ -432,3 +432,17 @@ class Squarespace(object):
             f"Sending 'Rotate a subscription secret' request for {webhook_id=}..."
         )
         return self.post(path=rotate_secret_path, object=dict())
+
+    def send_test_webhook_notification(
+        self,
+        webhook_id,
+        topic,
+    ):
+        test_notification_path = (
+            f"webhook_subscriptions/{webhook_id}/actions/sendTestNotification"
+        )
+
+        logging.debug(
+            f"Sending 'Rotate a subscription secret' request for {webhook_id=}..."
+        )
+        return self.post(path=test_notification_path, object=dict(topic=topic))

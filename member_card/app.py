@@ -282,12 +282,25 @@ def squarespace_oauth_callback():
     token_account_id = token_resp["account_id"]
     logger.debug(f"squarespace_oauth_callback(): {token_account_id=}")
 
+    squarespace = Squarespace(api_key=token_resp["access_token"])
     webhook_subscriptions = ensure_orders_webhook_subscription(
-        squarespace=Squarespace(api_key=token_resp["access_token"]),
+        squarespace=squarespace,
         account_id=token_account_id,
         endpoint_url=app.config["SQUARESPACE_ORDER_WEBHOOK_ENDPOINT"],
     )
     logger.debug(f"Webhook listing (after ensuring webhooks): {webhook_subscriptions=}")
+
+    logger.debug("Sending test notifications for all configured webhooks now...")
+    for webhook_subscription in webhook_subscriptions:
+        webhook_id = webhook_subscription["id"]
+        logger.debug(f"Sending test notifications for webhook {webhook_id}...")
+        test_notification_resp = squarespace.send_test_webhook_notification(
+            webhook_id=webhook_id,
+            topic="order.create",
+        )
+        logger.debug(
+            f"Test notifications for webhook {webhook_id}: {test_notification_resp=}"
+        )
     return redirect(url_for("squarespace_extension_details"))
 
 
