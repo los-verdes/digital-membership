@@ -22,7 +22,6 @@ jobs:
 
   build-website-image:
     name: Build Website Image
-    needs: [build-worker-image]
     permissions:
       contents: "read"
       id-token: "write"
