@@ -35,7 +35,7 @@ BASE_DIR = os.path.dirname(
 
 app = Flask(__name__)
 logger = app.logger
-logger.propagate = False
+logger.propagate = True
 
 login_manager = utils.MembershipLoginManager()
 
