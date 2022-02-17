@@ -81,6 +81,9 @@ def rotate_secret_for_webhook(squarespace, webhook_subscription, account_id):
     setattr(order_webhook, "topics", webhook_subscription["topics"])
     setattr(order_webhook, "created_on", webhook_subscription["createdOn"])
     setattr(order_webhook, "updated_on", webhook_subscription["updatedOn"])
+    website_id = webhook_subscription["websiteId"]
+    logging.debug(f"Setting website_id for {order_webhook} to: {website_id=}")
+    setattr(order_webhook, "website_id", website_id)
     # order_webhook = SquarespaceWebhook.query.filter_by(
     #     webhook_id=webhook_id, account_id=account_id
     # ).one()
