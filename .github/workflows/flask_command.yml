@@ -81,5 +81,6 @@ jobs:
         id: flask-command
         run: just ${{ inputs.command }}
         env:
-          DIGITAL_MEMBERSHIP_DB_USERNAME: ${{ inputs.flask_env }}
+          FLASK_ENV: ${{ inputs.flask_env }}
+          DIGITAL_MEMBERSHIP_DB_USERNAME: ${{ inputs.management_sql_user_name }}
           DIGITAL_MEMBERSHIP_DB_ACCESS_TOKEN: ${{ secrets.management_sql_user_password }}
