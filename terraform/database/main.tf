@@ -145,3 +145,12 @@ resource "postgresql_default_privileges" "read_write_usage_seqs" {
 #   object_type = "table"
 #   privileges  = ["SELECT"]
 # }
+
+output "management_sql_user_name" {
+  value = local.management_user_name
+}
+
+output "management_sql_user_password" {
+  sensitive = true
+  value     = local.management_user_password
+}

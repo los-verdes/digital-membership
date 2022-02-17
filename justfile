@@ -169,17 +169,13 @@ configure-database:
   just tf-db init
   just tf-db apply \
     -auto-approve
+  SQL_USER_NAME="$(just tf-db output -raw management_sql_user_name)"
+  SQL_USER_PASSWORD="$(just tf-db output -raw management_sql_user_password)"
+  echo "::add-mask::$SQL_USER_PASSWORD"
+  echo "::set-output name=management_sql_user_password::$SQL_USER_PASSWORD"
+  echo "::set-output name=management_sql_user_name::$creds"
 
 apply-migrations: ci-install-python-reqs
-  #!/bin/bash
-
-  set -eou pipefail
-
-  just tf init
-  just tf output -raw postgres_management_user_name
-  # TODO: maybe move these tf output calls to a TF -> secret manager -> python path instead...
-  export DIGITAL_MEMBERSHIP_DB_USERNAME="$(just tf output -raw postgres_management_user_name)"
-  export DIGITAL_MEMBERSHIP_DB_ACCESS_TOKEN="$(just tf output -raw postgres_management_user_password)"
   just flask db upgrade
   echo 'Any outstanding migrations have now been applied! :D'
 
