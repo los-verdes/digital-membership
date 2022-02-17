@@ -537,6 +537,7 @@ def query_db(email):
     logger.info(f"memberships matching {email}:\n{memberships}")
     user = User.query.filter_by(email=func.lower(email)).one()
     logger.info(f"user matching {email}:\n{user}")
+    logger.info(f"user roles {email}:\n{user.roles}")
     logger.info(f"user memberships:\n{user.annual_memberships}")
     logger.info(f"user membership cards:\n{user.membership_cards}")
 
