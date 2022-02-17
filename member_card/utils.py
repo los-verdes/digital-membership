@@ -71,7 +71,7 @@ def get_signing_key():
     return signing_key
 
 
-def sign(data: str, algorithm=hashlib.sha256, key=None) -> str:
+def sign(data: str, algorithm=hashlib.sha256, key=None, use_hex_digest=False) -> str:
     if key is None:
         key = get_signing_key()
     assert len(key) >= algorithm().digest_size, (
@@ -79,13 +79,27 @@ def sign(data: str, algorithm=hashlib.sha256, key=None) -> str:
     )
     if isinstance(data, str):
         data = data.encode()
-    signed_digest = hmac.new(key, data, algorithm).digest()
-    b64_digest = b64e(signed_digest).decode()
-    return b64_digest
+    encoded_hmac = hmac.new(key, data, algorithm)
+    if use_hex_digest:
+        signed_digest = encoded_hmac.hexdigest()
+    else:
+        signed_digest = encoded_hmac.digest()
+        # we base64 encode things here for reasons (apple auth token verification... needs to be rethunk)
+        signed_digest = b64e(signed_digest).decode()
+    return signed_digest
 
 
 def verify(signature: str, data: str, algorithm=hashlib.sha256, key=None) -> bool:
     expected = sign(data, algorithm, key=key)
+    logging.debug(f"{signature=}")
+    logging.debug(f"{expected=}")
+    return hmac.compare_digest(expected, signature)
+
+
+def verify_hex_digest(
+    signature: str, data: str, algorithm=hashlib.sha256, key=None
+) -> bool:
+    expected = sign(data, algorithm, key=key, use_hex_digest=True)
     logging.debug(f"{signature=}")
     logging.debug(f"{expected=}")
     return hmac.compare_digest(expected, signature)

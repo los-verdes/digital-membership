@@ -387,7 +387,7 @@ def squarespace_order_webhook():
     logger.debug(
         f"Verifying webhook payload signature ({incoming_signature=})", extra=log_extra
     )
-    payload_verified = utils.verify(
+    payload_verified = utils.verify_hex_digest(
         signature=incoming_signature,
         data=request.data,
         key=webhook.secret.encode(),
@@ -397,6 +397,7 @@ def squarespace_order_webhook():
         expected_signature = utils.sign(
             data=request.data,
             key=webhook.secret.encode(),
+            use_hex_digest=True,
         )
         log_extra["expected_signature"] = expected_signature
         logger.warning(
