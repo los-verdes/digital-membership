@@ -21,7 +21,7 @@ class SquarespaceWebhook(db.Model):
             website_id=self.website_id,
             endpoint_url=self.endpoint_url,
             topics=self.topics,
-            secret=self.secret,
+            secret=f"{self.secret[:3]} ... {self.secret[-3:]}",
             created_on=self.created_on,
             updated_on=self.updated_on,
         )
