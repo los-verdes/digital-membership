@@ -62,6 +62,21 @@ def generate_docker_image_build(project_id, repo_name, image_name, branch_name="
     base_image_gcr_name = "gcr.io/$PROJECT_ID/base"
     gcr_name = f"gcr.io/$PROJECT_ID/{image_name}"
 
+    build_args = [
+        "build",
+        "--cache-from",
+        f"{base_image_gcr_name}:latest",
+        "--target",
+        image_name,
+        "--tag",
+        f"{gcr_name}:$SHORT_SHA",
+        ".",
+    ]
+    if base_image_gcr_name != gcr_name:
+        build_args += [
+            "--cache-from",
+            f"{gcr_name}:latest",
+        ]
     build = cloudbuild_v1.Build()
 
     build.source = {
@@ -82,16 +97,7 @@ def generate_docker_image_build(project_id, repo_name, image_name, branch_name="
         },
         {
             "name": "gcr.io/cloud-builders/docker",
-            "args": [
-                "build",
-                "--cache-from",
-                f"{base_image_gcr_name}:latest",
-                "--target",
-                image_name,
-                "--tag",
-                f"{gcr_name}:$SHORT_SHA",
-                ".",
-            ],
+            "args": build_args,
         },
         {
             "name": "gcr.io/cloud-builders/docker",
