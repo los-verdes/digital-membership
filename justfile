@@ -116,8 +116,6 @@ build-worker:
   docker build . --target worker --tag '{{ worker_image_name }}:{{ image_tag }}'
 
 build: build-website build-worker
-  echo "Building statics..."
-  just flask assets build
 
 build-website-image: ci-install-python-reqs
   just flask build-image website

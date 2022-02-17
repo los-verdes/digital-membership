@@ -11,34 +11,24 @@ on:
 
 # jscpd:ignore-start
 jobs:
-  build-base-image:
-    name: Build Base Image
-    permissions:
-      contents: "read"
-      id-token: "write"
-    uses: los-verdes/digital-membership/.github/workflows/flask_command.yml@main
-    with:
-      command: build-base-image
-
-  build-website-image:
-    name: Build Website Image
-    needs: [build-base-image]
-    permissions:
-      contents: "read"
-      id-token: "write"
-    uses: los-verdes/digital-membership/.github/workflows/flask_command.yml@main
-    with:
-      command: build-website-image
-
   build-worker-image:
     name: Build Worker Image
-    needs: [build-base-image]
     permissions:
       contents: "read"
       id-token: "write"
     uses: los-verdes/digital-membership/.github/workflows/flask_command.yml@main
     with:
       command: build-worker-image
+
+  build-website-image:
+    name: Build Website Image
+    needs: [build-worker-image]
+    permissions:
+      contents: "read"
+      id-token: "write"
+    uses: los-verdes/digital-membership/.github/workflows/flask_command.yml@main
+    with:
+      command: build-website-image
 
   deploy-infra-and-services:
     name: Deploy Infrastructure & Services

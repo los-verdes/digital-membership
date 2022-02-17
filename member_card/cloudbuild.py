@@ -59,7 +59,7 @@ def create_upload_statics_build(client=None):
 
 
 def generate_docker_image_build(project_id, repo_name, image_name, branch_name="main"):
-    base_image_gcr_name = "gcr.io/$PROJECT_ID/base"
+    base_image_gcr_name = "gcr.io/$PROJECT_ID/worker"
     gcr_name = f"gcr.io/$PROJECT_ID/{image_name}"
 
     build_args = [
