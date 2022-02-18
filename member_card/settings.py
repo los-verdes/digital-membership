@@ -200,7 +200,7 @@ class Settings(object):
             db_pass=self.DB_PASSWORD,
         )
 
-        logger.debug({k: f"{v[:3]}...{v[-3:]}" for k, v in db_connection_kwargs.items})
+        logger.debug({k: f"{v[:3]}...{v[-3:]}" for k, v in db_connection_kwargs.items()})
 
         def get_db_connector(
             instance_connection_string: str, db_user: str, db_name: str, db_pass: str
