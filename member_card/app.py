@@ -420,7 +420,7 @@ def squarespace_order_webhook():
         db.session.commit()
     elif webhook_topic.startswith("order."):
         message_data = dict(
-            type="sync_order",
+            type="sync_squarespace_order",
             notification_id=webhook_payload["id"],
             order_id=webhook_payload["data"]["orderId"],
             website_id=website_id,

@@ -40,7 +40,10 @@ def parse_message():
 def process_email_distribution_request(message):
     logger.debug(f"Processing email distribution request message: {message}")
     email_distribution_recipient = message["email_distribution_recipient"]
-    log_extra = dict(email_distribution_recipient=email_distribution_recipient)
+    log_extra = dict(
+        message=message,
+        email_distribution_recipient=email_distribution_recipient,
+    )
     logger.debug("looking up user...", extra=log_extra)
     try:
         # BONUS TODO: make this case-insensitive
@@ -76,7 +79,10 @@ def process_email_distribution_request(message):
 
 
 def sync_subscriptions_etl(message):
-    logger.debug(f"Processing sync subscriptions ETL message: {message}")
+    log_extra = dict(message=message)
+    logger.debug(
+        f"Processing sync subscriptions ETL message: {message}", extra=log_extra,
+    )
     membership_skus = current_app.config["SQUARESPACE_MEMBERSHIP_SKUS"]
     squarespace = Squarespace(api_key=current_app.config["SQUARESPACE_API_KEY"])
     etl_results = squarespace_orders_etl(
@@ -85,7 +91,14 @@ def sync_subscriptions_etl(message):
         membership_skus=membership_skus,
         load_all=False,
     )
-    logger.info(f"sync_subscriptions() => {etl_results=}")
+    log_extra["etl_results"] = etl_results
+    logger.info(f"sync_subscriptions() => {etl_results=}", extra=log_extra)
+
+
+def sync_squarespace_order(message):
+    log_extra = dict(message=message)
+    logger.debug(f"sync_squarespace_order() called with {message=}", extra=log_extra)
+    # TODO: implement this :D
 
 
 @worker_bp.route("/pubsub", methods=["POST"])
@@ -98,6 +111,7 @@ def pubsub_ingress():
     MESSAGE_TYPE_HANDLERS = {
         "email_distribution_request": process_email_distribution_request,
         "sync_subscriptions_etl": sync_subscriptions_etl,
+        "sync_squarespace_order": sync_squarespace_order,
     }
     MESSAGE_TYPE_HANDLERS[message["type"]](message)
 
