@@ -83,14 +83,14 @@ def inject_user():
 
 @app.context_processor
 def load_common_context():
-    from member_card.db import get_membership_table_last_sync
+    # from member_card.db import get_membership_table_last_sync
 
     return utils.common_context(
         app.config["SOCIAL_AUTH_AUTHENTICATION_BACKENDS"],
         load_strategy(),
         getattr(g, "user", None),
         app.config.get("SOCIAL_AUTH_GOOGLE_PLUS_KEY"),
-        membership_last_sync=get_membership_table_last_sync(),
+        # membership_last_sync=get_membership_table_last_sync(),
     )
 
 

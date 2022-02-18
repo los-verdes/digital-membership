@@ -5,7 +5,6 @@ from datetime import datetime
 def get_last_run_start_time(table_name):
     from member_card.models import TableMetadata
 
-    # db.session = get_db.session()
     instance = (
         db.session.query(TableMetadata)
         .filter_by(
