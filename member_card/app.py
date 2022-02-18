@@ -507,15 +507,6 @@ def about():
     )
 
 
-@app.cli.command("ensure-db-schemas")
-@click.option("-D", "--drop-first", default=False)
-def ensure_db_schemas(drop_first):
-    logger.debug("ensure-db-schemas: calling `db.create_all()`")
-    from member_card.db import ensure_db_schemas
-
-    ensure_db_schemas(drop_first)
-
-
 @app.cli.command("sync-subscriptions")
 @click.option("-l", "--load-all", default=False)
 def sync_subscriptions(load_all):
