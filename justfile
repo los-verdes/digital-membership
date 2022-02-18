@@ -179,9 +179,6 @@ configure-database:
     -auto-approve
   SQL_USER_NAME="$(just tf-db output -raw management_sql_user_name)"
   echo "$SQL_USER_NAME"
-  SQL_USER_PASSWORD="$(just tf-db output -raw management_sql_user_password)"
-  echo "::add-mask::$SQL_USER_PASSWORD"
-  echo "::set-output name=management_sql_user_password::$SQL_USER_PASSWORD"
   echo "::set-output name=management_sql_user_name::$SQL_USER_NAME"
 
 apply-migrations: ci-install-python-reqs

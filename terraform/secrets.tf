@@ -3,11 +3,6 @@ resource "random_password" "flask_secret_key" {
   special = false
 }
 
-resource "random_password" "sql_password" {
-  length  = 64
-  special = false
-}
-
 resource "google_secret_manager_secret" "digital_membership" {
   secret_id = "digital-membership"
 

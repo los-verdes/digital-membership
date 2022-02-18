@@ -41,7 +41,7 @@ resource "google_sql_database" "database" {
 
 resource "google_sql_user" "management" {
   name     = "tf-management"
-  password = random_password.sql_password.result
+  password = var.management_sql_user_password
   instance = google_sql_database_instance.digital_membership.name
   type     = "BUILT_IN"
 }

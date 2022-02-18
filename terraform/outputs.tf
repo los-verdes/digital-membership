@@ -5,7 +5,7 @@ locals {
       "postgres://",
       google_sql_user.management.name,
       ":",
-      random_password.sql_password.result,
+      google_sql_user.management.password,
       "@",
       google_sql_database_instance.digital_membership.public_ip_address,
       "/",

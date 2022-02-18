@@ -60,6 +60,11 @@ variable "github_repo" {
   type = string
 }
 
+variable "management_sql_user_password" {
+  sensitive = true
+  type = string
+}
+
 variable "membership_squarespace_sku" {
   type = string
 }
