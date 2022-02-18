@@ -81,7 +81,7 @@ def sign(data: str, algorithm=hashlib.sha256, key=None, use_hex_digest=False) ->
         data = data.encode()
     encoded_hmac = hmac.new(key, data, algorithm)
     if use_hex_digest:
-        signed_digest = encoded_hmac.hexdigest()
+        signed_digest = encoded_hmac.hexdigest().upper()
     else:
         signed_digest = encoded_hmac.digest()
         # we base64 encode things here for reasons (apple auth token verification... needs to be rethunk)

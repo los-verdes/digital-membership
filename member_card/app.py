@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os
 from datetime import datetime
-
+import binascii
 import click
 from flask import (
     Flask,
@@ -364,9 +364,14 @@ def squarespace_order_webhook():
         webhook_payload=webhook_payload,
         allowed_website_ids=allowed_website_ids,
         website_id=website_id,
+        request_data=request.data,
     )
     logger.debug(
         f"squarespace_order_webhook(): INCOMING WEBHOOK YO {webhook_payload=}",
+        extra=log_extra,
+    )
+    logger.debug(
+        f"squarespace_order_webhook(): {request.data=}",
         extra=log_extra,
     )
 
@@ -387,16 +392,17 @@ def squarespace_order_webhook():
     logger.debug(
         f"Verifying webhook payload signature ({incoming_signature=})", extra=log_extra
     )
+    signature_key = binascii.unhexlify(webhook.secret.encode("utf-8"))
     payload_verified = utils.verify_hex_digest(
         signature=incoming_signature,
         data=request.data,
-        key=webhook.secret.encode(),
+        key=signature_key,
     )
     log_extra["payload_verified"] = payload_verified
     if not payload_verified:
         expected_signature = utils.sign(
             data=request.data,
-            key=webhook.secret.encode(),
+            key=signature_key,
             use_hex_digest=True,
         )
         log_extra["expected_signature"] = expected_signature
