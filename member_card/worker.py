@@ -7,7 +7,11 @@ from flask import Blueprint, current_app, request
 from member_card.db import db
 from member_card.models import AnnualMembership, User
 from member_card.sendgrid import generate_and_send_email
-from member_card.squarespace import Squarespace, squarespace_orders_etl
+from member_card.squarespace import (
+    Squarespace,
+    squarespace_orders_etl,
+    load_single_order,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -125,7 +129,17 @@ def sync_subscriptions_etl(message, load_all=False):
 def sync_squarespace_order(message):
     log_extra = dict(pubsub_message=message)
     logger.debug(f"sync_squarespace_order() called with {message=}", extra=log_extra)
-    # TODO: implement this :D
+    order_id = message["order_id"]
+
+    membership_skus = current_app.config["SQUARESPACE_MEMBERSHIP_SKUS"]
+    squarespace = Squarespace(api_key=current_app.config["SQUARESPACE_API_KEY"])
+    memberships = load_single_order(
+        squarespace_client=squarespace,
+        membership_skus=membership_skus,
+        order_id=order_id,
+    )
+    logger.info(f"Sync for {order_id=} completed!: {memberships=}")
+    return memberships
 
 
 @worker_bp.route("/pubsub", methods=["POST"])

@@ -27,6 +27,8 @@ def insert_order_as_membership(order, membership_skus):
     membership_orders = []
     line_items = order.get("lineItems", [])
     subscription_line_items = [i for i in line_items if i["sku"] in membership_skus]
+    ignored_line_items = [i for i in line_items if i["sku"] not in membership_skus]
+    logger.debug(f"{ignored_line_items=}")
     for subscription_line_item in subscription_line_items:
 
         fulfilled_on = None
@@ -77,6 +79,26 @@ def insert_order_as_membership(order, membership_skus):
     return membership_orders
 
 
+def parse_subscription_orders(membership_skus, subscription_orders):
+    logger.info(f"{len(subscription_orders)=} retrieved from Squarespace...")
+
+    # Insert oldest orders first (so our internal membership ID generally aligns with order IDs...)
+    subscription_orders.reverse()
+
+    # Loop over all the raw order data and do the ETL bits
+    memberships = []
+    for subscription_order in subscription_orders:
+        membership_orders = insert_order_as_membership(
+            order=subscription_order,
+            membership_skus=membership_skus,
+        )
+        for membership_order in membership_orders:
+            db.session.add(membership_order)
+        db.session.commit()
+        memberships += membership_orders
+    return memberships
+
+
 def squarespace_orders_etl(squarespace_client, membership_skus, load_all):
     from member_card import models
 
@@ -101,25 +123,21 @@ def squarespace_orders_etl(squarespace_client, membership_skus, load_all):
             membership_skus=membership_skus,
         )
 
-    logger.info(f"{len(subscription_orders)=} retrieved from Squarespace...")
-
-    # Insert oldest orders first (so our internal membership ID generally aligns with order IDs...)
-    subscription_orders.reverse()
-
-    # Loop over all the raw order data and do the ETL bits
-    memberships = []
-    for subscription_order in subscription_orders:
-        membership_orders = insert_order_as_membership(
-            order=subscription_order,
-            membership_skus=membership_skus,
-        )
-        for membership_order in membership_orders:
-            db.session.add(membership_order)
-        db.session.commit()
-        memberships += membership_orders
+    memberships = parse_subscription_orders(membership_skus, subscription_orders)
 
     table_metadata.set_last_run_start_time(membership_table_name, etl_start_time)
 
+    return memberships
+
+
+def load_single_order(squarespace_client, membership_skus, order_id):
+    subscription_order = squarespace_client.order(order_id)
+    logger.debug(f"API response for {order_id=}: {subscription_order=}")
+    memberships = parse_subscription_orders(
+        membership_skus=membership_skus,
+        subscription_orders=[subscription_order],
+    )
+    logger.debug(f"After parsing subscription orders: {memberships=}")
     return memberships
 
 

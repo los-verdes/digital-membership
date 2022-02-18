@@ -519,6 +519,17 @@ def sync_subscriptions(load_all):
     logger.info(f"sync_subscriptions() => {etl_results=}")
 
 
+@app.cli.command("sync-order-id")
+@click.argument("order_id")
+def sync_order_id(order_id):
+    from member_card.worker import sync_squarespace_order
+
+    sync_order_result = sync_squarespace_order(
+        message=dict(order_id=order_id),
+    )
+    logger.info(f"sync_order_id() => {sync_order_result=}")
+
+
 @app.cli.command("recreate-user")
 @click.argument("email")
 def recreate_user(email):
