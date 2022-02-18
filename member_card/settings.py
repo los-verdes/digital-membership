@@ -3,7 +3,7 @@ import logging
 import os
 from functools import partial
 from typing import TYPE_CHECKING, Tuple
-
+from social_core.backends.apple import AppleIdAuth
 from google.cloud.sql.connector import connector
 
 if TYPE_CHECKING:
@@ -122,6 +122,15 @@ class Settings(object):
     SOCIAL_AUTH_DISCONNECT_REDIRECT_URL: str = "/logout"
     SOCIAL_AUTH_GOOGLE_OAUTH2_KEY: str = os.environ.get("GOOGLE_CLIENT_ID", "")
     SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: str = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+
+    SOCIAL_AUTH_APPLE_ID_CLIENT = "es.losverd.card"
+    SOCIAL_AUTH_APPLE_ID_TEAM = APPLE_DEVELOPER_TEAM_ID
+    SOCIAL_AUTH_APPLE_ID_KEY: str = os.getenv("SOCIAL_AUTH_APPLE_ID_KEY", "T2V78B94CB")
+    SOCIAL_AUTH_APPLE_ID_SECRET: str = (
+        os.getenv("SOCIAL_AUTH_APPLE_ID_SECRET", "").replace(r"\n", "\n").strip()
+    )
+    SOCIAL_AUTH_APPLE_ID_SCOPE = ["email", "name"]
+
     SOCIAL_AUTH_LOGIN_REDIRECT_URL: str = "/"
     SOCIAL_AUTH_LOGIN_URL: str = "/login"
     SOCIAL_AUTH_REDIRECT_IS_HTTPS: bool = True
@@ -147,6 +156,7 @@ class Settings(object):
 
     SOCIAL_AUTH_AUTHENTICATION_BACKENDS: Tuple[str, ...] = (
         "social_core.backends.google.GoogleOAuth2",
+        "social_core.backends.apple.AppleIdAuth",
     )
 
     SOCIAL_AUTH_DISCONNECT_PIPELINE: Tuple[str, ...] = (
