@@ -68,30 +68,31 @@ def get_or_create(session, model, **kwargs):
 def ensure_user_for_order(email, first_name, last_name):
     from member_card.models import User
 
-    member_user = get_or_create(
+    user = get_or_create(
         session=db.session,
         model=User,
         email=email,
     )
 
-    if not member_user.fullname:
+    if not user.fullname:
         member_name = f"{first_name} {last_name}"
-        logger.debug(f"No name set yet on {member_user=}, updating to: {member_name}")
-        member_user.fullname = member_name
-        member_user.first_name = first_name
-        member_user.last_name = last_name
+        logger.debug(f"No name set yet on {user=}, updating to: {member_name}")
+        user.fullname = member_name
+        user.first_name = first_name
+        user.last_name = last_name
 
-    if member_user.first_name != first_name:
+    if user.first_name != first_name:
         logger.warning(
-            f"{member_user.first_name=} does not match {first_name} for some reason..."
+            f"{user.first_name=} does not match {first_name} for some reason..."
         )
-    if member_user.last_name != last_name:
+    if user.last_name != last_name:
         logger.warning(
-            f"{member_user.last_name=} does not match {last_name} for some reason..."
+            f"{user.last_name=} does not match {last_name} for some reason..."
         )
 
-    db.session.add(member_user)
+    db.session.add(user)
     db.session.commit()
+    return user
 
 
 def ensure_order_in_database(order, membership_skus):
@@ -136,16 +137,17 @@ def ensure_order_in_database(order, membership_skus):
         )
         membership_orders.append(membership)
 
-        member_user_id = ensure_user_for_order(
+        membership_user = ensure_user_for_order(
             email=membership.customer_email,
             first_name=membership.billing_address_first_name,
             last_name=membership.billing_address_last_name,
         )
+        membership_user_id = membership_user.id
         if not membership.user_id:
             logger.debug(
-                f"No user_id set for {membership=}! Setting to: {member_user_id=}"
+                f"No user_id set for {membership=}! Setting to: {membership_user_id=}"
             )
-            setattr(membership, "user_id", member_user_id)
+            setattr(membership, "user_id", membership_user_id)
     return membership_orders
 
 
