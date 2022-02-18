@@ -1,12 +1,15 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING
+from zoneinfo import ZoneInfo
 
 import requests
+from dateutil.parser import parse
 from requests.auth import HTTPBasicAuth
 
-from member_card.db import db, get_or_create
-from member_card.models import SquarespaceWebhook
+from member_card.db import db, get_or_create, get_or_update
+from member_card.models import SquarespaceWebhook, table_metadata
+from member_card.models.user import ensure_user
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -15,6 +18,110 @@ __VERSION__ = "0.0.4"
 api_baseurl = "https://api.squarespace.com"
 api_version = "1.0"
 
+logger = logging.getLogger(__name__)
+
+
+def insert_order_as_membership(order, membership_skus):
+    from member_card.models import AnnualMembership
+
+    membership_orders = []
+    line_items = order.get("lineItems", [])
+    subscription_line_items = [i for i in line_items if i["sku"] in membership_skus]
+    for subscription_line_item in subscription_line_items:
+
+        fulfilled_on = None
+        if fulfilled_on := order.get("fulfilledOn"):
+            fulfilled_on = parse(fulfilled_on).replace(tzinfo=timezone.utc)
+
+        customer_email = order["customerEmail"]
+
+        membership_kwargs = dict(
+            order_id=order["id"],
+            order_number=order["orderNumber"],
+            channel=order["channel"],
+            channel_name=order["channelName"],
+            billing_address_first_name=order["billingAddress"]["firstName"],
+            billing_address_last_name=order["billingAddress"]["lastName"],
+            external_order_reference=order["externalOrderReference"],
+            created_on=parse(order["createdOn"]).replace(tzinfo=timezone.utc),
+            modified_on=parse(order["modifiedOn"]).replace(tzinfo=timezone.utc),
+            fulfilled_on=fulfilled_on,
+            customer_email=customer_email,
+            fulfillment_status=order["fulfillmentStatus"],
+            test_mode=order["testmode"],
+            line_item_id=subscription_line_item["id"],
+            sku=subscription_line_item["sku"],
+            variant_id=subscription_line_item["variantId"],
+            product_id=subscription_line_item["productId"],
+            product_name=subscription_line_item["productName"],
+        )
+        membership = get_or_update(
+            session=db.session,
+            model=AnnualMembership,
+            filters=["order_id", "order_number"],
+            kwargs=membership_kwargs,
+        )
+        membership_orders.append(membership)
+
+        membership_user = ensure_user(
+            email=membership.customer_email,
+            first_name=membership.billing_address_first_name,
+            last_name=membership.billing_address_last_name,
+        )
+        membership_user_id = membership_user.id
+        if not membership.user_id:
+            logger.debug(
+                f"No user_id set for {membership=}! Setting to: {membership_user_id=}"
+            )
+            setattr(membership, "user_id", membership_user_id)
+    return membership_orders
+
+
+def squarespace_orders_etl(squarespace_client, membership_skus, load_all):
+    from member_card import models
+
+    etl_start_time = datetime.now(tz=ZoneInfo("UTC"))
+
+    membership_table_name = models.AnnualMembership.__tablename__
+
+    if not load_all:
+        last_run_start_time = table_metadata.get_last_run_start_time(
+            membership_table_name
+        )
+        logger.info(f"Starting sync from {last_run_start_time=}")
+        subscription_orders = squarespace_client.load_membership_orders_datetime_window(
+            membership_skus=membership_skus,
+            modified_before=last_run_start_time,
+            modified_after=last_run_start_time - timedelta(days=1),
+        )
+
+    else:
+        logger.info("Loading ALL orders now...")
+        subscription_orders = squarespace_client.load_all_membership_orders(
+            membership_skus=membership_skus,
+        )
+
+    logger.info(f"{len(subscription_orders)=} retrieved from Squarespace...")
+
+    # Insert oldest orders first (so our internal membership ID generally aligns with order IDs...)
+    subscription_orders.reverse()
+
+    # Loop over all the raw order data and do the ETL bits
+    memberships = []
+    for subscription_order in subscription_orders:
+        membership_orders = insert_order_as_membership(
+            order=subscription_order,
+            membership_skus=membership_skus,
+        )
+        for membership_order in membership_orders:
+            db.session.add(membership_order)
+        db.session.commit()
+        memberships += membership_orders
+
+    table_metadata.set_last_run_start_time(membership_table_name, etl_start_time)
+
+    return memberships
+
 
 def ensure_orders_webhook_subscription(
     squarespace, account_id, endpoint_url, delete_extant_first=False
@@ -22,17 +129,17 @@ def ensure_orders_webhook_subscription(
     if delete_extant_first:
         list_webhooks_resp = squarespace.list_webhook_subscriptions()
         webhook_subscriptions = list_webhooks_resp["webhookSubscriptions"]
-        logging.debug(f"ensure_orders_webhook_subscription(): {webhook_subscriptions=}")
+        logger.debug(f"ensure_orders_webhook_subscription(): {webhook_subscriptions=}")
 
         for webhook_subscription in webhook_subscriptions:
             tmp_delete_resp = squarespace.delete_webhook(
                 webhook_id=webhook_subscription["id"]
             )
-            logging.debug(f"{tmp_delete_resp=}")
+            logger.debug(f"{tmp_delete_resp=}")
 
     list_webhooks_resp = squarespace.list_webhook_subscriptions()
     webhook_subscriptions = list_webhooks_resp["webhookSubscriptions"]
-    logging.debug(f"ensure_orders_webhook_subscription(): {webhook_subscriptions=}")
+    logger.debug(f"ensure_orders_webhook_subscription(): {webhook_subscriptions=}")
 
     if webhook_subscriptions:
         for webhook_subscription in webhook_subscriptions:
@@ -48,23 +155,23 @@ def ensure_orders_webhook_subscription(
             endpoint_url=endpoint_url,
         )
 
-        logging.debug("Refreshing webhooks list post-webhook-creation...")
+        logger.debug("Refreshing webhooks list post-webhook-creation...")
         list_webhooks_resp = squarespace.list_webhook_subscriptions()
         webhook_subscriptions = list_webhooks_resp["webhookSubscriptions"]
         webhook_subscriptions_by_id = {w["id"]: w for w in webhook_subscriptions}
-        logging.debug(f"after creating webhook: {webhook_subscriptions_by_id=}")
+        logger.debug(f"after creating webhook: {webhook_subscriptions_by_id=}")
         website_id = webhook_subscriptions_by_id[order_webhook.webhook_id]["websiteId"]
-        logging.debug(f"Setting website_id for {order_webhook} to: {website_id=}")
+        logger.debug(f"Setting website_id for {order_webhook} to: {website_id=}")
         setattr(order_webhook, "website_id", website_id)
         db.session.add(order_webhook)
         db.session.commit()
-        logging.debug(f"order webhook committed!: {order_webhook=}")
+        logger.debug(f"order webhook committed!: {order_webhook=}")
     return webhook_subscriptions
 
 
 def rotate_secret_for_webhook(squarespace, webhook_subscription, account_id):
     webhook_id = webhook_subscription["id"]
-    logging.debug(
+    logger.debug(
         f"Querying database for extant webhook ID (or creating a new entry): {webhook_id}..."
     )
     order_webhook = get_or_create(
@@ -82,27 +189,27 @@ def rotate_secret_for_webhook(squarespace, webhook_subscription, account_id):
     setattr(order_webhook, "created_on", webhook_subscription["createdOn"])
     setattr(order_webhook, "updated_on", webhook_subscription["updatedOn"])
     website_id = webhook_subscription["websiteId"]
-    logging.debug(f"Setting website_id for {order_webhook} to: {website_id=}")
+    logger.debug(f"Setting website_id for {order_webhook} to: {website_id=}")
     setattr(order_webhook, "website_id", website_id)
     # order_webhook = SquarespaceWebhook.query.filter_by(
     #     webhook_id=webhook_id, account_id=account_id
     # ).one()
 
-    logging.debug(f"Rotating webhook subscription secret for {order_webhook=}...")
+    logger.debug(f"Rotating webhook subscription secret for {order_webhook=}...")
     rotate_secret_resp = squarespace.rotate_webhook_subscription_secret(
         webhook_id=order_webhook.webhook_id
     )
 
-    logging.debug(f"Updating secret attribute for webhook {webhook_id}...")
+    logger.debug(f"Updating secret attribute for webhook {webhook_id}...")
     setattr(order_webhook, "secret", rotate_secret_resp["secret"])
     db.session.add(order_webhook)
     db.session.commit()
-    logging.debug(f"Secret attribute update for webhook {webhook_id} committed!")
+    logger.debug(f"Secret attribute update for webhook {webhook_id} committed!")
 
 
 def create_orders_webhook(squarespace, account_id, endpoint_url):
     # I.e., if we have no extant webhook subscriptions for the targeted site / account ID...
-    logging.debug(f"Creating webhook for {account_id} now...")
+    logger.debug(f"Creating webhook for {account_id} now...")
     orders_webhook_resp = squarespace.create_webhook(
         endpoint_url=endpoint_url,
         topics=[
@@ -111,7 +218,7 @@ def create_orders_webhook(squarespace, account_id, endpoint_url):
             "extension.uninstall",
         ],
     )
-    logging.debug(f"create_orders_webhook(): {orders_webhook_resp=}")
+    logger.debug(f"create_orders_webhook(): {orders_webhook_resp=}")
 
     order_webhook = get_or_create(
         session=db.session,
@@ -124,7 +231,7 @@ def create_orders_webhook(squarespace, account_id, endpoint_url):
         # created_on=orders_webhook_resp["createdOn"],
         # updated_on=orders_webhook_resp["updatedOn"],
     )
-    logging.debug(f"order webhook created!: {order_webhook=}")
+    logger.debug(f"order webhook created!: {order_webhook=}")
     setattr(order_webhook, "topics", orders_webhook_resp["topics"])
     setattr(order_webhook, "created_on", orders_webhook_resp["createdOn"])
     setattr(order_webhook, "updated_on", orders_webhook_resp["updatedOn"])
@@ -148,7 +255,7 @@ def perform_oauth_token_request(client_id, client_secret, token_request_body):
             "User-Agent": "lv-digital-membership",
         },
     )
-    logging.debug(f"perform_oauth_token_request(): {list(token_resp.headers)=}")
+    logger.debug(f"perform_oauth_token_request(): {list(token_resp.headers)=}")
     token_resp.raise_for_status()
     resp_data = token_resp.json()
     # {
@@ -166,7 +273,7 @@ def perform_oauth_token_request(client_id, client_secret, token_request_body):
     for k, v in resp_data.items():
         if k.endswith("expires_at"):
             expires_at_dt = datetime.fromtimestamp(v).strftime("%c")
-            logging.debug(f"perform_oauth_token_request(): {k} => {expires_at_dt}")
+            logger.debug(f"perform_oauth_token_request(): {k} => {expires_at_dt}")
             resp_data[k] = expires_at_dt
     return resp_data
 
@@ -249,7 +356,7 @@ class Squarespace(object):
             A dictionary containing JSON compatible key/value combinations.
         """
         url = "%s/%s/%s" % (self.api_baseurl, self.api_version, path)
-        # logging.debug("url:%s object:%s", url, object)
+        # logger.debug("url:%s object:%s", url, object)
         return self.process_request(self.http.post(url, json=object))
 
     def get(self, path, args=None) -> dict:
@@ -258,12 +365,12 @@ class Squarespace(object):
             args = {}
 
         url = "%s/%s/%s" % (self.api_baseurl, self.api_version, path)
-        # logging.debug("url:%s args:%s", url, args)
+        # logger.debug("url:%s args:%s", url, args)
         return self.process_request(self.http.get(url, params=args))
 
     def delete(self, path):
         url = "%s/%s/%s" % (self.api_baseurl, self.api_version, path)
-        # logging.debug("url:%s object:%s", url, object)
+        # logger.debug("url:%s object:%s", url, object)
         return self.process_request(self.http.delete(url))
 
     def process_request(self, request) -> dict:
@@ -275,15 +382,15 @@ class Squarespace(object):
         elif request.status_code == 401:
             raise ValueError("The API key %s is not valid.", self.api_key)
         elif 200 < request.status_code < 299:
-            logging.warning("Squarespace success response %s:", request.status_code)
-            logging.warning(request.text)
+            logger.warning("Squarespace success response %s:", request.status_code)
+            logger.warning(request.text)
             raise NotImplementedError(
                 "Squarespace sent us a success response we're not prepared for!"
             )
 
-        logging.error("Squarespace error response %s:", request.status_code)
-        logging.error("URL: %s", request.url)
-        logging.error(request.text)
+        logger.error("Squarespace error response %s:", request.status_code)
+        logger.error("URL: %s", request.url)
+        logger.error(request.text)
 
         if 400 <= request.status_code < 499:
             raise RuntimeError("Squarespace thinks this request is bogus")
@@ -363,23 +470,23 @@ class Squarespace(object):
         all_orders = []
         membership_orders = []
 
-        logging.debug(f"Grabbing all orders with {order_params=}")
+        logger.debug(f"Grabbing all orders with {order_params=}")
 
         for order in self.all_orders(**order_params):
             all_orders.append(order)
 
             order_product_names = [i["productName"] for i in order["lineItems"]]
             if any(i["sku"] in membership_skus for i in order["lineItems"]):
-                logging.debug(
+                logger.debug(
                     f"{order['id']=} (#{order['orderNumber']}) includes {membership_skus=} in {order_product_names=}"
                 )
                 membership_orders.append(order)
                 continue
-            # logging.debug(
+            # logger.debug(
             #     f"#{order['orderNumber']} has no {membership_sku=} in {order_product_names=}"
             # )
 
-        logging.debug(
+        logger.debug(
             f"{len(all_orders)=} loaded with {len(membership_orders)=} and whatnot"
         )
         return membership_orders
@@ -387,7 +494,7 @@ class Squarespace(object):
     def list_webhook_subscriptions(
         self,
     ):
-        logging.debug("Sending 'Retrieve all webhook subscriptions' request...")
+        logger.debug("Sending 'Retrieve all webhook subscriptions' request...")
         return self.get(
             path="webhook_subscriptions",
         )
@@ -398,7 +505,7 @@ class Squarespace(object):
     ):
         webhook_path = f"webhook_subscriptions/{webhook_id}"
 
-        logging.debug(
+        logger.debug(
             f"Sending 'Delete a webhook subscription' request for {webhook_id=}..."
         )
         return self.delete(
@@ -415,7 +522,7 @@ class Squarespace(object):
             topics=topics,
         )
 
-        logging.debug(
+        logger.debug(
             f"Sending 'Create a webhook subscription' request with {request_body=}..."
         )
         return self.post(
@@ -429,7 +536,7 @@ class Squarespace(object):
     ):
         rotate_secret_path = f"webhook_subscriptions/{webhook_id}/actions/rotateSecret"
 
-        logging.debug(
+        logger.debug(
             f"Sending 'Rotate a subscription secret' request for {webhook_id=}..."
         )
         return self.post(path=rotate_secret_path, object=dict())
@@ -443,7 +550,7 @@ class Squarespace(object):
             f"webhook_subscriptions/{webhook_id}/actions/sendTestNotification"
         )
 
-        logging.debug(
+        logger.debug(
             f"Sending 'Rotate a subscription secret' request for {webhook_id=}..."
         )
         return self.post(path=test_notification_path, object=dict(topic=topic))

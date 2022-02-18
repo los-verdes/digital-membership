@@ -1,9 +1,40 @@
 from datetime import timedelta
-
-# from flask_login import UserMixin
-from member_card.db import db
+import logging
+from member_card.db import db, get_or_create
 from sqlalchemy.orm import relationship, backref
 from flask_security import UserMixin, RoleMixin
+
+
+logger = logging.getLogger(__name__)
+
+
+def ensure_user(email, first_name, last_name):
+
+    user = get_or_create(
+        session=db.session,
+        model=User,
+        email=email,
+    )
+
+    if not user.fullname:
+        member_name = f"{first_name} {last_name}"
+        logger.debug(f"No name set yet on {user=}, updating to: {member_name}")
+        user.fullname = member_name
+        user.first_name = first_name
+        user.last_name = last_name
+
+    if user.first_name != first_name:
+        logger.warning(
+            f"{user.first_name=} does not match {first_name} for some reason..."
+        )
+    if user.last_name != last_name:
+        logger.warning(
+            f"{user.last_name=} does not match {last_name} for some reason..."
+        )
+
+    db.session.add(user)
+    db.session.commit()
+    return user
 
 
 roles_users = db.Table(

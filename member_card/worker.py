@@ -4,10 +4,10 @@ import logging
 
 from flask import Blueprint, current_app, request
 
-from member_card.db import db, squarespace_orders_etl
-from member_card.models import User, AnnualMembership
+from member_card.db import db
+from member_card.models import AnnualMembership, User
 from member_card.sendgrid import generate_and_send_email
-from member_card.squarespace import Squarespace
+from member_card.squarespace import Squarespace, squarespace_orders_etl
 
 logger = logging.getLogger(__name__)
 
