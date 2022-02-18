@@ -24,9 +24,7 @@ from social_flask.utils import load_strategy
 from sqlalchemy.sql import func
 
 from member_card import utils
-from member_card.db import squarespace_orders_etl
 from member_card.models import User
-from member_card.squarespace import Squarespace
 
 BASE_DIR = os.path.dirname(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "member_card")
@@ -85,14 +83,14 @@ def inject_user():
 
 @app.context_processor
 def load_common_context():
-    from member_card.db import get_membership_table_last_sync
+    # from member_card.db import get_membership_table_last_sync
 
     return utils.common_context(
         app.config["SOCIAL_AUTH_AUTHENTICATION_BACKENDS"],
         load_strategy(),
         getattr(g, "user", None),
         app.config.get("SOCIAL_AUTH_GOOGLE_PLUS_KEY"),
-        membership_last_sync=get_membership_table_last_sync(),
+        # membership_last_sync=get_membership_table_last_sync(),
     )
 
 
@@ -420,7 +418,7 @@ def squarespace_order_webhook():
         db.session.commit()
     elif webhook_topic.startswith("order."):
         message_data = dict(
-            type="sync_order",
+            type="sync_squarespace_order",
             notification_id=webhook_payload["id"],
             order_id=webhook_payload["data"]["orderId"],
             website_id=website_id,
@@ -509,29 +507,27 @@ def about():
     )
 
 
-@app.cli.command("ensure-db-schemas")
-@click.option("-D", "--drop-first", default=False)
-def ensure_db_schemas(drop_first):
-    logger.debug("ensure-db-schemas: calling `db.create_all()`")
-    from member_card.db import ensure_db_schemas
-
-    ensure_db_schemas(drop_first)
-
-
 @app.cli.command("sync-subscriptions")
 @click.option("-l", "--load-all", default=False)
 def sync_subscriptions(load_all):
-    from member_card.db import db
+    from member_card.worker import sync_subscriptions_etl
 
-    membership_skus = app.config["SQUARESPACE_MEMBERSHIP_SKUS"]
-    squarespace = Squarespace(api_key=app.config["SQUARESPACE_API_KEY"])
-    etl_results = squarespace_orders_etl(
-        squarespace_client=squarespace,
-        db_session=db.session,
-        membership_skus=membership_skus,
+    etl_results = sync_subscriptions_etl(
+        message=dict(type="cli-sync-subscriptions"),
         load_all=load_all,
     )
     logger.info(f"sync_subscriptions() => {etl_results=}")
+
+
+@app.cli.command("sync-order-id")
+@click.argument("order_id")
+def sync_order_id(order_id):
+    from member_card.worker import sync_squarespace_order
+
+    sync_order_result = sync_squarespace_order(
+        message=dict(order_id=order_id),
+    )
+    logger.info(f"sync_order_id() => {sync_order_result=}")
 
 
 @app.cli.command("recreate-user")

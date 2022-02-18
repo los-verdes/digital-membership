@@ -4,10 +4,14 @@ import logging
 
 from flask import Blueprint, current_app, request
 
-from member_card.db import db, squarespace_orders_etl
-from member_card.models import User
+from member_card.db import db
+from member_card.models import AnnualMembership, User
 from member_card.sendgrid import generate_and_send_email
-from member_card.squarespace import Squarespace
+from member_card.squarespace import (
+    Squarespace,
+    squarespace_orders_etl,
+    load_single_order,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +44,10 @@ def parse_message():
 def process_email_distribution_request(message):
     logger.debug(f"Processing email distribution request message: {message}")
     email_distribution_recipient = message["email_distribution_recipient"]
-    log_extra = dict(email_distribution_recipient=email_distribution_recipient)
+    log_extra = dict(
+        message=message,
+        email_distribution_recipient=email_distribution_recipient,
+    )
     logger.debug("looking up user...", extra=log_extra)
     try:
         # BONUS TODO: make this case-insensitive
@@ -75,17 +82,64 @@ def process_email_distribution_request(message):
     )
 
 
-def sync_subscriptions_etl(message):
-    logger.debug(f"Processing sync subscriptions ETL message: {message}")
+def sync_subscriptions_etl(message, load_all=False):
+    log_extra = dict(pubsub_message=message)
+    logger.debug(
+        f"Processing sync subscriptions ETL message: {message}",
+        extra=log_extra,
+    )
+
+    total_num_memberships_start = db.session.query(AnnualMembership.id).count()
+
     membership_skus = current_app.config["SQUARESPACE_MEMBERSHIP_SKUS"]
     squarespace = Squarespace(api_key=current_app.config["SQUARESPACE_API_KEY"])
-    etl_results = squarespace_orders_etl(
+    memberships = squarespace_orders_etl(
         squarespace_client=squarespace,
-        db_session=db.session,
         membership_skus=membership_skus,
-        load_all=False,
+        load_all=load_all,
     )
-    logger.info(f"sync_subscriptions() => {etl_results=}")
+
+    total_num_memberships_end = db.session.query(AnnualMembership.id).count()
+    log_extra.update(
+        dict(
+            active_memberships=[m for m in memberships if m.is_active],
+            inactive_memberships=[m for m in memberships if not m.is_active],
+            total_num_memberships_end=total_num_memberships_end,
+            total_num_memberships_added=(
+                total_num_memberships_end - total_num_memberships_start
+            ),
+        )
+    )
+    logger.info(
+        f"Sync subscription aggregate stats: {log_extra['total_num_memberships_added']=}",
+        extra=log_extra,
+    )
+    return {
+        "stats": dict(
+            num_membership=len(memberships),
+            num_active_membership=len(log_extra["active_memberships"]),
+            num_inactive_membership=len(log_extra["inactive_memberships"]),
+            total_num_memberships_start=total_num_memberships_start,
+            total_num_memberships_end=total_num_memberships_end,
+            total_num_memberships_added=log_extra["total_num_memberships_added"],
+        )
+    }
+
+
+def sync_squarespace_order(message):
+    log_extra = dict(pubsub_message=message)
+    logger.debug(f"sync_squarespace_order() called with {message=}", extra=log_extra)
+    order_id = message["order_id"]
+
+    membership_skus = current_app.config["SQUARESPACE_MEMBERSHIP_SKUS"]
+    squarespace = Squarespace(api_key=current_app.config["SQUARESPACE_API_KEY"])
+    memberships = load_single_order(
+        squarespace_client=squarespace,
+        membership_skus=membership_skus,
+        order_id=order_id,
+    )
+    logger.info(f"Sync for {order_id=} completed!: {memberships=}")
+    return memberships
 
 
 @worker_bp.route("/pubsub", methods=["POST"])
@@ -98,6 +152,7 @@ def pubsub_ingress():
     MESSAGE_TYPE_HANDLERS = {
         "email_distribution_request": process_email_distribution_request,
         "sync_subscriptions_etl": sync_subscriptions_etl,
+        "sync_squarespace_order": sync_squarespace_order,
     }
     MESSAGE_TYPE_HANDLERS[message["type"]](message)
 

@@ -1,3 +1,4 @@
+import logging
 import re
 from datetime import timezone
 from collections import OrderedDict
@@ -5,6 +6,10 @@ from datetime import datetime, timedelta
 
 from member_card.db import db
 from sqlalchemy.orm import relationship
+
+
+logger = logging.getLogger(__name__)
+
 
 membership_card_to_membership_assoc_table = db.Table(
     "membership_cards_to_memberships",
