@@ -342,11 +342,12 @@ class Squarespace(object):
         modified_before=None,
         modified_after=None,
     ):
-        # ) -> List[AnnualMembership]:
-        order_params = dict(
-            modifiedAfter=modified_after,
-            modifiedBefore=modified_before,
-        )
+        order_params = dict()
+        if modified_after is not None:
+            order_params = dict(
+                modifiedAfter=modified_after.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                modifiedBefore=modified_before.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            )
 
         return self.load_all_membership_orders(
             membership_skus, order_params=order_params

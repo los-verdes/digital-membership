@@ -65,185 +65,166 @@ def get_or_create(session, model, **kwargs):
         return instance
 
 
-def squarespace_orders_etl(squarespace_client, db_session, membership_skus, load_all):
-    from member_card import models
+def ensure_user_for_order(email, first_name, last_name):
+    from member_card.models import User
 
-    start_time = datetime.now(tz=ZoneInfo("UTC"))
-    # db_session = get_db_session()
+    member_user = get_or_create(
+        session=db.session,
+        model=User,
+        email=email,
+    )
+
+    if not member_user.fullname:
+        member_name = f"{first_name} {last_name}"
+        logger.debug(f"No name set yet on {member_user=}, updating to: {member_name}")
+        member_user.fullname = member_name
+        member_user.first_name = first_name
+        member_user.last_name = last_name
+
+    if member_user.first_name != first_name:
+        logger.warning(
+            f"{member_user.first_name=} does not match {first_name} for some reason..."
+        )
+    if member_user.last_name != last_name:
+        logger.warning(
+            f"{member_user.last_name=} does not match {last_name} for some reason..."
+        )
+
+    db.session.add(member_user)
+    db.session.commit()
+
+
+def ensure_order_in_database(order, membership_skus):
+    from member_card.models import AnnualMembership
+
+    membership_orders = []
+    line_items = order.get("lineItems", [])
+    subscription_line_items = [i for i in line_items if i["sku"] in membership_skus]
+    for subscription_line_item in subscription_line_items:
+
+        fulfilled_on = None
+        if fulfilled_on := order.get("fulfilledOn"):
+            fulfilled_on = parse(fulfilled_on).replace(tzinfo=timezone.utc)
+
+        customer_email = order["customerEmail"]
+
+        membership_kwargs = dict(
+            order_id=order["id"],
+            order_number=order["orderNumber"],
+            channel=order["channel"],
+            channel_name=order["channelName"],
+            billing_address_first_name=order["billingAddress"]["firstName"],
+            billing_address_last_name=order["billingAddress"]["lastName"],
+            external_order_reference=order["externalOrderReference"],
+            created_on=parse(order["createdOn"]).replace(tzinfo=timezone.utc),
+            modified_on=parse(order["modifiedOn"]).replace(tzinfo=timezone.utc),
+            fulfilled_on=fulfilled_on,
+            customer_email=customer_email,
+            fulfillment_status=order["fulfillmentStatus"],
+            test_mode=order["testmode"],
+            line_item_id=subscription_line_item["id"],
+            sku=subscription_line_item["sku"],
+            variant_id=subscription_line_item["variantId"],
+            product_id=subscription_line_item["productId"],
+            product_name=subscription_line_item["productName"],
+        )
+        membership = get_or_update(
+            session=db.session,
+            model=AnnualMembership,
+            filters=["order_id", "order_number"],
+            kwargs=membership_kwargs,
+        )
+        membership_orders.append(membership)
+
+        member_user_id = ensure_user_for_order(
+            email=membership.customer_email,
+            first_name=membership.billing_address_first_name,
+            last_name=membership.billing_address_last_name,
+        )
+        if not membership.user_id:
+            logger.debug(
+                f"No user_id set for {membership=}! Setting to: {member_user_id=}"
+            )
+            setattr(membership, "user_id", member_user_id)
+    return membership_orders
+
+
+def get_last_run_start_time(table_name):
+    from member_card.models import TableMetadata
+
+    # db.session = get_db.session()
     instance = (
-        db_session.query(models.TableMetadata)
+        db.session.query(TableMetadata)
         .filter_by(
-            table_name=models.AnnualMembership.__tablename__,
+            table_name=table_name,
             attribute_name="last_run_start_time",
         )
         .first()
     )
-    # modified_before_dt = datetime.now(tz=ZoneInfo("UTC"))
-    total_num_memberships_start = db_session.query(models.AnnualMembership.id).count()
+    if instance:
+        return datetime.fromtimestamp(float(instance.attribute_value))
 
-    if instance and not load_all:
-        logger.debug(f"{instance=}")
-        last_run_start_time = datetime.fromtimestamp(float(instance.attribute_value))
-        modified_after_dt = last_run_start_time - timedelta(days=1)
+    return datetime.fromtimestamp(0)
+
+
+def set_last_run_start_time(table_name, last_run_dt):
+    from member_card.models import TableMetadata
+
+    cursor_metadata = get_or_create(
+        session=db.session,
+        model=TableMetadata,
+        **dict(
+            table_name=table_name,
+            attribute_name="last_run_start_time",
+        ),
+    )
+    setattr(cursor_metadata, "attribute_value", str(last_run_dt.timestamp()))
+    db.session.add(cursor_metadata)
+    db.session.commit()
+
+
+def squarespace_orders_etl(squarespace_client, membership_skus, load_all):
+    from member_card import models
+
+    etl_start_time = datetime.now(tz=ZoneInfo("UTC"))
+
+    membership_table_name = models.AnnualMembership.__tablename__
+
+    if not load_all:
+        last_run_start_time = get_last_run_start_time(membership_table_name)
         logger.info(f"Starting sync from {last_run_start_time=}")
-        # modified_after_dt = start_time - timedelta(days=3)
-        modified_after = modified_after_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
-        modified_before = start_time.strftime("%Y-%m-%dT%H:%M:%SZ")
-
         subscription_orders = squarespace_client.load_membership_orders_datetime_window(
             membership_skus=membership_skus,
-            modified_after=modified_after,
-            modified_before=modified_before,
+            modified_before=last_run_start_time,
+            modified_after=last_run_start_time - timedelta(days=1),
         )
 
     else:
+        logger.info("Loading ALL orders now...")
         subscription_orders = squarespace_client.load_all_membership_orders(
             membership_skus=membership_skus,
         )
 
-    subscription_orders.reverse()
-    member_user_ids_by_email = {}
-    memberships = []
     logger.info(f"{len(subscription_orders)=} retrieved from Squarespace...")
+
+    # Insert oldest orders first (so our internal membership ID generally aligns with order IDs...)
+    subscription_orders.reverse()
+
+    # Loop over all the raw order data and do the ETL bits
+    memberships = []
     for subscription_order in subscription_orders:
-        line_items = subscription_order.get("lineItems", [])
-        subscription_line_items = [i for i in line_items if i["sku"] in membership_skus]
-        for subscription_line_item in subscription_line_items:
-
-            fulfilled_on = None
-            if fulfilled_on := subscription_order.get("fulfilledOn"):
-                fulfilled_on = parse(fulfilled_on).replace(tzinfo=timezone.utc)
-
-            customer_email = subscription_order["customerEmail"]
-            member_user_id = member_user_ids_by_email.get(customer_email)
-            if member_user_id is None:
-                member_user = get_or_create(
-                    session=db_session,
-                    model=models.User,
-                    email=customer_email,
-                )
-                db.session.add(member_user)
-                db.session.commit()
-                member_user_id = member_user.id
-                member_user_ids_by_email[customer_email] = member_user_id
-            else:
-                member_user = (
-                    db_session.query(models.User).filter_by(id=member_user_id).one()
-                )
-
-            membership_kwargs = dict(
-                order_id=subscription_order["id"],
-                order_number=subscription_order["orderNumber"],
-                channel=subscription_order["channel"],
-                channel_name=subscription_order["channelName"],
-                billing_address_first_name=subscription_order["billingAddress"][
-                    "firstName"
-                ],
-                billing_address_last_name=subscription_order["billingAddress"][
-                    "lastName"
-                ],
-                external_order_reference=subscription_order["externalOrderReference"],
-                created_on=parse(subscription_order["createdOn"]).replace(
-                    tzinfo=timezone.utc
-                ),
-                modified_on=parse(subscription_order["modifiedOn"]).replace(
-                    tzinfo=timezone.utc
-                ),
-                fulfilled_on=fulfilled_on,
-                customer_email=customer_email,
-                fulfillment_status=subscription_order["fulfillmentStatus"],
-                test_mode=subscription_order["testmode"],
-                line_item_id=subscription_line_item["id"],
-                sku=subscription_line_item["sku"],
-                variant_id=subscription_line_item["variantId"],
-                product_id=subscription_line_item["productId"],
-                product_name=subscription_line_item["productName"],
-            )
-            membership = get_or_update(
-                session=db_session,
-                model=models.AnnualMembership,
-                filters=["order_id", "order_number"],
-                kwargs=membership_kwargs,
-            )
-            memberships.append(membership)
-
-            # membership_datetime_attrs = [
-            #     "created_on",
-            #     "modified_on",
-            #     "fulfilled_on",
-            # ]
-            # for membership_datetime_attr in membership_datetime_attrs:
-            #     datetime_value = getattr(membership, membership_datetime_attr)
-            #     logger.debug(
-            #         f"{membership=}.{membership_datetime_attr} => {datetime_value=}"
-            #     )
-            #     if datetime_value is not None and datetime_value.tzinfo is None:
-            #         tz_datetime_value = datetime_value.replace(tzinfo=timezone.utc)
-            #         logger.debug(
-            #             f"Updating {membership_datetime_attr=} for {membership=} from {datetime_value=} to: {tz_datetime_value=}"
-            #         )
-            #         setattr(membership, membership_datetime_attr, tz_datetime_value)
-            if not membership.user_id:
-                logger.debug(
-                    f"No user_id set for {membership=}! Setting to: {member_user_id=}"
-                )
-                setattr(membership, "user_id", member_user_id)
-
-            if not member_user.fullname:
-                member_name = f"{membership.billing_address_first_name} {membership.billing_address_last_name}"
-                logger.debug(
-                    f"No name set yet on {member_user=}, updating to: {member_name}"
-                )
-                member_user.fullname = member_name
-                member_user.first_name = membership.billing_address_first_name
-                member_user.last_name = membership.billing_address_last_name
-                db.session.add(member_user)
-            elif (
-                member_user.first_name != membership.billing_address_first_name
-                or member_user.last_name != membership.billing_address_last_name
-            ):
-                logger.warning(
-                    f"{member_user.fullname=} does not match {membership.billing_address_first_name} {membership.billing_address_last_name} for some reason..."
-                )
-
-            db.session.add(membership)
-            db.session.commit()
-
-    cursor_metadata = get_or_create(
-        session=db_session,
-        model=models.TableMetadata,
-        **dict(
-            table_name=models.AnnualMembership.__tablename__,
-            attribute_name="last_run_start_time",
-        ),
-    )
-    setattr(cursor_metadata, "attribute_value", str(start_time.timestamp()))
-    db.session.add(cursor_metadata)
-    db_session.commit()
-
-    active_memberships = [m for m in memberships if m.is_active]
-    inactive_memberships = [m for m in memberships if not m.is_active]
-    logger.info(
-        f"Sync subscription sync run stats: {len(memberships)=} / {len(active_memberships)=} / {len(inactive_memberships)=}"
-    )
-
-    total_num_memberships_end = db_session.query(models.AnnualMembership.id).count()
-    total_num_memberships_added = (
-        total_num_memberships_end - total_num_memberships_start
-    )
-    logger.info(
-        f"Sync subscription aggregate stats: {total_num_memberships_end=} - {total_num_memberships_start=} => {total_num_memberships_added=}"
-    )
-    return {
-        "stats": dict(
-            num_membership=len(memberships),
-            num_active_membership=len(active_memberships),
-            num_inactive_membership=len(inactive_memberships),
-            total_num_memberships_start=total_num_memberships_start,
-            total_num_memberships_end=total_num_memberships_end,
-            total_num_memberships_added=total_num_memberships_added,
+        membership_orders = ensure_order_in_database(
+            order=subscription_order,
+            membership_skus=membership_skus,
         )
-    }
+        for membership_order in membership_orders:
+            db.session.add(membership_order)
+        db.session.commit()
+        memberships += membership_orders
+
+    set_last_run_start_time(membership_table_name, etl_start_time)
+
+    return memberships
 
 
 def ensure_db_schemas(drop_first):
