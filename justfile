@@ -288,3 +288,8 @@ gunicorn:
     --log-level=info \
     --log-config=config/gunicron_logging.ini \
     'wsgi:create_app()'
+
+test:
+  #!/bin/bash
+  export PYTHONPATH="$PYTHONPATH:{{ justfile_directory() }}"
+  pytest .
