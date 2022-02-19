@@ -53,6 +53,7 @@ resource "google_secret_manager_secret_version" "digital_membership" {
     sendgrid_api_key = var.sendgrid_api_key
 
     # For configuring python-social-auth / Google OAuth 2 bits:
+    social_auth_apple_id_secret      = var.social_auth_apple_id_secret
     social_auth_google_oauth2_key    = var.oauth_client_id
     social_auth_google_oauth2_secret = var.oauth_client_secret
 

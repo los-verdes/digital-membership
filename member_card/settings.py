@@ -3,7 +3,6 @@ import logging
 import os
 from functools import partial
 from typing import TYPE_CHECKING, Tuple
-from social_core.backends.apple import AppleIdAuth
 from google.cloud.sql.connector import connector
 
 if TYPE_CHECKING:

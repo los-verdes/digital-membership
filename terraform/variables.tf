@@ -62,7 +62,7 @@ variable "github_repo" {
 
 variable "management_sql_user_password" {
   sensitive = true
-  type = string
+  type      = string
 }
 
 variable "membership_squarespace_sku" {
@@ -85,6 +85,10 @@ variable "recaptcha_secret_key" {
 }
 
 variable "sendgrid_api_key" {
+  sensitive = true
+}
+
+variable "social_auth_apple_id_secret" {
   sensitive = true
 }
 
