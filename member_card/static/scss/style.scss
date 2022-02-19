@@ -18,9 +18,15 @@ $button-active-blue: #1669f2;
 a {
   color: $bright-verde;
 }
+
 .google-sign-in-button {
   > img {
-    max-height: 46px;
+    max-width: 210px;
+  }
+}
+.yahoo-sign-in-button {
+  > img {
+    max-width: 210px;
   }
 }
 
@@ -89,11 +95,18 @@ div.qr-code {
   }
 }
 
+.lil-rule {
+  border-top: 1px dashed $bright-verde;
+  width: 50%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 div.small-form {
   > details {
-    max-width: 300px;
-    float: right;
-    margin-right: 10px;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 
@@ -372,4 +385,11 @@ details > div {
   color: #fff;
   font-size: 14px;
   font-weight: 500;
+}
+
+.appleid-signin-button {
+  width: 210px;
+  height: 40px;
+  cursor: pointer;
+  margin: 0 auto;
 }
