@@ -45,7 +45,7 @@ def process_email_distribution_request(message):
     logger.debug(f"Processing email distribution request message: {message}")
     email_distribution_recipient = message["email_distribution_recipient"]
     log_extra = dict(
-        message=message,
+        pubsub_message=message,
         email_distribution_recipient=email_distribution_recipient,
     )
     logger.debug("looking up user...", extra=log_extra)
