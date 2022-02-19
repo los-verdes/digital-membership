@@ -89,11 +89,18 @@ div.qr-code {
   }
 }
 
+.lil-rule {
+  border-top: 1px dashed $bright-verde;
+  width: 50%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 div.small-form {
   > details {
-    max-width: 300px;
-    float: right;
-    margin-right: 10px;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 
@@ -378,4 +385,5 @@ details > div {
   width: 210px;
   height: 40px;
   cursor: pointer;
+  margin: 0 auto;
 }

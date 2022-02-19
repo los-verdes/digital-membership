@@ -25,20 +25,6 @@
         </h4>
         <ul>
           <li>
-            <strong class="mdl-color-text--green">Website Login</strong>:
-            <br>
-            Login to access the Los Verdes membership portal and retrieve your membership card:
-            <br>
-            <br>
-            <div class="mdl-typography--text-bottom	mdl-typography--text-right">
-              {{ macros.google_sign_in_button() }}
-            </div>
-            <div class="mdl-typography--text-bottom	mdl-typography--text-right">
-              {{ macros.apple_sign_in_button() }}
-            </div>
-          </li>
-          <hr>
-          <li>
             <strong class="mdl-color-text--green">Email Request</strong>:
             <br>
             Have a image and Google Pay / Apple wallet passes links for your membership card sent via email:
@@ -70,6 +56,22 @@
                 </div>
               </details>
             </div>
+          </li>
+          <hr>
+          <li>
+            <strong class="mdl-color-text--green">Website Login</strong>:
+            <br>
+            Login to access the Los Verdes membership portal and retrieve your membership card using one of the methods below:
+            <br>
+            <hr class="lil-rule">
+            <div class="mdl-typography--text-bottom	mdl-typography--text-center">
+              {{ macros.google_sign_in_button() }}
+            </div>
+            <hr class="lil-rule">
+            <div class="mdl-typography--text-bottom	mdl-typography--text-right">
+              {{ macros.apple_sign_in_button() }}
+            </div>
+            <hr class="lil-rule">
           </li>
         </ul>
         <br>
