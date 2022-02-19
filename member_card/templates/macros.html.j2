@@ -50,6 +50,12 @@
 </a>
 {% endmacro %}
 
+{% macro yahoo_sign_in_button() %}
+<a class="yahoo-sign-in-button mdl-js-button" id="yahoo-oauth2-button" name="yahoo oauth2" href="/login/yahoo-oauth2/">
+  <img src="{{ url_for('static', filename='yahoo_signin.png') }}">
+</a>
+{% endmacro %}
+
 {% macro membership_card(
 title,
 primary_info_text,

@@ -91,6 +91,8 @@ jobs:
           TF_VAR_apple_pass_certificate: ${{ secrets.apple_pass_certificate }}
           TF_VAR_apple_pass_private_key_password: ${{ secrets.apple_pass_private_key_password }}
           TF_VAR_social_auth_apple_id_secret: ${{ secrets.social_auth_apple_id_secret }}
+          TF_VAR_social_auth_yahoo_oauth2_key: ${{ secrets.social_auth_yahoo_oauth2_key }}
+          TF_VAR_social_auth_yahoo_oauth2_secret: ${{ secrets.social_auth_yahoo_oauth2_secret }}
           TF_VAR_management_sql_user_password: ${{ secrets.management_sql_user_password }}
           TF_VAR_recaptcha_secret_key: ${{ secrets.recaptcha_secret_key }}
 

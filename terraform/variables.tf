@@ -92,6 +92,13 @@ variable "social_auth_apple_id_secret" {
   sensitive = true
 }
 
+variable "social_auth_yahoo_oauth2_key" {
+}
+
+variable "social_auth_yahoo_oauth2_secret" {
+  sensitive = true
+}
+
 variable "oauth_client_id" {
   sensitive = true
 }

@@ -18,9 +18,15 @@ $button-active-blue: #1669f2;
 a {
   color: $bright-verde;
 }
+
 .google-sign-in-button {
   > img {
-    max-height: 46px;
+    max-width: 210px;
+  }
+}
+.yahoo-sign-in-button {
+  > img {
+    max-width: 210px;
   }
 }
 

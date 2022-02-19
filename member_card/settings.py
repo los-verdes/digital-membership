@@ -130,6 +130,11 @@ class Settings(object):
     )
     SOCIAL_AUTH_APPLE_ID_SCOPE = ["email", "name"]
 
+    SOCIAL_AUTH_YAHOO_OAUTH2_KEY: str = os.getenv("SOCIAL_AUTH_YAHOO_OAUTH2_KEY", "")
+    SOCIAL_AUTH_YAHOO_OAUTH2_SECRET: str = os.getenv(
+        "SOCIAL_AUTH_YAHOO_OAUTH2_SECRET", ""
+    )
+
     SOCIAL_AUTH_LOGIN_REDIRECT_URL: str = "/"
     SOCIAL_AUTH_LOGIN_URL: str = "/login"
     SOCIAL_AUTH_REDIRECT_IS_HTTPS: bool = True
@@ -156,6 +161,7 @@ class Settings(object):
     SOCIAL_AUTH_AUTHENTICATION_BACKENDS: Tuple[str, ...] = (
         "social_core.backends.google.GoogleOAuth2",
         "social_core.backends.apple.AppleIdAuth",
+        "social_core.backends.yahoo.YahooOAuth2",
     )
 
     SOCIAL_AUTH_DISCONNECT_PIPELINE: Tuple[str, ...] = (
