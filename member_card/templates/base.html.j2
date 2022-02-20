@@ -228,11 +228,16 @@
       }
       document.querySelectorAll('.update-name-dialog-link').forEach((editUserNameDialogLink) => {
         editUserNameDialogLink.addEventListener('click', function () {
+          document.getElementById("editUserNameProgressBar").style.display = "none";
           editUserNameDialog.showModal();
         });
       });
       editUserNameDialog.querySelector('#discard-button').addEventListener('click', function () {
         editUserNameDialog.close();
+      });
+      editUserNameDialog.querySelector('#editUserNameSubmitBtn').addEventListener('click', function (event) {
+        document.getElementById("editUserNameProgressBar").style.display = "block";
+        document.getElementById("editUserNameForm").submit();
       });
     }
   </script>
