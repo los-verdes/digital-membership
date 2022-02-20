@@ -287,3 +287,41 @@ This site's privacy policy can be view here: <a href="{{ url_for('privacy_policy
   <button class="mdl-snackbar__action" type="button"></button>
 </div>
 {% endmacro %}
+
+{% macro membership_history_and_user_details(membership_orders, current_user) %}
+<div class="membership-details-card mdl-card mdl-shadow--2dp">
+  <div class="mdl-card__supporting-text">
+    <h4 class="vhlm">Membership History</h4>
+    {% for membership_order in membership_orders | reverse %}
+    {% call verde_box(title="Order #" ~ membership_order.order_number ~ " - " ~  membership_order.product_name) %}
+    <ul class="mdl-list">
+      {% for key, value in membership_order.to_dict().items() %}
+      <li class="mdl-list__item mdl-list__item--two-line">
+        <span class="mdl-list__item-primary-content">
+          <span class="mdl-list__item-sub-title"><strong>{{ key | replace("_", " ") | title }}</strong></span>
+          <span>{{ value }}</span>
+        </span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endcall %}
+    {% endfor %}
+
+
+    <h4 class="vhlm">Verde Hasta La Muerte</h4>
+    <hr>
+    {% call verde_box(title="User Details") %}
+    <ul class="mdl-list">
+      {% for key, value in current_user.to_dict().items() %}
+      <li class="mdl-list__item mdl-list__item--two-line">
+        <span class="mdl-list__item-primary-content">
+          <span class="mdl-list__item-sub-title"><strong>{{ key | replace("_", " ") | title }}</strong></span>
+          <span>{{ value }}</span>
+        </span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endcall %}
+  </div>
+</div>
+{% endmacro %}
