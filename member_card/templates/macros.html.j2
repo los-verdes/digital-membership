@@ -305,6 +305,10 @@ This site's privacy policy can be view here: <a href="{{ url_for('privacy_policy
       {% endfor %}
     </ul>
     {% endcall %}
+    {% else %}
+    <h6>
+      No previous orders recorded for email address:<wbr><strong class="email-address">{{ current_user.email }}</strong>
+    </h6>
     {% endfor %}
 
 

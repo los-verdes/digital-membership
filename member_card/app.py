@@ -123,6 +123,8 @@ def home():
         return render_template(
             "no_membership_landing_page.html.j2",
             user=current_user,
+            membership_orders=g.user.annual_memberships,
+            membership_table_keys=list(AnnualMembership().to_dict().keys()),
         )
 
 
