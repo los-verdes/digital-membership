@@ -20,6 +20,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Almendra+Display&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Bungee&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bungee+Shade&display=swap" rel="stylesheet">
   {% assets "style" %}
   <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}">
   {% endassets %}
@@ -40,6 +41,8 @@
   <!-- <script async src="{{ url_for('static', filename='dialog-polyfill.js')}}"></script> -->
   <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
   <script defer src="{{ url_for('static', filename='html2canvas.min.js')}}"></script>
+  <script defer src="{{ url_for('static', filename='animated-details.js')}}"></script>
+  <script defer src="{{ url_for('static', filename='dialog-polyfill.js')}}"></script>
   <script defer src="{{ url_for('static', filename='script.js')}}"></script>
   {% block head %}{% endblock %}
 </head>
@@ -97,6 +100,11 @@
           </button>
           <ul class="mdl-menu mdl-menu--bottom-right mdl-js-menu" for="accbtn">
 
+            <a class="mdl-menu__item mdl-navigation__link update-name-dialog-link">
+              <i class="material-icons">edit</i>
+              Update Display Name
+            </a>
+
             <a id="logout" class="mdl-menu__item mdl-navigation__link " href="{{ url_for('logout') }}">
               <i class="material-icons">logout</i>
               Logout
@@ -146,10 +154,6 @@
           </i>
           Logout
         </a>
-        {% else %}
-        <li class="mdl-navigation__link" role="presentation">
-          {{ macros.google_sign_in_button() }}
-        </li>
         {% endif %}
       </nav>
     </div>
@@ -171,6 +175,73 @@
 
     <!-- End of "outer" div that holds our entire layout -->
   </div>
+
+  <dialog id="edit-user-name-dialog" class="mdl-dialog">
+    <h3 class="mdl-dialog__title">Edit Display Name</h3>
+    <div class="mdl-dialog__content">
+      <p>
+        You can change the name displayed on your membership card using the form below:
+      </p>
+      <hr>
+      <form id="editUserNameForm" action="{{ url_for('edit_user_name_request') }}" method="post">
+        <div class="mdl-grid">
+
+          <div class="mdl-cell mdl-cell--6-col">
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+              <input id="newFirstName" name="newFirstName" class="mdl-textfield__input" type="text" value="{{ current_user.first_name }}">
+              <label class="mdl-textfield__label" for="newFirstName">First Name</label>
+              <span id="firstNameError" class="mdl-textfield__error">Please enter a valid "first name" value before submitting.</span>
+            </div>
+          </div>
+
+          <div class="mdl-cell mdl-cell--6-col">
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+              <input id="newLastName" name="newLastName" class="mdl-textfield__input" type="text" value="{{ current_user.last_name }}">
+              <label class="mdl-textfield__label" for="newLastName">Last Name</label>
+              <span id="lastNameError" class="mdl-textfield__error">Please enter a valid "last name" value before submitting.</span>
+            </div>
+          </div>
+
+        </div>
+
+      </form>
+    </div>
+    <div class="mdl-dialog__actions">
+      <!-- <button type="button" class="mdl-button">Save</button> -->
+      <button id="editUserNameSubmitBtn" class="mdl-button mdl-js-button mdl-button--colored">
+        Save Changes
+      </button>
+      <div id="editUserNameProgressBar" class="mdl-progress mdl-js-progress mdl-progress__indeterminate" style="display:none;"></div>
+      <button id="discard-button" type="button" class="mdl-button mdl-js-button">Discard</button>
+    </div>
+  </dialog>
+
+  <script>
+    window.onload = function () {
+      document.querySelectorAll('details').forEach((el) => {
+        new Accordion(el);
+      });
+
+      var editUserNameDialog = document.querySelector('#edit-user-name-dialog');
+      if (!editUserNameDialog.showModal) {
+        dialogPolyfill.registerDialog(dialog);
+      }
+      document.querySelectorAll('.update-name-dialog-link').forEach((editUserNameDialogLink) => {
+        editUserNameDialogLink.addEventListener('click', function () {
+          document.getElementById("editUserNameProgressBar").style.display = "none";
+          editUserNameDialog.showModal();
+        });
+      });
+      editUserNameDialog.querySelector('#discard-button').addEventListener('click', function () {
+        editUserNameDialog.close();
+      });
+      editUserNameDialog.querySelector('#editUserNameSubmitBtn').addEventListener('click', function (event) {
+        document.getElementById("editUserNameProgressBar").style.display = "block";
+        document.getElementById("editUserNameForm").submit();
+      });
+    }
+  </script>
+
   {% block before_body_close %}{% endblock %}
 </body>
 

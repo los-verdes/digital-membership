@@ -4,6 +4,12 @@
 
 {% block content %}
 {% call macros.content_grid() %}
+
+<div class="form-messages mdl-color-text--green mdl-typography--text-center">
+  <h4>
+    {{ form_message }}
+  </h4>
+</div>
 <div id="save-as-screenshot-window">
   {{
   macros.membership_card(
@@ -18,52 +24,7 @@
 </div>
 {% endcall %}
 {% call macros.content_grid() %}
-<div class="membership-details-card mdl-card mdl-shadow--2dp">
-  <div class="mdl-card__supporting-text">
-    <h4 class="vhlm">Membership History</h4>
-    {% for membership_order in membership_orders | reverse %}
-    <details>
-      <summary id="membership-details-{{ membership_order.id }}">
-        <h5>Order #{{ membership_order.order_number }} - {{ membership_order.product_name }}</h5>
-      </summary>
-      <div>
-        <ul class="mdl-list">
-          {% for key, value in membership_order.to_dict().items() %}
-          <li class="mdl-list__item mdl-list__item--two-line">
-            <span class="mdl-list__item-primary-content">
-              <span class="mdl-list__item-sub-title"><strong>{{ key | replace("_", " ") | title }}</strong></span>
-              <span>{{ value }}</span>
-            </span>
-          </li>
-          {% endfor %}
-        </ul>
-      </div>
-    </details>
-    {% endfor %}
-
-
-    <h4 class="vhlm">Verde Hasta La Muerte</h4>
-    <hr>
-    <details>
-      <summary id="user-details-{{ current_user.id }}">
-        <h5>User Details</h5>
-      </summary>
-      <div>
-        <ul class="mdl-list">
-          {% for key, value in current_user.to_dict().items() %}
-          <li class="mdl-list__item mdl-list__item--two-line">
-            <span class="mdl-list__item-primary-content">
-              <span class="mdl-list__item-sub-title"><strong>{{ key | replace("_", " ") | title }}</strong></span>
-              <span>{{ value }}</span>
-            </span>
-          </li>
-          {% endfor %}
-        </ul>
-      </div>
-    </details>
-
-  </div>
-</div>
+{{ macros.membership_history_and_user_details(membership_orders, current_user)  }}
 {% endcall %}
 
 {% endblock %}

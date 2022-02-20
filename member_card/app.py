@@ -90,6 +90,8 @@ def load_common_context():
         load_strategy(),
         getattr(g, "user", None),
         app.config.get("SOCIAL_AUTH_GOOGLE_PLUS_KEY"),
+        form_error_message=request.args.get("formErrorMessage", ""),
+        form_message=request.args.get("formMessage", ""),
         # membership_last_sync=get_membership_table_last_sync(),
     )
 
@@ -123,7 +125,31 @@ def home():
         return render_template(
             "no_membership_landing_page.html.j2",
             user=current_user,
+            membership_orders=g.user.annual_memberships,
+            membership_table_keys=list(AnnualMembership().to_dict().keys()),
         )
+
+
+@app.route("/edit-user-name", methods=["POST"])
+@login_required
+def edit_user_name_request():
+    from member_card.db import db
+
+    log_extra = dict(form=request.form)
+    new_first_name = request.form["newFirstName"]
+    new_last_name = request.form["newLastName"]
+    logger.debug(
+        f"edit_user_name_request(): {new_first_name=} {new_last_name=}", extra=log_extra
+    )
+    form_message = "User display name updated!"
+
+    setattr(g.user, "fullname", " ".join([new_first_name, new_last_name]))
+    setattr(g.user, "first_name", new_first_name)
+    setattr(g.user, "last_name", new_last_name)
+    db.session.add(g.user)
+    db.session.commit()
+    logger.debug(f"post-commit: {g.user=}")
+    return redirect(f"{url_for('home')}?formMessage={form_message}")
 
 
 @app.route("/email-distribution-request", methods=["POST"])
@@ -141,7 +167,7 @@ def email_distribution_request():
             "Unable to verify recaptcha, redirecting to login", extra=log_extra
         )
         return redirect(
-            f"{url_for('login')}?emailFormErrorMessage={email_form_error_message}"
+            f"{url_for('login')}?formErrorMessage={email_form_error_message}"
         )
 
     email_distribution_recipient = request.form["emailDistributionRecipient"]
@@ -166,7 +192,7 @@ def email_distribution_request():
             extra=dict(form=request.form),
         )
         return redirect(
-            f"{url_for('login')}?emailFormErrorMessage={email_form_error_message}"
+            f"{url_for('login')}?formErrorMessage={email_form_error_message}"
         )
 
     topic_id = app.config["GCLOUD_PUBSUB_TOPIC_ID"]
@@ -478,10 +504,8 @@ def verify_pass(serial_number):
 @app.route("/login")
 def login():
     """Logout view"""
-    email_form_error_message = request.args.get("emailFormErrorMessage", "")
     return render_template(
         "login.html.j2",
-        email_form_error_message=email_form_error_message,
         recaptcha_site_key=app.config["RECAPTCHA_SITE_KEY"],
     )
 
@@ -658,6 +682,7 @@ def force_assets_bundle_build():
 def upload_statics():
     from member_card.cloudbuild import create_upload_statics_build
 
+    utils.force_assets_bundle_build(app)
     create_upload_statics_build()
 
 

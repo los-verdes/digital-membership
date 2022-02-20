@@ -20,7 +20,7 @@
 <div class="mdl-card mdl-shadow--2dp mdl-cell--middle">
   <div class="mdl-card__supporting-text">
     <h5>
-      No active membership found for {{ user.email }}
+      No active membership found for:<wbr><strong class="email-address">{{ user.email }}</strong>
     </h5>
     <h6>
       If you believe is incorrect, please feel free to consult our troubleshooting list below:
@@ -30,4 +30,9 @@
   </div>
 </div>
 {% endcall %}
+
+{% call macros.content_grid() %}
+{{ macros.membership_history_and_user_details(membership_orders, current_user)  }}
+{% endcall %}
+
 {% endblock %}

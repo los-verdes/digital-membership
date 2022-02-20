@@ -31,8 +31,7 @@
           </g>
         </svg>
       </div>
-      <div style=" padding: 1px; width: 100%; height: 100%; box-sizing: border-box;"><svg xmlns="http://www.w3.org/2000/svg" style=" overflow: visible;" width="100%"
-             height="100%">
+      <div style=" padding: 1px; width: 100%; height: 100%; box-sizing: border-box;"><svg xmlns="http://www.w3.org/2000/svg" style=" overflow: visible;" width="100%" height="100%">
           <rect width="100%" height="100%" ry="15%" fill="#000" stroke="black" stroke-width="1" stroke-linecap="round"></rect>
         </svg></div>
     </div>
@@ -162,6 +161,11 @@ show_qr_code_on_card=False
     <a class="save-pass-button save-apple-pass-button" href="{{ url_for('passes_apple_pay') }}">
       <img class="mdl-js-button" src="{{ url_for('static', filename='Add_to_Apple_Wallet_rgb_US-UK.svg') }}">
     </a>
+    <hr>
+    <a class="mdl-button mdl-js-button update-name-dialog-link">
+      <i class="material-icons">edit</i>
+      Update Display Name
+    </a>
     {% else %}
     <a class="mdl-button mdl-js-button" href="{{ url_for('home') }}">
       Back to Home
@@ -236,7 +240,7 @@ Your can either view your membership card directly on <a href="https://card.losv
 Download links can be sent via email to any Los Verdes member's address upon request as well!
 
 <h6>Sample Cards</h6>
-<div class="mdl-grid">
+<div class="mdl-grid lil-image-cards">
   {{ lil_image('sample/add_to_ios_wallet.png', 'Add to Apple Wallet') }}
   {{ lil_image('sample/ios_in_wallet.png', 'Apple Wallet Pass') }}
   {{ lil_image('sample/add_to_gpay.png', 'Save to Google Pay') }}
@@ -256,7 +260,8 @@ This site's privacy policy can be view here: <a href="{{ url_for('privacy_policy
 
 {% macro lil_image(image_filename, caption) %}
 <div class="mdl-cell mdl-cell--4-col">
-  <div class="lil-card-image mdl-card mdl-shadow--2dp" style="background-image: url({{ url_for('static', filename=image_filename) }});">
+  {% set lil_image_url = url_for('static', filename=image_filename) %}
+  <div class="lil-card-image mdl-card mdl-shadow--2dp" style="background-image: url({{lil_image_url}});">
     <div class="mdl-card__title mdl-card--expand"></div>
     <div class="mdl-card__actions">
       <span class="lil-card-image__caption">{{ caption }}</span>
@@ -265,12 +270,12 @@ This site's privacy policy can be view here: <a href="{{ url_for('privacy_policy
 </div>
 {% endmacro %}
 
-{% macro verde_box(title) %}
-<details>
+{% macro verde_box(title, box_id="") %}
+<details {% if box_id %}id="{{ box_id }}" {% endif -%}>
   <summary>
-    <h6>{{ title }}</h6>
+    {{ title }}
   </summary>
-  <div>
+  <div class="content">
     {{ caller() }}
   </div>
 </details>
@@ -280,5 +285,47 @@ This site's privacy policy can be view here: <a href="{{ url_for('privacy_policy
 <div id="toastSnackbar" class="mdl-js-snackbar mdl-snackbar">
   <div id="toastSnackbarContent" class="mdl-snackbar__text"></div>
   <button class="mdl-snackbar__action" type="button"></button>
+</div>
+{% endmacro %}
+
+{% macro membership_history_and_user_details(membership_orders, current_user) %}
+<div class="membership-details-card mdl-card mdl-shadow--2dp">
+  <div class="mdl-card__supporting-text">
+    <h4 class="vhlm">Membership History</h4>
+    {% for membership_order in membership_orders | reverse %}
+    {% call verde_box(title="Order #" ~ membership_order.order_number ~ " - " ~  membership_order.product_name) %}
+    <ul class="mdl-list">
+      {% for key, value in membership_order.to_dict().items() %}
+      <li class="mdl-list__item mdl-list__item--two-line">
+        <span class="mdl-list__item-primary-content">
+          <span class="mdl-list__item-sub-title"><strong>{{ key | replace("_", " ") | title }}</strong></span>
+          <span>{{ value }}</span>
+        </span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endcall %}
+    {% else %}
+    <h6>
+      No previous orders recorded for email address:<wbr><strong class="email-address">{{ current_user.email }}</strong>
+    </h6>
+    {% endfor %}
+
+
+    <h4 class="vhlm">Verde Hasta La Muerte</h4>
+    <hr>
+    {% call verde_box(title="User Details") %}
+    <ul class="mdl-list">
+      {% for key, value in current_user.to_dict().items() %}
+      <li class="mdl-list__item mdl-list__item--two-line">
+        <span class="mdl-list__item-primary-content">
+          <span class="mdl-list__item-sub-title"><strong>{{ key | replace("_", " ") | title }}</strong></span>
+          <span>{{ value }}</span>
+        </span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endcall %}
+  </div>
 </div>
 {% endmacro %}

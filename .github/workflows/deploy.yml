@@ -104,6 +104,7 @@ jobs:
       id-token: "write"
     uses: los-verdes/digital-membership/.github/workflows/flask_command.yml@main
     with:
+      # TODO: add a CloudFlare cache purge somewhere 'round here....
       command: upload-statics
 
   apply-database-config:
