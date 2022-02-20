@@ -161,6 +161,11 @@ show_qr_code_on_card=False
     <a class="save-pass-button save-apple-pass-button" href="{{ url_for('passes_apple_pay') }}">
       <img class="mdl-js-button" src="{{ url_for('static', filename='Add_to_Apple_Wallet_rgb_US-UK.svg') }}">
     </a>
+    <hr>
+    <a class="mdl-button mdl-js-button update-name-dialog-link">
+      <i class="material-icons">edit</i>
+      Update Display Name
+    </a>
     {% else %}
     <a class="mdl-button mdl-js-button" href="{{ url_for('home') }}">
       Back to Home

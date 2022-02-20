@@ -126,6 +126,18 @@ def home():
         )
 
 
+@app.route("/edit-user-name", methods=["POST"])
+def edit_user_name_request():
+
+    log_extra = dict(form=request.form)
+    new_first_name = request.form["newFirstName"]
+    new_last_name = request.form["newLastName"]
+    logger.debug(
+        f"edit_user_name_request(): {new_first_name=} {new_last_name=}", extra=log_extra
+    )
+    return redirect("/")
+
+
 @app.route("/email-distribution-request", methods=["POST"])
 def email_distribution_request():
     from email_validator import EmailNotValidError, validate_email

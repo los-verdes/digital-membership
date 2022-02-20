@@ -34,9 +34,11 @@ a {
   }
 }
 
-// .mdl-dialog {
-//   width: 75vw;
-// }
+.mdl-dialog {
+  width: 50%;
+  min-width: 300px;
+  max-width: 500px;
+}
 
 .lv-crest {
   background-image: url("lv_onverde.png");
