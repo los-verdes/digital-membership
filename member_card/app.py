@@ -657,6 +657,7 @@ def force_assets_bundle_build():
 @app.cli.command("upload-statics")
 def upload_statics():
     from member_card.cloudbuild import create_upload_statics_build
+
     utils.force_assets_bundle_build(app)
     create_upload_statics_build()
 

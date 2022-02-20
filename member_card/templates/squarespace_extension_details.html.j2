@@ -18,23 +18,19 @@
     <hr>
 
     {% for webhook in webhooks %}
-    <details>
-      <summary id="webhook-details-{{ webhook.id }}">
-        <h5>Webhook #{{ webhook.id }}</h5>
-      </summary>
-      <div>
-        <ul class="mdl-list">
-          {% for key, value in webhook.to_dict().items() %}
-          <li class="mdl-list__item mdl-list__item--two-line">
-            <span class="mdl-list__item-primary-content">
-              <span class="mdl-list__item-sub-title"><strong>{{ key | replace("_", " ") | title }}</strong></span>
-              <span>{{ value }}</span>
-            </span>
-          </li>
-          {% endfor %}
-        </ul>
-      </div>
-    </details>
+
+    {% call macros.verde_box(title="Webhook #" ~  webhook.id ) %}
+    <ul class="mdl-list">
+      {% for key, value in webhook.to_dict().items() %}
+      <li class="mdl-list__item mdl-list__item--two-line">
+        <span class="mdl-list__item-primary-content">
+          <span class="mdl-list__item-sub-title"><strong>{{ key | replace("_", " ") | title }}</strong></span>
+          <span>{{ value }}</span>
+        </span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endcall %}
     {% endfor %}
   </div>
 

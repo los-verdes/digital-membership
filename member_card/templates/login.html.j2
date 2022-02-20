@@ -31,30 +31,25 @@
             <br>
             <br>
             <div class="small-form">
-              <details>
-                <summary>
-                  <h6>Email Distribution Form</h6>
-                </summary>
-                <div>
-                  <form id="emailDistributionRequestForm" action="{{ url_for('email_distribution_request') }}" method="post">
-                    <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                      <input id="emailDistributionRecipient" name="emailDistributionRecipient" class="mdl-textfield__input" type="email">
-                      <label class="mdl-textfield__label" for="emailDistributionRecipient">E-mail</label>
-                      <span id="emailDistributionRecipientError" class="mdl-textfield__error">Please enter a valid email
-                        before submitting.</span>
-                    </div>
-                    <div class="error-messages mdl-color-text--red">{{ email_form_error_message }}</div>
-                    <div id='recaptcha' class="g-recaptcha" data-callback="onSubmit" data-expired-callback="onCaptchaExpired" data-error-callback="onCaptchaError"
-                         data-sitekey="{{ recaptcha_site_key }}" data-size="invisible">
-                    </div>
-                    <div class="mdl-typography--text-bottom	mdl-typography--text-right">
-                      <button id="emailDistributionSubmitBtn" class="mdl-button mdl-js-button mdl-button--colored">Submit Email
-                        Request</button>
-                      <div id="emailDistributionProgressBar" class="mdl-progress mdl-js-progress mdl-progress__indeterminate" style="display:none;"></div>
-                    </div>
-                  </form>
+              {% call macros.verde_box(box_id="email-form-details", title="Email Distribution Form") %}
+              <form id="emailDistributionRequestForm" action="{{ url_for('email_distribution_request') }}" method="post">
+                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+                  <input id="emailDistributionRecipient" name="emailDistributionRecipient" class="mdl-textfield__input" type="email">
+                  <label class="mdl-textfield__label" for="emailDistributionRecipient">E-mail</label>
+                  <span id="emailDistributionRecipientError" class="mdl-textfield__error">Please enter a valid email
+                    before submitting.</span>
                 </div>
-              </details>
+                <div class="error-messages mdl-color-text--red">{{ email_form_error_message }}</div>
+                <div id='recaptcha' class="g-recaptcha" data-callback="onSubmit" data-expired-callback="onCaptchaExpired" data-error-callback="onCaptchaError"
+                     data-sitekey="{{ recaptcha_site_key }}" data-size="invisible">
+                </div>
+                <div class="mdl-typography--text-bottom	mdl-typography--text-right">
+                  <button id="emailDistributionSubmitBtn" class="mdl-button mdl-js-button mdl-button--colored">Submit Email
+                    Request</button>
+                  <div id="emailDistributionProgressBar" class="mdl-progress mdl-js-progress mdl-progress__indeterminate" style="display:none;"></div>
+                </div>
+              </form>
+              {% endcall %}
             </div>
           </li>
           <hr>
@@ -107,6 +102,11 @@
   window.onload = function () {
     document.getElementById("about-panel-content").style.display = "block";
     distributionFormOnload();
+    setTimeout(function () {
+      el = document.getElementById("email-form-details")
+      emailFormDetails = new Accordion(el)
+      emailFormDetails.open()
+    }, 250);
   }
 </script>
 {% endblock %}

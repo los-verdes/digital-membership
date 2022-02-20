@@ -1,3 +1,5 @@
+@import url(https://fonts.googleapis.com/css?family=Roboto:500);
+
 $bright-verde: #00b140;
 
 $white: #fff;
@@ -7,6 +9,7 @@ $button-active-blue: #1669f2;
 .mdl-card > .mdl-card__title {
   color: black;
 }
+
 .mdl-card {
   width: 100%;
 
@@ -24,6 +27,7 @@ a {
     max-width: 210px;
   }
 }
+
 .yahoo-sign-in-button {
   > img {
     max-width: 210px;
@@ -43,25 +47,20 @@ a {
 .mdl-tabs__tab-bar {
   justify-content: left;
 }
-// .login {
-//   ~
-// }
+
 .login {
   min-height: 50vh;
 }
+
 .login-side-cover {
-  // background: url("login_side_cover.png") center / cover;
   background: url("small_lv_hands.png") center / 75%;
   background-repeat: no-repeat;
-  // min-height: calc(300px);
   height: 100%;
 }
 
 .email-request-landing-side-cover {
-  // background: url("login_side_cover.png") center / cover;
   background: url("LosVerdes_Logo_RGB_300_Stack_BlackOnTransparent.png") center / fit;
   background-repeat: no-repeat;
-  // min-height: calc(300px);
   height: 100%;
 }
 
@@ -84,7 +83,6 @@ div.qr-code {
   margin-right: auto;
   width: 100%;
   > img {
-    // display: none;
     object-fit: contain;
     max-height: 100px;
   }
@@ -103,11 +101,9 @@ div.qr-code {
 }
 
 div.small-form {
-  > details {
-    max-width: 400px;
-    margin-left: auto;
-    margin-right: auto;
-  }
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .mdl-mini-footer {
@@ -168,15 +164,13 @@ div.membership-card {
 
 div.membership-card > .membership-card-inner {
   padding-bottom: 64.06%; /* 3.370:2.125 aspect ratio */
-
-  // color: white;
 }
 
 .members-card-wide.mdl-card {
   background-color: transparent;
 }
+
 .membership-card-inner > .mdl-grid {
-  // height: 100%;
   position: absolute;
   top: 0;
   bottom: 0;
@@ -188,7 +182,6 @@ div.membership-card > .membership-card-inner {
   justify-content: center;
 
   h3 {
-    // font-size: 3vh;
     font-size: calc(12px + 1.5vh);
     line-height: calc(4px + 3vh);
     margin: 0px;
@@ -246,8 +239,6 @@ div.membership-card > .membership-card-inner {
   line-height: 3vh;
 }
 
-@import url(https://fonts.googleapis.com/css?family=Roboto:500);
-
 .lv-header.mdl-layout__header {
   background-color: $bright-verde !important;
 }
@@ -263,27 +254,35 @@ div.membership-card > .membership-card-inner {
   height: 48px;
   border-radius: 24px;
 }
+
 .lv-layout .mdl-layout__header .mdl-layout__drawer-button {
   color: rgba(0, 0, 0, 0.54);
 }
+
 .mdl-layout__drawer .avatar {
   margin-bottom: 16px;
 }
+
 .lv-drawer {
   border: none;
 }
+
 /* iOS Safari specific workaround */
 .lv-drawer .mdl-menu__container {
   z-index: -1;
 }
+
 .lv-drawer .lv-navigation {
   z-index: -2;
 }
+
 /* END iOS Safari specific workaround */
+
 .lv-drawer .mdl-menu .mdl-menu__item {
   display: flex;
   align-items: center;
 }
+
 .lv-drawer-header {
   box-sizing: border-box;
   display: flex;
@@ -293,6 +292,7 @@ div.membership-card > .membership-card-inner {
   padding: 16px;
   height: 151px;
 }
+
 .lv-avatar-dropdown {
   display: flex;
   position: relative;
@@ -304,13 +304,14 @@ div.membership-card > .membership-card-inner {
 .lv-navigation {
   flex-grow: 1;
 }
+
 .lv-layout .lv-navigation .mdl-navigation__link {
   display: flex !important;
   flex-direction: row;
   align-items: center;
-  // color: rgba(255, 255, 255, 0.56);
   font-weight: 500;
 }
+
 .mdl-navigation__link:hover {
   background-color: $bright-verde;
   color: #000000;
@@ -318,7 +319,6 @@ div.membership-card > .membership-card-inner {
 
 .lv-navigation .mdl-navigation__link .material-icons {
   font-size: 24px;
-  // color: rgba(255, 255, 255, 0.56);
   margin-right: 32px;
 }
 
@@ -327,26 +327,41 @@ div.membership-card > .membership-card-inner {
 }
 
 details {
-  padding-bottom: 15px;
-}
+  box-sizing: border-box;
+  margin-top: 5px;
+  margin-bottom: 10px;
 
-details summary {
-  cursor: pointer;
-}
-details > summary {
-  background-color: #00b1415a;
-  cursor: pointer;
-  padding: 0.5rem 1rem;
-}
-
-details > summary > * {
-  display: inline;
-}
-
-details > div {
-  border: 2px solid #00b1415a;
-  margin-top: 0;
-  padding: 1rem;
+  > summary {
+    background: #00b1415a;
+    padding: 5px;
+    border: 2px solid transparent;
+    outline: none;
+    font-family: "Bungee", cursive;
+    -webkit-text-stroke-width: 1px;
+    -webkit-text-stroke-color: #000000;
+    color: $bright-verde;
+    // margin: 24px 0 16px;
+    font-size: calc(0.75em + 1vmin);
+    &:focus {
+      border-color: black;
+    }
+  }
+  > div {
+    border-top: none;
+    padding: 10px;
+    border: 2px solid #00b1415a;
+    border-top: none;
+  }
+  > p {
+    margin: 0;
+    padding-bottom: 10px;
+    &:last-child {
+      padding: 0;
+    }
+  }
+  > img {
+    max-width: 100%;
+  }
 }
 
 .about-card {
@@ -374,8 +389,9 @@ details > div {
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
-  // background: url('../assets/lils/image_card.jpg') center / cover;
+  display: inline;
 }
+
 .lil-card-image > .mdl-card__actions {
   height: 52px;
   padding: 16px;

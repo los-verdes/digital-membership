@@ -31,8 +31,7 @@
           </g>
         </svg>
       </div>
-      <div style=" padding: 1px; width: 100%; height: 100%; box-sizing: border-box;"><svg xmlns="http://www.w3.org/2000/svg" style=" overflow: visible;" width="100%"
-             height="100%">
+      <div style=" padding: 1px; width: 100%; height: 100%; box-sizing: border-box;"><svg xmlns="http://www.w3.org/2000/svg" style=" overflow: visible;" width="100%" height="100%">
           <rect width="100%" height="100%" ry="15%" fill="#000" stroke="black" stroke-width="1" stroke-linecap="round"></rect>
         </svg></div>
     </div>
@@ -265,12 +264,12 @@ This site's privacy policy can be view here: <a href="{{ url_for('privacy_policy
 </div>
 {% endmacro %}
 
-{% macro verde_box(title) %}
-<details>
+{% macro verde_box(title, box_id="") %}
+<details {% if box_id %}id="{{ box_id }}" {% endif -%}>
   <summary>
-    <h6>{{ title }}</h6>
+    {{ title }}
   </summary>
-  <div>
+  <div class="content">
     {{ caller() }}
   </div>
 </details>
