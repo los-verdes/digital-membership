@@ -235,7 +235,7 @@ Your can either view your membership card directly on <a href="https://card.losv
 Download links can be sent via email to any Los Verdes member's address upon request as well!
 
 <h6>Sample Cards</h6>
-<div class="mdl-grid">
+<div class="mdl-grid lil-image-cards">
   {{ lil_image('sample/add_to_ios_wallet.png', 'Add to Apple Wallet') }}
   {{ lil_image('sample/ios_in_wallet.png', 'Apple Wallet Pass') }}
   {{ lil_image('sample/add_to_gpay.png', 'Save to Google Pay') }}
@@ -255,7 +255,8 @@ This site's privacy policy can be view here: <a href="{{ url_for('privacy_policy
 
 {% macro lil_image(image_filename, caption) %}
 <div class="mdl-cell mdl-cell--4-col">
-  <div class="lil-card-image mdl-card mdl-shadow--2dp" style="background-image: url({{ url_for('static', filename=image_filename) }});">
+  {% set lil_image_url = url_for('static', filename=image_filename) %}
+  <div class="lil-card-image mdl-card mdl-shadow--2dp" style="background-image: url({{lil_image_url}});">
     <div class="mdl-card__title mdl-card--expand"></div>
     <div class="mdl-card__actions">
       <span class="lil-card-image__caption">{{ caption }}</span>

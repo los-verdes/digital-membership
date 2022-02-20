@@ -386,13 +386,16 @@ details {
   cursor: pointer;
 }
 
+.lil-image-cards > * {
+  display: inline;
+}
+
 .lil-card-image.mdl-card {
   width: 256px;
   height: 256px;
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
-  display: inline;
 }
 
 .lil-card-image > .mdl-card__actions {
