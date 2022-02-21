@@ -599,11 +599,9 @@ def update_sendgrid_template():
 @app.cli.command("send-test-email")
 @click.argument("email")
 def send_test_email(email):
-    from member_card.sendgrid import generate_and_send_email
+    from member_card.worker import process_email_distribution_request
 
-    generate_and_send_email(
-        user=User.query.filter_by(email=email).one(),
-    )
+    process_email_distribution_request(message=dict(email_distribution_recipient=email))
 
 
 @app.cli.command("generate-card-image")
