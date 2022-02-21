@@ -46,6 +46,24 @@ resource "google_sql_user" "management" {
   type     = "BUILT_IN"
 }
 
+locals {
+  read_only_sql_users = ["bigquery"]
+}
+
+resource "random_password" "read_only_sql_users" {
+  for_each = toset(local.read_only_sql_users)
+  length   = 32
+  special  = false
+}
+
+resource "google_sql_user" "read_only" {
+  for_each = random_password.read_only_sql_users
+  name     = each.key
+  password = each.password
+  instance = google_sql_database_instance.digital_membership.name
+  type     = "BUILT_IN"
+}
+
 resource "google_sql_user" "service_accounts" {
   for_each = {
     website = google_service_account.digital_membership["website"].email,

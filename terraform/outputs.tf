@@ -60,6 +60,15 @@ output "pubsub_topic_id" {
   value = google_pubsub_topic.digital_membership.id
 }
 
+output "read_only_sql_usernames" {
+  value = [for u in values(google_sql_user.read_only) : u.name]
+}
+
+output "read_only_sql_user_passwords" {
+  value     = random_password.read_only_sql_users
+  sensitive = true
+}
+
 output "secret_name" {
   value = google_secret_manager_secret_version.digital_membership.name
 }
