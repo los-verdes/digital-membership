@@ -28,6 +28,7 @@ locals {
   management_user_name     = data.terraform_remote_state.production.outputs.postgres_management_user_name
   management_user_password = data.terraform_remote_state.production.outputs.postgres_management_user_password
 
+  read_only_sql_users = data.terraform_remote_state.production.outputs.read_only_sql_usernames
   sql_users = concat(
     [data.terraform_remote_state.production.outputs.postgres_management_user_name],
     data.terraform_remote_state.production.outputs.sql_usernames,
@@ -108,43 +109,49 @@ resource "postgresql_default_privileges" "read_write_usage_seqs" {
   privileges  = ["SELECT", "UPDATE", "USAGE"]
 }
 
-# resource "postgresql_role" "read_only" {
-#   name  = "read_only"
-#   roles = []
-# }
+resource "postgresql_role" "read_only" {
+  name  = "read_only"
+  roles = []
+}
 
-# resource "postgresql_grant" "read_only_connect" {
-#   role        = postgresql_role.read_only.name
-#   database    = local.database_name
-#   object_type = "database"
-#   privileges  = ["CONNECT"]
-# }
+resource "postgresql_grant_role" "read_only" {
+  for_each   = toset(local.read_only_sql_users)
+  role       = each.value
+  grant_role = "read_only"
+}
 
-# resource "postgresql_grant" "read_only_usage" {
-#   role        = postgresql_role.read_only.name
-#   database    = local.database_name
-#   schema      = "public"
-#   object_type = "schema"
-#   privileges  = ["USAGE"]
-# }
+resource "postgresql_grant" "read_only_connect" {
+  role        = postgresql_role.read_only.name
+  database    = local.database_name
+  object_type = "database"
+  privileges  = ["CONNECT"]
+}
 
-# resource "postgresql_grant" "read_only_select_all_public" {
-#   role        = postgresql_role.read_only.name
-#   database    = local.database_name
-#   schema      = "public"
-#   object_type = "table"
-#   privileges  = ["SELECT"]
-# }
+resource "postgresql_grant" "read_only_usage" {
+  role        = postgresql_role.read_only.name
+  database    = local.database_name
+  schema      = "public"
+  object_type = "schema"
+  privileges  = ["USAGE"]
+}
 
-# resource "postgresql_default_privileges" "read_only_tables" {
-#   role     = postgresql_role.read_only.name
-#   database = local.database_name
-#   schema   = "public"
+resource "postgresql_grant" "read_only_select_all_public" {
+  role        = postgresql_role.read_only.name
+  database    = local.database_name
+  schema      = "public"
+  object_type = "table"
+  privileges  = ["SELECT"]
+}
 
-#   owner       = postgresql_role.read_only.name
-#   object_type = "table"
-#   privileges  = ["SELECT"]
-# }
+resource "postgresql_default_privileges" "read_only_tables" {
+  role     = postgresql_role.read_only.name
+  database = local.database_name
+  schema   = "public"
+
+  owner       = local.management_user_name
+  object_type = "table"
+  privileges  = ["SELECT"]
+}
 
 output "management_sql_user_name" {
   value = local.management_user_name
