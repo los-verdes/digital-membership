@@ -55,6 +55,7 @@ def process_email_distribution_request(message):
         log_extra.update(dict(user=user))
     except Exception as err:
         log_extra.update(dict(user_query_err=err))
+        logger.warning(f"unable to look up user!: {err}", extra=log_extra)
         user = None
 
     if user is None:
