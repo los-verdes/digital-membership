@@ -59,7 +59,7 @@ resource "random_password" "read_only_sql_users" {
 resource "google_sql_user" "read_only" {
   for_each = random_password.read_only_sql_users
   name     = each.key
-  password = each.password
+  password = each.value.result
   instance = google_sql_database_instance.digital_membership.name
   type     = "BUILT_IN"
 }
