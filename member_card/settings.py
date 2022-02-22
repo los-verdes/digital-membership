@@ -79,8 +79,8 @@ class Settings(object):
     CDN_HTTPS = True
     FLASK_ASSETS_USE_CDN = True
 
-    DB_USERNAME: str = os.environ["DIGITAL_MEMBERSHIP_DB_USERNAME"]
-    DB_DATABASE_NAME: str = os.environ["DIGITAL_MEMBERSHIP_DB_DATABASE_NAME"]
+    DB_USERNAME: str = os.getenv("DIGITAL_MEMBERSHIP_DB_USERNAME", "")
+    DB_DATABASE_NAME: str = os.getenv("DIGITAL_MEMBERSHIP_DB_DATABASE_NAME", "")
     DB_PASSWORD: str = os.getenv("DIGITAL_MEMBERSHIP_DB_ACCESS_TOKEN")
 
     BASE_URL: str = (
