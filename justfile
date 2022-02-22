@@ -289,7 +289,16 @@ gunicorn:
     --log-config=config/gunicron_logging.ini \
     'wsgi:create_app()'
 
+debug-test:
+  python -m pytest \
+    --durations=10 \
+    --cov=member_card \
+    --cov-report=term-missing \
+    --capture=no \
+    --pdb
+
 test:
-  #!/bin/bash
-  export PYTHONPATH="$PYTHONPATH:{{ justfile_directory() }}"
-  pytest .
+  python -m pytest \
+    --durations=10 \
+    --cov=member_card \
+    --cov-report=xml
