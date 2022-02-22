@@ -17,7 +17,7 @@ export FLASK_ENV := env_var_or_default("FLASK_ENV", "developement")
 export FLASK_DEBUG := "true"
 export LOG_LEVEL := env_var_or_default("LOG_LEVEL", "debug")
 export DOCKER_BUILDKIT := "1"
-export DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME := "lv-digital-membership:us-central1:lv-digital-membership-6b6a7153"
+export DIGITAL_MEMBERSHIP_GCP_SQL_CONNECTION_NAME := "lv-digital-membership:us-central1:lv-digital-membership-6b6a7153"
 export DIGITAL_MEMBERSHIP_DB_USERNAME := env_var_or_default("DIGITAL_MEMBERSHIP_DB_USERNAME", `gcloud auth list 2>/dev/null | grep -E '^\*' | awk '{print $2;}'`)
 export DIGITAL_MEMBERSHIP_DB_DATABASE_NAME := "lv-digital-membership"
 export DIGITAL_MEMBERSHIP_BASE_URL := "localcard.losverd.es:5000"
@@ -69,7 +69,7 @@ docker-flask +CMD: build
     --env=APPLE_PASS_PRIVATE_KEY_PASSWORD \
     --env=GCS_BUCKET_ID \
     --env=GCLOUD_PROJECT \
-    --env=DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME \
+    --env=DIGITAL_MEMBERSHIP_GCP_SQL_CONNECTION_NAME \
     --env=DIGITAL_MEMBERSHIP_DB_USERNAME \
     --env=DIGITAL_MEMBERSHIP_DB_DATABASE_NAME \
     --env=DIGITAL_MEMBERSHIP_DB_ACCESS_TOKEN \
@@ -214,7 +214,7 @@ apply-migrations: ci-install-python-reqs
 sync-subscriptions: ci-install-python-reqs
   @echo "DIGITAL_MEMBERSHIP_DB_DATABASE_NAME: $DIGITAL_MEMBERSHIP_DB_DATABASE_NAME"
   @echo "DIGITAL_MEMBERSHIP_DB_USERNAME: $DIGITAL_MEMBERSHIP_DB_USERNAME"
-  @echo "DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME: $DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME"
+  @echo "DIGITAL_MEMBERSHIP_GCP_SQL_CONNECTION_NAME: $DIGITAL_MEMBERSHIP_GCP_SQL_CONNECTION_NAME"
   @echo "gcloud auth user: $(gcloud auth list 2>/dev/null | grep -E '^\*' | awk '{print $2;}')"
   just flask sync-subscriptions
 
@@ -238,7 +238,7 @@ lint:
 
 sql-proxy:
   ~/.local/bin/cloud_sql_proxy \
-    -instances="$DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME=tcp:5432" \
+    -instances="$DIGITAL_MEMBERSHIP_GCP_SQL_CONNECTION_NAME=tcp:5432" \
     ;
   # -enable_iam_login \
   # -token="$(gcloud auth print-access-token --impersonate-service-account=website@lv-digital-membership.iam.gserviceaccount.com)"

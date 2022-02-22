@@ -77,7 +77,7 @@ resource "google_cloud_run_service" "digital_membership" {
           value = google_secret_manager_secret_version.digital_membership.name
         }
         env {
-          name  = "DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME"
+          name  = "DIGITAL_MEMBERSHIP_GCP_SQL_CONNECTION_NAME"
           value = google_sql_database_instance.digital_membership.connection_name
         }
         env {
