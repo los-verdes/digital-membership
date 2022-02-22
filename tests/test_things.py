@@ -4,7 +4,7 @@ from member_card import create_app
 
 @pytest.fixture()
 def app():
-    app = create_app()
+    app = create_app(env="tests")
     app.config.update(
         {
             "TESTING": True,
