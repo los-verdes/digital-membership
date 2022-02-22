@@ -105,12 +105,12 @@ def verify_hex_digest(
     return hmac.compare_digest(expected, signature)
 
 
-def load_settings(app):
+def load_settings(app, env=None):
+    if env is None:
+        logging.debug(f"{app.config['ENV']=}")
+        env = app.config["ENV"].lower().strip()
 
-    logging.debug(f"{app.config['ENV']=}")
-    settings_env = app.config["ENV"].lower().strip()
-
-    settings_obj = get_settings_obj_for_env(settings_env)
+    settings_obj = get_settings_obj_for_env(env)
     app.config.from_object(settings_obj())
 
 

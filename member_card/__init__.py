@@ -9,13 +9,13 @@ from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from member_card import utils
 
 
-def create_cli_app():
+def create_cli_app(env=None):
     from member_card.app import app
 
     logger = logging.getLogger(__name__)
 
     logger.debug("load_settings")
-    utils.load_settings(app)
+    utils.load_settings(app, env)
 
     logger.debug("register_asset_bundles")
     utils.register_asset_bundles(app)
@@ -29,12 +29,12 @@ class MemberCardDatastore(SQLAlchemySessionUserDatastore):
         return self.user_model.query.filter_by(**kwargs).first()
 
 
-def create_app():
+def create_app(env=None):
     from member_card.app import login_manager, recaptcha, cdn, security
 
     logger = logging.getLogger(__name__)
 
-    app = create_cli_app()
+    app = create_cli_app(env)
 
     if os.getenv("K_SERVICE") == "worker":
         from member_card.worker import worker_bp
