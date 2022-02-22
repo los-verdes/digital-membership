@@ -1,12 +1,7 @@
 import json
 import logging
 import os
-from functools import partial
-from typing import TYPE_CHECKING, Tuple
-from google.cloud.sql.connector import connector
-
-if TYPE_CHECKING:
-    from pg8000 import dbapi
+from typing import Tuple
 
 logger = logging.getLogger("member_card")
 
@@ -84,7 +79,6 @@ class Settings(object):
     CDN_HTTPS = True
     FLASK_ASSETS_USE_CDN = True
 
-    DB_CONNECTION_NAME: str = os.environ["DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME"]
     DB_USERNAME: str = os.environ["DIGITAL_MEMBERSHIP_DB_USERNAME"]
     DB_DATABASE_NAME: str = os.environ["DIGITAL_MEMBERSHIP_DB_DATABASE_NAME"]
     DB_PASSWORD: str = os.getenv("DIGITAL_MEMBERSHIP_DB_ACCESS_TOKEN")
@@ -207,49 +201,6 @@ class Settings(object):
         logger.debug(f"Exporting {list(self._secrets.keys())} as setting attributes...")
         self.export_dict_as_settings(self._secrets)
 
-    def use_gcp_sql_connector(self) -> None:
-        db_connection_kwargs = dict(
-            instance_connection_string=self.DB_CONNECTION_NAME,
-            db_user=self.DB_USERNAME,
-            db_name=self.DB_DATABASE_NAME,
-            db_pass=self.DB_PASSWORD,
-        )
-
-        logger.debug(
-            {
-                k: f"{v[:3]}...{v[-3:]}"
-                for k, v in db_connection_kwargs.items()
-                if v is not None
-            }
-        )
-
-        def get_db_connector(
-            instance_connection_string: str, db_user: str, db_name: str, db_pass: str
-        ) -> "dbapi.Connection":
-            conn_kwargs = dict(
-                user=db_user,
-                db=db_name,
-                # enable_iam_auth=True,
-            )
-
-            conn_obj = connector.Connector()
-            if db_pass:
-                conn_kwargs["password"] = db_pass
-            else:
-                # TODO: drop this kludge pending release of https://github.com/GoogleCloudPlatform/cloud-sql-python-connector/pull/273
-                conn_obj._enable_iam_auth = not db_pass
-            conn: "dbapi.Connection" = conn_obj.connect(
-                instance_connection_string,
-                "pg8000",
-                **conn_kwargs,
-            )
-            return conn
-
-        engine_creator = partial(get_db_connector, **db_connection_kwargs)
-        self.SQLALCHEMY_ENGINE_OPTIONS = dict(
-            creator=engine_creator,
-        )
-
     def __init__(self) -> None:
         logger.debug(f"Initializing settings class: {type(self)}...")
         logger.info("env var keys", extra=dict(env_var_keys=list(os.environ.keys())))
@@ -281,6 +232,17 @@ class ProductionSettings(Settings):
     SQLALCHEMY_DATABASE_URI: str = "postgresql+pg8000://"
     SQLALCHEMY_ECHO: bool = False
     CDN_DEBUG = False
+
+    def use_gcp_sql_connector(self) -> None:
+        from member_card.db import get_gcp_sql_engine_creator
+
+        engine_creator = get_gcp_sql_engine_creator(
+            instance_connection_string=os.environ["DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME"],
+            settings=self,
+        )
+        self.SQLALCHEMY_ENGINE_OPTIONS = dict(
+            creator=engine_creator,
+        )
 
     def __init__(self) -> None:
 
