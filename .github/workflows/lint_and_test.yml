@@ -38,3 +38,36 @@ jobs:
           # https://github.com/github/super-linter/issues/1852
           # https://github.com/rhysd/actionlint/issues/91
           VALIDATE_GITHUB_ACTIONS: false
+
+  test:
+    name: "Run Tests"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup just
+        uses: extractions/setup-just@v1
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Utilize pip cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ env.pythonLocation }}-pip-${{ hashFiles('requirements.txt') }}
+
+      - name: Install pytest
+        run: pip install pytest
+
+      - name: Run Tests
+        run: |
+          python -m pytest \
+            --durations=10 \
+            --junitxml=artifacts/junit.xml
+        env:
+          GITHUB_PAT: ${{ secrets.GH_PAT }}
+          # PYTEST_RUN_PATH: tests
