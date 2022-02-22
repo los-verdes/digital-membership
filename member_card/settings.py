@@ -237,7 +237,9 @@ class ProductionSettings(Settings):
         from member_card.db import get_gcp_sql_engine_creator
 
         engine_creator = get_gcp_sql_engine_creator(
-            instance_connection_string=os.environ["DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME"],
+            instance_connection_string=os.environ[
+                "DIGITAL_MEMBERSHIP_GCP_SQL_CONNECTION_NAME"
+            ],
             settings=self,
         )
         self.SQLALCHEMY_ENGINE_OPTIONS = dict(
