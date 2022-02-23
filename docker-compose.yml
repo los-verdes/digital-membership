@@ -32,9 +32,8 @@ services:
     image: postgres:14.1
     restart: always
     environment:
-      - POSTGRES_DB=lv-digital-membership
-      - POSTGRES_USER=member-card-user
-      - POSTGRES_PASSWORD=member-card-password
+      - POSTGRES_DB=lv-digital-membership-tests
+      - POSTGRES_PASSWORD=postgres
     logging:
       options:
         max-size: 10m
