@@ -311,10 +311,17 @@ debug-test:
     --capture=no \
     --pdb
 
-bootstrap-test-db:
-  ./tests/config/sql/bootstrap.sh
+ci-bootstrap-test-db:
+  #!/bin/bash
 
-test: ci-install-test-python-reqs bootstrap-test-db
+  set -eou pipefail
+
+  if [[ '{{ env_var_or_default("CI", "false") }}' == "true" ]]
+  then
+    ./tests/config/sql/bootstrap.sh
+  fi
+
+test: ci-install-test-python-reqs ci-bootstrap-test-db
   python -m pytest \
     --durations=10 \
     --cov=member_card \
