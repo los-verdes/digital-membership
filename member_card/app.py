@@ -22,7 +22,6 @@ from flask_security.utils import logout_user
 from social_flask.template_filters import backends
 from social_flask.utils import load_strategy
 from sqlalchemy.sql import func
-
 from member_card import utils
 from member_card.models import User
 

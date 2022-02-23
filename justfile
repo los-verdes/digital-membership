@@ -41,6 +41,20 @@ tf-init:
 tf-auto-apply:
   just tf 'apply -auto-approve'
 
+ci-install-test-python-reqs:
+  #!/bin/bash
+
+  set -eou pipefail
+
+  if [[ '{{ env_var_or_default("CI", "false") }}' == "true" ]]
+  then
+    pip3 install \
+      --quiet \
+      --requirement='requirements-test.in'
+  else
+    echo "skipping pip install outside of GitHub Actions..."
+  fi
+
 ci-install-python-reqs:
   #!/bin/bash
 
@@ -297,7 +311,7 @@ debug-test:
     --capture=no \
     --pdb
 
-test:
+test: ci-install-test-python-reqs
   python -m pytest \
     --durations=10 \
     --cov=member_card \

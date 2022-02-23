@@ -58,10 +58,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-pip-${{ hashFiles('requirements.txt') }}
-
-      - name: Install pytest
-        run: pip install pytest pytest-cov
+          key: ${{ env.pythonLocation }}-pip-${{ hashFiles('requirements-test.txt') }}
 
       - name: Run Tests
         run: just test
