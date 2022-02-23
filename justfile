@@ -311,7 +311,10 @@ debug-test:
     --capture=no \
     --pdb
 
-test: ci-install-test-python-reqs
+bootstrap-test-db:
+  ./tests/config/sql/bootstrap.sh
+
+test: ci-install-test-python-reqs bootstrap-test-db
   python -m pytest \
     --durations=10 \
     --cov=member_card \
