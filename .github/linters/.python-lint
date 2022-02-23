@@ -279,6 +279,8 @@ ignored-modules=flask,
                 flask_security,
                 pytest,
                 member_card,
+                tests,
+                mock,
                 click
 
 # Show a hint with possible names when a member name was not found. The aspect
