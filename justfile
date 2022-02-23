@@ -306,9 +306,9 @@ gunicorn:
 debug-test:
   python -m pytest \
     --durations=10 \
+    --log-level=DEBUG \
     --cov=member_card \
     --cov-report=term-missing \
-    --capture=no \
     --pdb
 
 ci-bootstrap-test-db:
@@ -324,5 +324,6 @@ ci-bootstrap-test-db:
 test: ci-install-test-python-reqs ci-bootstrap-test-db
   python -m pytest \
     --durations=10 \
+    --log-level=DEBUG \
     --cov=member_card \
     --cov-report=xml

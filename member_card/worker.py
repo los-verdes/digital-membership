@@ -33,10 +33,10 @@ def parse_message():
 
     pubsub_message = envelope["message"]
     logger.debug(f"pubsub message from within envelope: {pubsub_message=}")
-    print(pubsub_message["data"])
     message = json.loads(
         base64.b64decode(pubsub_message["data"]).decode("utf-8").strip()
     )
+    logger.debug(f"Parsed message: {message}")
     assert "type" in message, "'type' key required in message pubsub body"
     return message
 
@@ -76,7 +76,7 @@ def process_email_distribution_request(message):
         f"Found {user=} for {email_distribution_recipient=}. Generating and sending email now",
         extra=log_extra,
     )
-    generate_and_send_email(
+    return generate_and_send_email(
         user=user,
         submitting_ip_address=message.get("remote_addr"),
         submitted_on=message.get("submitted_on"),
@@ -155,6 +155,11 @@ def pubsub_ingress():
         "sync_subscriptions_etl": sync_subscriptions_etl,
         "sync_squarespace_order": sync_squarespace_order,
     }
+
+    message_type = message["type"]
+    if message_type not in MESSAGE_TYPE_HANDLERS:
+        return f"Message type {message_type} is unsupported", 400
+
     MESSAGE_TYPE_HANDLERS[message["type"]](message)
 
     return ("", 204)
