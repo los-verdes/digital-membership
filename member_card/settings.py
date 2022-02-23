@@ -188,7 +188,7 @@ class Settings(object):
     SECRET_KEY: str = os.environ.get("SECRET_KEY", "not-very-secret-at-all")
     SESSION_COOKIE_NAME: str = "psa_session"
 
-    SQLALCHEMY_DATABASE_URI: str = "postgresql://member-card-user:member-card-password@127.0.0.1:5433/digital-membership"
+    SQLALCHEMY_DATABASE_URI: str = "postgresql://member-card-user:member-card-password@127.0.0.1:5433/lv-digital-membership"
     SQLALCHEMY_TRACK_MODIFICATIONS: bool = False
 
     def export_dict_as_settings(self, dict_to_export: dict[str, str]) -> None:
@@ -261,6 +261,14 @@ class DevelopementSettings(Settings):
     SQLALCHEMY_ECHO: bool = False
 
 
+class TestSettings(Settings):
+    SQLALCHEMY_ECHO: bool = True
+    SQLALCHEMY_DATABASE_URI: str = (
+        "postgresql://test-runner:hi-im-testing@127.0.0.1:5433/lv-digital-membership"
+    )
+    # SQLALCHEMY_DATABASE_URI: str = "sqlite:///:memory:"
+
+
 class RemoteSqlProductionSettings(ProductionSettings):
     def __init__(self) -> None:
 
@@ -275,6 +283,7 @@ def get_settings_obj_for_env(env: str = None, default_settings_class=Settings):
         "compose": DockerComposeSettings,
         "production": ProductionSettings,
         "remote-sql": RemoteSqlProductionSettings,
+        "tests": TestSettings,
     }
 
     return settings_objs_by_env.get(env, default_settings_class)

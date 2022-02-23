@@ -8,7 +8,7 @@ from flask_security import UserMixin, RoleMixin
 logger = logging.getLogger(__name__)
 
 
-def ensure_user(email, first_name, last_name):
+def ensure_user(email, first_name, last_name, username=None, password=None):
 
     user = get_or_create(
         session=db.session,
@@ -31,6 +31,14 @@ def ensure_user(email, first_name, last_name):
         logger.warning(
             f"{user.last_name=} does not match {last_name} for some reason..."
         )
+
+    if username is not None:
+        logger.debug(f"Setting new username for {user=}: {username}")
+        setattr(user, "username", username)
+
+    if password is not None:
+        logger.debug(f"Setting new password for {user=}")
+        setattr(user, "password", password)
 
     db.session.add(user)
     db.session.commit()
