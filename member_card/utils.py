@@ -1,4 +1,3 @@
-import contextlib
 import hashlib
 import hmac
 import json
@@ -28,15 +27,6 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from webassets.filter import get_filter
 
 from member_card.settings import get_settings_obj_for_env
-
-
-@contextlib.contextmanager
-def remember_cwd():
-    curdir = os.getcwd()
-    try:
-        yield
-    finally:
-        os.chdir(curdir)
 
 
 def initialize_tracer():
