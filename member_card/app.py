@@ -64,10 +64,9 @@ def commit_on_success(error=None):
 
 @app.context_processor
 def inject_user():
-    try:
-        return {"user": g.user}
-    except AttributeError:
-        return {"user": None}
+    return {
+        "user": getattr(g, "user", None),
+    }
 
 
 @app.context_processor
