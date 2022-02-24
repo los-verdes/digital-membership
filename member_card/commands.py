@@ -120,12 +120,13 @@ def query_db(email):
         user = User.query.filter_by(email=func.lower(email)).one()
     except NoResultFound as err:
         logger.warning(f"No user found matching {email=} ({err=})")
-        return
+        return None
 
     logger.info(f"user matching {email}:\n{user}")
     logger.info(f"user roles {email}:\n{user.roles}")
     logger.info(f"user memberships:\n{user.annual_memberships}")
     logger.info(f"user membership cards:\n{user.membership_cards}")
+    return User
 
 
 @app.cli.command("query-order-num")

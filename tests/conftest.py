@@ -35,6 +35,16 @@ def runner(app):
 
 
 @pytest.fixture()
+def runner_without_db(app):
+    sql_alchemy_ext = app.extensions["sqlalchemy"]
+    del app.extensions["sqlalchemy"]
+
+    yield app.test_cli_runner()
+
+    app.extensions["sqlalchemy"] = sql_alchemy_ext
+
+
+@pytest.fixture()
 def authenticated_client(app, fake_user):
     mock_get_user = patch("flask_login.utils._get_user", Mock(return_value=fake_user))
 
