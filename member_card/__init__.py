@@ -10,8 +10,10 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from flask_security import SQLAlchemySessionUserDatastore
 from flask.logging import default_handler
 from flask_gravatar import Gravatar
-from opentelemetry.instrumentation.flask import FlaskInstrumentor
 
+
+from member_card.models.user import User, Role
+from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from member_card import utils
 
 
@@ -87,8 +89,6 @@ def create_app(env=None):
     db.init_app(app)
     init_social(app, db.session)
     migrate.init_app(app, db)
-
-    from member_card.models.user import User, Role
 
     user_datastore = MemberCardDatastore(db.session, User, Role)
     security.init_app(

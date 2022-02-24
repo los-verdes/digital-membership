@@ -23,6 +23,8 @@ from social_flask.template_filters import backends
 from social_flask.utils import load_strategy
 from member_card import utils
 
+from member_card.db import db
+
 BASE_DIR = os.path.dirname(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "member_card")
 )
@@ -52,8 +54,6 @@ def commit_on_success(error=None):
     if "sqlalchemy" not in app.extensions:
         # TODO: do this better
         return
-    from member_card.db import db
-
     if error is None:
         db.session.commit()
     else:
@@ -121,8 +121,6 @@ def home():
 @app.route("/edit-user-name", methods=["POST"])
 @login_required
 def edit_user_name_request():
-    from member_card.db import db
-
     log_extra = dict(form=request.form)
     new_first_name = request.form["newFirstName"]
     new_last_name = request.form["newLastName"]
@@ -360,7 +358,6 @@ def squarespace_extension_details():
 
 @app.route("/squarespace/order-webhook", methods=["POST"])
 def squarespace_order_webhook():
-    from member_card.db import db
     from member_card.models import SquarespaceWebhook
     from member_card.pubsub import publish_message
 
@@ -465,7 +462,6 @@ def squarespace_order_webhook():
 # Note: get_or_create_membership_card() has this route hard-coded in it
 # TODO: ^ make that not the case
 def verify_pass(serial_number):
-    from member_card.db import db
     from member_card.models import AnnualMembership, MembershipCard
 
     signature = request.args.get("signature")
