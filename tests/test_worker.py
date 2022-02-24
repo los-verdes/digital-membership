@@ -1,7 +1,9 @@
 import base64
 import json
 import logging
+
 from member_card import worker
+from mock import sentinel
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -65,6 +67,48 @@ class TestPubsubIngress:
 
         # Check that we return a 400 / Bad Request in these cases
         assert response.status_code == 204
+
+    def test_sync_subscriptions_etl(self, client, mocker):
+        mock_squarespace_orders_etl = mocker.patch(
+            "member_card.worker.squarespace_orders_etl"
+        )
+        test_message = dict(
+            type="sync_subscriptions_etl",
+        )
+        response = client.post(
+            "/pubsub",
+            json=self.generate_test_envelope(test_message),
+        )
+        logging.debug(f"{response=}")
+
+        # Check that we return a 400 / Bad Request in these cases
+        assert response.status_code == 204
+
+        mock_squarespace_orders_etl.assert_called_once()
+
+    def test_sync_squarespace_order(self, app, client, mocker):
+        mock_squarespace_class = mocker.patch("member_card.worker.Squarespace")
+        mock_squarespace_client = mock_squarespace_class()
+        mock_load_single_order = mocker.patch("member_card.worker.load_single_order")
+        test_order_id = str(sentinel.squarespace_order_id)
+        test_message = dict(
+            type="sync_squarespace_order",
+            order_id=test_order_id,
+        )
+        response = client.post(
+            "/pubsub",
+            json=self.generate_test_envelope(test_message),
+        )
+        logging.debug(f"{response=}")
+
+        # Check that we return a 400 / Bad Request in these cases
+        assert response.status_code == 204
+
+        mock_load_single_order.assert_called_once_with(
+            squarespace_client=mock_squarespace_client,
+            membership_skus=app.config["SQUARESPACE_MEMBERSHIP_SKUS"],
+            order_id=test_order_id,
+        )
 
 
 class TestEmailDistribution:
