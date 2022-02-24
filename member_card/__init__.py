@@ -39,8 +39,9 @@ def create_cli_app(env=None):
     logger.debug("register_asset_bundles")
     utils.register_asset_bundles(app)
 
-    from member_card import cli
-    assert cli
+    from member_card import commands
+
+    assert commands
 
     return app
 
