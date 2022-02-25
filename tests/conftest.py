@@ -15,7 +15,10 @@ logging.basicConfig(level=logging.DEBUG)
 
 @pytest.fixture(scope="session")
 def app():
-    app = create_worker_app(env="tests")
+    # Don't need to trace our tests typically so mocking this bit out :P
+    with patch("member_card.monitoring", autospec=True):
+        app = create_worker_app(env="tests")
+
     with app.app_context():
         flask_migrate.upgrade()
 

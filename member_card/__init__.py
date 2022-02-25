@@ -40,8 +40,8 @@ def create_app(env=None):
     logger.debug("cdn.init_app")
     cdn.init_app(app)
 
-    logger.debug("initialize_tracer")
     if app.config["TRACING_ENABLED"]:
+        logger.debug("initialize_tracer")
         monitoring.initialize_tracer()
 
     app.logger.removeHandler(default_handler)
