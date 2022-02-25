@@ -1,5 +1,5 @@
-
 -r ./requirements.txt
+bs4
 mock
 pytest
 pytest-cov
