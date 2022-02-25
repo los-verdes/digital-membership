@@ -120,7 +120,7 @@ def edit_user_name_request():
     logger.debug(
         f"edit_user_name_request(): {new_first_name=} {new_last_name=}", extra=log_extra
     )
-    form_message = utils.get_message_str('edit_user_name_success')
+    form_message = utils.get_message_str("edit_user_name_success")
     setattr(g.user, "fullname", " ".join([new_first_name, new_last_name]))
     setattr(g.user, "first_name", new_first_name)
     setattr(g.user, "last_name", new_last_name)
