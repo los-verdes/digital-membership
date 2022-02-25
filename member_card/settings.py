@@ -9,6 +9,10 @@ logger = logging.getLogger("member_card")
 class Settings(object):
     _secrets: dict = dict()
 
+    MESSAGES = dict(
+        edit_user_name_success="User display name updated!",
+    )
+
     APPLE_DEVELOPER_ORG_NAME: str = "Jeffrey Hogan"  # TODO: if LV is a legit 501c this can maybe become a less personal org...
     APPLE_DEVELOPER_PASS_TYPE_ID: str = "pass.es.losverd.card"
     APPLE_DEVELOPER_TEAM_ID: str = "KJHZP635V9"

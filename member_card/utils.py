@@ -240,3 +240,8 @@ def load_gcp_credentials(scopes=DEFAULT_GCP_SCOPES):
             lifetime=500,
         )
     return credentials
+
+
+def get_message_str(message_key):
+    message_str = flask.current_app.config["MESSAGES"][message_key]
+    return message_str
