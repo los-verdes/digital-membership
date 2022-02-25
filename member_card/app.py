@@ -21,9 +21,11 @@ from flask_security.decorators import login_required, roles_required
 from flask_security.utils import logout_user
 from social_flask.template_filters import backends
 from social_flask.utils import load_strategy
-from member_card import utils
 
+from member_card import utils
 from member_card.db import db
+from member_card.models import AnnualMembership
+from member_card.models.membership_card import get_or_create_membership_card
 
 BASE_DIR = os.path.dirname(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "member_card")
@@ -91,31 +93,22 @@ app.jinja_env.globals["url"] = utils.social_url_for
 @app.route("/")
 @login_required
 def home():
-    from member_card.models import AnnualMembership
-
-    current_user = g.user
-    if not current_user.is_authenticated:
-        return redirect("/login")
-
-    if current_user.has_active_memberships:
-        from member_card.models.membership_card import get_or_create_membership_card
-
-        membership_card = get_or_create_membership_card(current_user)
-        # response_body = render_template(
-        # TODO: update this deal to only generate gpay pass JWTs upon demand instead of every request
-        return render_template(
-            "member_card_and_history.html.j2",
-            membership_card=membership_card,
-            membership_orders=g.user.annual_memberships,
-            membership_table_keys=list(AnnualMembership().to_dict().keys()),
-        )
-    else:
+    if not g.user.has_active_memberships:
         return render_template(
             "no_membership_landing_page.html.j2",
-            user=current_user,
+            user=g.user,
             membership_orders=g.user.annual_memberships,
             membership_table_keys=list(AnnualMembership().to_dict().keys()),
         )
+
+    membership_card = get_or_create_membership_card(g.user)
+
+    return render_template(
+        "member_card_and_history.html.j2",
+        membership_card=membership_card,
+        membership_orders=g.user.annual_memberships,
+        membership_table_keys=list(AnnualMembership().to_dict().keys()),
+    )
 
 
 @app.route("/edit-user-name", methods=["POST"])
