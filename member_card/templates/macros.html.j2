@@ -84,11 +84,11 @@ show_qr_code_on_card=False
           <div class="mdl-cell mdl-cell--4-col mdl-cell--2-col-tablet mdl-cell--1-col-phone lv-crest"></div>
           <!-- Card title / identifier in top-right corner 2/3 column (desktop:8, table:6, phone:3) -->
           <div class="mdl-cell mdl-cell--8-col mdl-cell--6-col-tablet mdl-cell--3-col-phone mdl-typography--text-right">
-            <h3 class="live-laugh-love">
+            <h3 id="card-title" class="live-laugh-love">
               {{ title }}
             </h3>
             {% if validation_msg %}
-            <h3 class="validation-overlay">
+            <h3 id="card-validation-msg" class="validation-overlay">
               {{ validation_msg }}
             </h3>
             {% endif %}
@@ -99,13 +99,13 @@ show_qr_code_on_card=False
           <!-- Large bottom-left corner, contents justified to the bottom-left. User-specific details: name, join date, etc. -->
           {% if show_qr_code_on_card %}
           <div class="mdl-cell mdl-cell--8-col mdl-cell--6-col-tablet mdl-cell--3-col-phone mdl-typography--text-left mdl-cell--bottom">
-            <div class="live-laugh-love-large houschka">
+            <div id="membership-primary-info-text" class="live-laugh-love-large houschka">
               {{ primary_info_text }}
             </div>
-            <div class="live-laugh-love houschka">
+            <div id="membership-seconday-info-text" class="live-laugh-love houschka">
               {{ secondary_info_text }}
             </div>
-            <div class="live-laugh-love houschka">
+            <div id="membership-aux-info-text" class="live-laugh-love houschka">
               <small>
                 {{ aux_info_text }}
               </small>
@@ -119,13 +119,13 @@ show_qr_code_on_card=False
           <!-- END BOTTOM-ROW -->
           {% else %}
           <div class="mdl-cell mdl-cell--12-col mdl-cell--8-col-tablet mdl-cell--4-col-phone mdl-cell--bottom mdl-typography--text-left">
-            <div class="live-laugh-love-large houschka">
+            <div id="membership-primary-info-text" class="live-laugh-love-large houschka">
               {{ primary_info_text }}
             </div>
-            <div class="live-laugh-love houschka">
+            <div id="membership-seconday-info-text" class="live-laugh-love houschka">
               {{ secondary_info_text }}
             </div>
-            <div class="live-laugh-love houschka">
+            <div id="membership-aux-info-text" class="live-laugh-love houschka">
               <small>
                 {{ aux_info_text }}
               </small>
