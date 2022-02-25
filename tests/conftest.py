@@ -73,6 +73,7 @@ def fake_user(app: "Flask"):
     roles = None
 
     user = user_cls()
+    user.fullname = "Verde Tester"
     user.email = email
     user.id = userid
     user.password = "mypassword"
