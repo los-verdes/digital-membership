@@ -262,7 +262,7 @@ class DevelopementSettings(Settings):
 
 
 class TestSettings(Settings):
-    SQLALCHEMY_ECHO: bool = True
+    SQLALCHEMY_ECHO: bool = False
     SQLALCHEMY_DATABASE_URI: str = "postgresql://test-runner:hi-im-testing@127.0.0.1:5433/lv-digital-membership-tests"
     # SQLALCHEMY_DATABASE_URI: str = "sqlite:///:memory:"
 
