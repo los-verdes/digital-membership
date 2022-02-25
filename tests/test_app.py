@@ -1,17 +1,25 @@
 import logging
+from urllib.parse import quote_plus
+
 from bs4 import BeautifulSoup
+from flask.testing import FlaskClient
 from member_card.app import commit_on_success
 
 
-class TestUnauthenticatedRequests:
-    def test_home_redirects_to_login_page(self, client):
-        response = client.get("/")
-        logging.debug(f"{response=}")
-        # Check that we've been redirected to the login page:
-        assert response.status_code == 302
-        assert response.location == "http://localhost/login?next=%2F"
+def ensure_login_required(client: "FlaskClient", path, method="GET"):
+    response = getattr(client, method.lower())(path=path)
+    logging.debug(f"{response=}")
+    # Check that we've been redirected to the login page:
+    assert response.status_code == 302
+    next_param = quote_plus(path)
+    assert response.location == f"http://localhost/login?next={next_param}"
 
-    def test_login_page(self, client):
+
+class TestUnauthenticatedRequests:
+    def test_home_redirects_to_login_page(self, client: "FlaskClient"):
+        ensure_login_required(client, path="/", method="GET")
+
+    def test_login_page(self, client: "FlaskClient"):
         response = client.get("/login")
         assert b'<form id="emailDistributionRequestForm"' in response.data
         assert b' id="appleid-signin" ' in response.data
