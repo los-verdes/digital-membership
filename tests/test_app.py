@@ -1,5 +1,5 @@
 import logging
-
+from bs4 import BeautifulSoup
 from member_card.app import commit_on_success
 
 
@@ -29,6 +29,28 @@ class TestAuthenticatedRequests:
         with app.app_context():
             assert current_login_user
         assert b"los.verdes.tester@gmail.com" in response.data
+
+    def test_home_route_with_active_membership(self, authenticated_client, fake_member):
+
+        response = authenticated_client.get("/")
+        logging.debug(response)
+
+        soup = BeautifulSoup(response.data.decode("utf-8"), "html.parser")
+
+        card_actions_classes = [
+            "save-google-pass-button",
+            "save-apple-pass-button",
+            "update-name-dialog-link",
+        ]
+        for card_actions_class in card_actions_classes:
+            matching_buttons = soup.find_all("a", {"class": card_actions_class})
+            logging.debug(matching_buttons)
+            assert len(matching_buttons) > 0
+
+        assert (
+            soup.find(id="membership-primary-info-text").text.strip()
+            == fake_member.fullname
+        )
 
 
 def test_db_commit_on_teardown(app, client, mocker):
