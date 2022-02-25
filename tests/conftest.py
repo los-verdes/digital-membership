@@ -7,7 +7,6 @@ from member_card import create_worker_app
 from member_card.db import db
 from member_card.models.annual_membership import AnnualMembership
 from member_card.models.user import User
-from member_card.worker import worker_bp
 from mock import Mock, patch
 from flask.testing import FlaskClient, FlaskCliRunner
 from typing import TYPE_CHECKING
@@ -26,8 +25,6 @@ def app() -> "Flask":
 
     with app.app_context():
         flask_migrate.upgrade()
-
-    app.register_blueprint(worker_bp)
 
     yield app
 
