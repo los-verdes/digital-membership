@@ -329,3 +329,14 @@ This site's privacy policy can be view here: <a href="{{ url_for('privacy_policy
   </div>
 </div>
 {% endmacro %}
+
+
+{% macro form_message_heading() %}
+{% if form_message %}
+<div class="form-messages mdl-color-text--green mdl-typography--text-center">
+  <h4 id="form-message">
+    {{ form_message }}
+  </h4>
+</div>
+{% endif %}
+{% endmacro %}
