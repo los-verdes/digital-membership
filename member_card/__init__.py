@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import logging
 import os
-from flask_security import SQLAlchemySessionUserDatastore
 from flask.logging import default_handler
 from flask_gravatar import Gravatar
 
@@ -10,6 +9,7 @@ from member_card.models.user import User, Role
 from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from member_card import utils
 from member_card import monitoring
+from member_card.db import MemberCardDatastore
 
 
 def create_cli_app(env=None):
@@ -28,13 +28,6 @@ def create_cli_app(env=None):
     assert commands
 
     return app
-
-
-class MemberCardDatastore(SQLAlchemySessionUserDatastore):
-    def find_user(self, **kwargs):
-        if "id" in kwargs:
-            kwargs["id"] = int(kwargs["id"])
-        return self.user_model.query.filter_by(**kwargs).first()
 
 
 def create_app(env=None):
