@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from flask_security import SQLAlchemySessionUserDatastore
 from google.cloud.sql.connector import connector
 
 if TYPE_CHECKING:
@@ -13,6 +14,13 @@ if TYPE_CHECKING:
 db = SQLAlchemy()
 migrate = Migrate()
 logger = logging.getLogger(__name__)
+
+
+class MemberCardDatastore(SQLAlchemySessionUserDatastore):
+    def find_user(self, **kwargs):
+        if "id" in kwargs:
+            kwargs["id"] = int(kwargs["id"])
+        return self.user_model.query.filter_by(**kwargs).first()
 
 
 def get_gcp_sql_engine_creator(instance_connection_string, settings):
