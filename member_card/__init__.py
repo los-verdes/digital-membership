@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import logging
-import os
+from member_card.worker import worker_bp
 from flask.logging import default_handler
 from flask_gravatar import Gravatar
 
@@ -36,12 +36,6 @@ def create_app(env=None):
     logger = logging.getLogger(__name__)
 
     app = create_cli_app(env)
-
-    if os.getenv("K_SERVICE") == "worker":
-        from member_card.worker import worker_bp
-
-        logger.debug("registering worker blueprint")
-        app.register_blueprint(worker_bp)
 
     logger.debug("cdn.init_app")
     cdn.init_app(app)
@@ -92,5 +86,14 @@ def create_app(env=None):
     assert gravatar
 
     recaptcha.init_app(app)
+
+    return app
+
+
+def create_worker_app(env=None):
+    app = create_app(env=env)
+
+    logging.debug("registering worker blueprint")
+    app.register_blueprint(worker_bp)
 
     return app

@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 
 import flask_migrate
 import pytest
-from member_card import create_app
+from member_card import create_worker_app
 from member_card.db import db
 from member_card.models.annual_membership import AnnualMembership
 from member_card.models.user import User
@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 @pytest.fixture(scope="session")
 def app():
-    app = create_app(env="tests")
+    app = create_worker_app(env="tests")
     with app.app_context():
         flask_migrate.upgrade()
 

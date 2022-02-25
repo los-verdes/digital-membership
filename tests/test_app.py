@@ -48,6 +48,7 @@ def test_db_commit_on_teardown(app, client, mocker):
 
 def test_db_teardown_rollback_on_error(client, mocker):
     from member_card.db import db
+
     assert client
 
     mock_session = mocker.patch.object(db, "session")
