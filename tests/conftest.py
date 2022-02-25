@@ -62,17 +62,23 @@ def authenticated_client(app: "Flask", fake_user):
 
 
 @pytest.fixture()
-def fake_user(app: "Flask"):
+def fake_user(app: "Flask") -> User:
     """Create fake user optionally with roles"""
+    user_id = 1
+    with app.app_context():
+        if extant_user := User.query.filter_by(id=user_id).first():
+            db.session.delete(extant_user)
+            db.session.commit()
     user_cls = User
     email = "los.verdes.tester@gmail.com"
-    userid = 1
     roles = None
 
     user = user_cls()
-    user.fullname = "Verde Tester"
+    user.first_name = "Verde"
+    user.last_name = "Tester"
+    user.fullname = f"{user.first_name} {user.last_name}"
     user.email = email
-    user.id = userid
+    user.id = user_id
     user.password = "mypassword"
     user.active = True
     if roles:
@@ -93,7 +99,7 @@ def fake_user(app: "Flask"):
 
 
 @pytest.fixture()
-def fake_membership_order(app: "Flask", fake_user):
+def fake_membership_order(app: "Flask", fake_user: User) -> AnnualMembership:
     membership_order = AnnualMembership()
 
     today = datetime.utcnow().replace(tzinfo=timezone.utc)
@@ -111,22 +117,9 @@ def fake_membership_order(app: "Flask", fake_user):
 
 
 @pytest.fixture()
-def fake_member(fake_user, fake_membership_order):
+def fake_member(fake_user: User, fake_membership_order: AnnualMembership) -> User:
     fake_membership_order.user_id = fake_user.id
     db.session.add(fake_membership_order)
     db.session.commit()
 
     yield fake_user
-
-
-# def set_current_user(login_manager, user):
-#     """Set up so that when request is received,
-#     the token will cause 'user' to be made the current_user
-#     """
-
-#     def token_cb(request):
-#         if request.headers.get("Authentication-Token") == "token":
-#             return user
-#         return login_manager.anonymous_user()
-
-#     login_manager.request_loader(token_cb)
