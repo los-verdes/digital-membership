@@ -306,7 +306,8 @@ gunicorn:
 debug-test:
   python -m pytest \
     --durations=10 \
-    --log-level=DEBUG \
+    --capture="tee-sys" \
+    --log-level=NOTSET \
     --cov=member_card \
     --cov-report=term-missing \
     --pdb
