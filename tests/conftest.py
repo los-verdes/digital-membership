@@ -9,12 +9,17 @@ from member_card.models.annual_membership import AnnualMembership
 from member_card.models.user import User
 from member_card.worker import worker_bp
 from mock import Mock, patch
+from flask.testing import FlaskClient, FlaskCliRunner
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from flask import Flask
 
 logging.basicConfig(level=logging.DEBUG)
 
 
 @pytest.fixture(scope="session")
-def app():
+def app() -> "Flask":
     # Don't need to trace our tests typically so mocking this bit out :P
     with patch("member_card.monitoring", autospec=True):
         app = create_worker_app(env="tests")
@@ -28,17 +33,17 @@ def app():
 
 
 @pytest.fixture()
-def client(app):
+def client(app: "Flask") -> "FlaskClient":
     return app.test_client()
 
 
 @pytest.fixture()
-def runner(app):
+def runner(app: "Flask") -> "FlaskCliRunner":
     return app.test_cli_runner()
 
 
 @pytest.fixture()
-def runner_without_db(app):
+def runner_without_db(app: "Flask"):
     sql_alchemy_ext = app.extensions["sqlalchemy"]
     del app.extensions["sqlalchemy"]
 
@@ -48,7 +53,7 @@ def runner_without_db(app):
 
 
 @pytest.fixture()
-def authenticated_client(app, fake_user):
+def authenticated_client(app: "Flask", fake_user):
     mock_get_user = patch("flask_login.utils._get_user", Mock(return_value=fake_user))
 
     with app.app_context():
@@ -60,7 +65,7 @@ def authenticated_client(app, fake_user):
 
 
 @pytest.fixture()
-def fake_user(app):
+def fake_user(app: "Flask"):
     """Create fake user optionally with roles"""
     user_cls = User
     email = "los.verdes.tester@gmail.com"
@@ -90,7 +95,7 @@ def fake_user(app):
 
 
 @pytest.fixture()
-def fake_membership_order(app, fake_user):
+def fake_membership_order(app: "Flask", fake_user):
     membership_order = AnnualMembership()
 
     today = datetime.utcnow().replace(tzinfo=timezone.utc)

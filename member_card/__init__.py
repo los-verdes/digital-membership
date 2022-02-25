@@ -3,7 +3,7 @@ import logging
 from member_card.worker import worker_bp
 from flask.logging import default_handler
 from flask_gravatar import Gravatar
-
+from typing import TYPE_CHECKING
 
 from member_card.models.user import User, Role
 from opentelemetry.instrumentation.flask import FlaskInstrumentor
@@ -11,8 +11,11 @@ from member_card import utils
 from member_card import monitoring
 from member_card.db import MemberCardDatastore
 
+if TYPE_CHECKING:
+    from flask import Flask
 
-def create_cli_app(env=None):
+
+def create_cli_app(env=None) -> "Flask":
     from member_card.app import app
 
     logger = logging.getLogger(__name__)
@@ -30,7 +33,7 @@ def create_cli_app(env=None):
     return app
 
 
-def create_app(env=None):
+def create_app(env=None) -> "Flask":
     from member_card.app import login_manager, recaptcha, cdn, security
 
     logger = logging.getLogger(__name__)
@@ -90,7 +93,7 @@ def create_app(env=None):
     return app
 
 
-def create_worker_app(env=None):
+def create_worker_app(env=None) -> "Flask":
     app = create_app(env=env)
 
     logging.debug("registering worker blueprint")
