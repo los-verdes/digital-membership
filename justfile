@@ -303,6 +303,14 @@ gunicorn:
     --log-config=config/gunicron_logging.ini \
     'wsgi:create_app()'
 
+local-test:
+  python -m pytest \
+    --durations=10 \
+    --capture="tee-sys" \
+    --log-level=NOTSET \
+    --cov=member_card \
+    --cov-report=term-missing
+
 debug-test:
   python -m pytest \
     --durations=10 \
