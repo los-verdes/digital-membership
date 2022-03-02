@@ -199,10 +199,28 @@ class TestAuthenticatedRequests:
             "email_distribution_recipient"
         ] == fake_member.email
 
-    def test_passes_google_pay(
+    def test_passes_google_pay_no_active_membership(
         self,
         authenticated_client: "FlaskClient",
-        fake_card: "User",
+        fake_user: "User",
+        mocker: "MockerFixture",
+    ):
+        # mock_get_card.return_value
+        mock_generate_pass_jwt = mocker.patch(
+            "member_card.models.membership_card.generate_pass_jwt"
+        )
+        fake_jwt_str = "jwtest"
+        fake_jwt_bytes = fake_jwt_str.encode("utf-8")
+        mock_generate_pass_jwt.return_value = fake_jwt_bytes
+        response = authenticated_client.get("/passes/google-pay")
+
+        mock_generate_pass_jwt.assert_not_called()
+        assert response.location == "http://localhost/"
+
+    def test_passes_google_pay_with_active_membership(
+        self,
+        authenticated_client: "FlaskClient",
+        fake_card,
         mocker: "MockerFixture",
     ):
         # mock_get_card.return_value
