@@ -11,6 +11,8 @@ class Settings(object):
 
     MESSAGES = dict(
         edit_user_name_success="User display name updated!",
+        captcha_not_verified="Request not verified via ReCaptcha! Please try again or contact support@losverd.es for assistance.",
+        missing_email_distribution_recipient="No email address in request form data! Please try again or contact support@losverd.es for assistance.",
     )
 
     APPLE_DEVELOPER_ORG_NAME: str = "Jeffrey Hogan"  # TODO: if LV is a legit 501c this can maybe become a less personal org...

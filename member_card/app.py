@@ -26,6 +26,7 @@ from member_card import utils
 from member_card.db import db
 from member_card.models import AnnualMembership
 from member_card.models.membership_card import get_or_create_membership_card
+from member_card.pubsub import publish_message
 
 BASE_DIR = os.path.dirname(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "member_card")
@@ -134,13 +135,11 @@ def edit_user_name_request():
 def email_distribution_request():
     from email_validator import EmailNotValidError, validate_email
 
-    from member_card.pubsub import publish_message
-
     log_extra = dict(form=request.form)
 
     # First prerequisite: verified recaptcha stuff:
     if not recaptcha.verify():
-        email_form_error_message = "Request not verified via ReCaptcha! Please try again or contact support@losverd.es for assistance."
+        email_form_error_message = utils.get_message_str("captcha_not_verified")
         logger.error(
             "Unable to verify recaptcha, redirecting to login", extra=log_extra
         )
@@ -148,7 +147,18 @@ def email_distribution_request():
             f"{url_for('login')}?formErrorMessage={email_form_error_message}"
         )
 
-    email_distribution_recipient = request.form["emailDistributionRecipient"]
+    email_distribution_recipient = request.form.get("emailDistributionRecipient")
+    if email_distribution_recipient is None:
+        email_form_error_message = utils.get_message_str(
+            "missing_email_distribution_recipient"
+        )
+        logger.error(
+            "Unable to verify recaptcha, redirecting to login", extra=log_extra
+        )
+        return redirect(
+            f"{url_for('login')}?formErrorMessage={email_form_error_message}"
+        )
+
     log_extra.update(dict(email_distribution_recipient=email_distribution_recipient))
 
     # Second prerequisite: we can actually send to this address
@@ -351,7 +361,6 @@ def squarespace_extension_details():
 @app.route("/squarespace/order-webhook", methods=["POST"])
 def squarespace_order_webhook():
     from member_card.models import SquarespaceWebhook
-    from member_card.pubsub import publish_message
 
     webhook_payload = request.get_json()
 
