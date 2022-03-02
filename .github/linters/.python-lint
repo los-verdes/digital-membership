@@ -281,6 +281,7 @@ ignored-modules=flask,
                 member_card,
                 tests,
                 mock,
+                bs4,
                 click
 
 # Show a hint with possible names when a member name was not found. The aspect
