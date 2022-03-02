@@ -206,8 +206,8 @@ def email_distribution_request():
     )
 
 
-@login_required
 @app.route("/passes/google-pay")
+@login_required
 def passes_google_pay():
 
     current_user = g.user
@@ -220,8 +220,8 @@ def passes_google_pay():
     return redirect("/")
 
 
-@login_required
 @app.route("/passes/apple-pay")
+@login_required
 def passes_apple_pay():
 
     current_user = g.user
@@ -458,8 +458,8 @@ def squarespace_order_webhook():
     return "thanks buds!", 200
 
 
-@login_required
 @app.route("/verify-pass/<serial_number>")
+@login_required
 # Note: get_or_create_membership_card() has this route hard-coded in it
 # TODO: ^ make that not the case
 def verify_pass(serial_number):
@@ -495,8 +495,8 @@ def login():
     )
 
 
-@login_required
 @app.route("/logout")
+@login_required
 def logout():
     logout_user()
     return redirect("/")
