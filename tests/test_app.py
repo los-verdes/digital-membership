@@ -41,6 +41,9 @@ class TestUnauthenticatedRequests:
     def test_edit_user_name(self, client: "FlaskClient"):
         ensure_login_required(client, path="/edit-user-name", method="POST")
 
+    def test_google_pay_passes_redirects_to_login_page(self, client: "FlaskClient"):
+        ensure_login_required(client, path="/passes/google-pay", method="GET")
+
 
 class TestAuthenticatedRequests:
     def test_modify_session(self, app, authenticated_client):
