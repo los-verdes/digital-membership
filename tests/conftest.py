@@ -1,15 +1,15 @@
 import logging
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 
 import flask_migrate
 import pytest
+from flask.testing import FlaskClient, FlaskCliRunner
 from member_card import create_worker_app
 from member_card.db import db
 from member_card.models.annual_membership import AnnualMembership
 from member_card.models.user import User
 from mock import Mock, patch
-from flask.testing import FlaskClient, FlaskCliRunner
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from flask import Flask
@@ -123,3 +123,14 @@ def fake_member(fake_user: User, fake_membership_order: AnnualMembership) -> Use
     db.session.commit()
 
     yield fake_user
+
+
+@pytest.fixture()
+def fake_card(fake_member: User) -> User:
+    from member_card.models.membership_card import get_or_create_membership_card
+
+    fake_membership_card = get_or_create_membership_card(fake_member)
+    db.session.add(fake_membership_card)
+    db.session.commit()
+
+    yield fake_membership_card
