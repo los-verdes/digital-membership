@@ -7,6 +7,7 @@ from flask.testing import FlaskClient
 from member_card import utils
 from member_card.app import commit_on_success
 from member_card.models.user import User
+from member_card.app import recaptcha
 
 if TYPE_CHECKING:
     from flask import Flask
@@ -110,6 +111,85 @@ class TestAuthenticatedRequests:
         assert updated_fake_user.first_name == new_first_name
         assert updated_fake_user.last_name == new_last_name
         assert updated_fake_user.fullname == new_fullname
+
+    def test_email_distribution_request_recaptcha_unverified(
+        self, authenticated_client, mocker
+    ):
+        mock_publish_message = mocker.patch("member_card.app.publish_message")
+        response = authenticated_client.post(
+            "/email-distribution-request",
+            follow_redirects=True,
+        )
+        mock_publish_message.assert_not_called()
+        assert response.status_code == 200
+        soup = BeautifulSoup(response.data.decode("utf-8"), "html.parser")
+        form_error_message_element = soup.find(id="form-error-message")
+        assert form_error_message_element
+        assert form_error_message_element.text.strip() == utils.get_message_str(
+            "captcha_not_verified"
+        )
+
+    def test_email_distribution_request_missing_recipient(
+        self, authenticated_client, mocker
+    ):
+        mocker.patch.object(recaptcha, "verify", return_value=True)
+        mock_publish_message = mocker.patch("member_card.app.publish_message")
+        response = authenticated_client.post(
+            "/email-distribution-request",
+            follow_redirects=True,
+        )
+        mock_publish_message.assert_not_called()
+        assert response.status_code == 200
+        soup = BeautifulSoup(response.data.decode("utf-8"), "html.parser")
+        form_error_message_element = soup.find(id="form-error-message")
+        assert form_error_message_element
+        assert form_error_message_element.text.strip() == utils.get_message_str(
+            "missing_email_distribution_recipient"
+        )
+
+    def test_email_distribution_request_invalid_recipient(
+        self, authenticated_client, mocker
+    ):
+        mocker.patch.object(recaptcha, "verify", return_value=True)
+        mock_publish_message = mocker.patch("member_card.app.publish_message")
+        response = authenticated_client.post(
+            "/email-distribution-request",
+            data=dict(
+                emailDistributionRecipient="an-invalid-email-address",
+            ),
+            follow_redirects=True,
+        )
+        mock_publish_message.assert_not_called()
+        assert response.status_code == 200
+        soup = BeautifulSoup(response.data.decode("utf-8"), "html.parser")
+        form_error_message_element = soup.find(id="form-error-message")
+        assert form_error_message_element
+        expected_msg = (
+            "The email address is not valid. It must have exactly one @-sign."
+        )
+        assert form_error_message_element.text.strip() == expected_msg
+
+    def test_email_distribution_request_valid_recipient(
+        self, authenticated_client: "FlaskClient", fake_member: "User", mocker
+    ):
+        mocker.patch.object(recaptcha, "verify", return_value=True)
+        mock_publish_message = mocker.patch("member_card.app.publish_message")
+        response = authenticated_client.post(
+            "/email-distribution-request",
+            data=dict(
+                emailDistributionRecipient=fake_member.email,
+            ),
+            follow_redirects=True,
+        )
+        assert response.status_code == 200
+
+        mock_publish_message.assert_called_once()
+        mock_publish_message.call_args.kwargs["message_data"][
+            "type"
+        ] == "email_distribution_request"
+        mock_publish_message.call_args.kwargs["message_data"][
+            "email_distribution_recipient"
+        ] == fake_member.email
 
 
 def test_db_commit_on_teardown(app, client, mocker):
