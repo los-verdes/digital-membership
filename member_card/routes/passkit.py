@@ -268,8 +268,10 @@ def passkit_get_latest_version_of_pass(membership_card_pass, device_library_iden
         f"generating updated pass for {membership_card_pass.user=}",
         extra=log_extra,
     )
+
     pkpass_out_path = get_apple_pass_for_user(
         user=membership_card_pass.user,
+        membership_card=membership_card_pass,
     )
     logger.info(
         f"sending out updated pass with {attachment_filename=}",

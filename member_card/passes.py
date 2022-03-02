@@ -8,7 +8,6 @@ from wallet.models import Barcode, BarcodeFormat, Generic, Pass
 
 from member_card.apple_wallet import with_apple_developer_key
 from member_card.db import db
-from member_card.models.membership_card import get_or_create_membership_card
 from member_card.storage import upload_file_to_gcs
 from member_card.utils import sign
 
@@ -397,10 +396,8 @@ def create_pkpass(membership_card, key_filepath, key_password, pkpass_out_path=N
 
 
 @with_apple_developer_key()
-def get_apple_pass_for_user(user, membership_card=None, key_filepath=None):
+def get_apple_pass_for_user(user, membership_card, key_filepath=None):
     app = flask.current_app
-    if membership_card is None:
-        membership_card = get_or_create_membership_card(user=user)
     db.session.add(membership_card)
     db.session.commit()
     _, pkpass_out_path = tempfile.mkstemp()
