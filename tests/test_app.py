@@ -5,12 +5,12 @@ from urllib.parse import quote_plus
 from bs4 import BeautifulSoup
 from flask.testing import FlaskClient
 from member_card import utils
-from member_card.app import commit_on_success
+from member_card.app import commit_on_success, recaptcha
 from member_card.models.user import User
-from member_card.app import recaptcha
 
 if TYPE_CHECKING:
     from flask import Flask
+    from pytest_mock.plugin import MockerFixture
 
 
 def ensure_login_required(client: "FlaskClient", path, method="GET"):
@@ -198,6 +198,24 @@ class TestAuthenticatedRequests:
         mock_publish_message.call_args.kwargs["message_data"][
             "email_distribution_recipient"
         ] == fake_member.email
+
+    def test_passes_google_pay(
+        self,
+        authenticated_client: "FlaskClient",
+        fake_card: "User",
+        mocker: "MockerFixture",
+    ):
+        # mock_get_card.return_value
+        mock_generate_pass_jwt = mocker.patch(
+            "member_card.models.membership_card.generate_pass_jwt"
+        )
+        fake_jwt_str = "jwtest"
+        fake_jwt_bytes = fake_jwt_str.encode("utf-8")
+        mock_generate_pass_jwt.return_value = fake_jwt_bytes
+        response = authenticated_client.get("/passes/google-pay")
+
+        mock_generate_pass_jwt.assert_called_once_with(fake_card)
+        assert response.location == f"https://pay.google.com/gp/v/save/{fake_jwt_str}"
 
 
 def test_db_commit_on_teardown(app, client, mocker):
