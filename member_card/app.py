@@ -225,8 +225,10 @@ def passes_apple_pay():
         from member_card.passes import get_apple_pass_for_user
 
         attachment_filename = f"lv_apple_pass-{current_user.last_name.lower()}.pkpass"
+        membership_card = get_or_create_membership_card(current_user)
         pkpass_out_path = get_apple_pass_for_user(
             user=current_user,
+            membership_card=membership_card,
         )
         return send_file(
             pkpass_out_path,
