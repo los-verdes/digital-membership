@@ -8,6 +8,7 @@ from io import BytesIO, StringIO
 import flask
 import qrcode
 from member_card.db import db, get_or_create
+from member_card.gpay import generate_pass_jwt
 from member_card.models.annual_membership import (
     membership_card_to_membership_assoc_table,
 )
@@ -113,7 +114,6 @@ class MembershipCard(db.Model):
     def google_pay_jwt(self):
         if self._google_pay_jwt is not None:
             return self._google_pay_jwt
-        from member_card.gpay import generate_pass_jwt
 
         google_pay_jwt = generate_pass_jwt(self)
         self._google_pay_jwt = google_pay_jwt.decode("UTF-8")
