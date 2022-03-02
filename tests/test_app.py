@@ -115,6 +115,16 @@ class TestAuthenticatedRequests:
         assert updated_fake_user.last_name == new_last_name
         assert updated_fake_user.fullname == new_fullname
 
+    @staticmethod
+    def assert_form_error_message(response, expected_msg):
+        assert response.status_code == 200
+
+        soup = BeautifulSoup(response.data.decode("utf-8"), "html.parser")
+
+        form_error_message_element = soup.find(id="form-error-message")
+        assert form_error_message_element
+        assert form_error_message_element.text.strip() == expected_msg
+
     def test_email_distribution_request_recaptcha_unverified(
         self, authenticated_client, mocker
     ):
@@ -124,12 +134,9 @@ class TestAuthenticatedRequests:
             follow_redirects=True,
         )
         mock_publish_message.assert_not_called()
-        assert response.status_code == 200
-        soup = BeautifulSoup(response.data.decode("utf-8"), "html.parser")
-        form_error_message_element = soup.find(id="form-error-message")
-        assert form_error_message_element
-        assert form_error_message_element.text.strip() == utils.get_message_str(
-            "captcha_not_verified"
+        self.assert_form_error_message(
+            response=response,
+            expected_msg=utils.get_message_str("captcha_not_verified"),
         )
 
     def test_email_distribution_request_missing_recipient(
@@ -142,12 +149,9 @@ class TestAuthenticatedRequests:
             follow_redirects=True,
         )
         mock_publish_message.assert_not_called()
-        assert response.status_code == 200
-        soup = BeautifulSoup(response.data.decode("utf-8"), "html.parser")
-        form_error_message_element = soup.find(id="form-error-message")
-        assert form_error_message_element
-        assert form_error_message_element.text.strip() == utils.get_message_str(
-            "missing_email_distribution_recipient"
+        self.assert_form_error_message(
+            response=response,
+            expected_msg=utils.get_message_str("missing_email_distribution_recipient"),
         )
 
     def test_email_distribution_request_invalid_recipient(
@@ -170,6 +174,7 @@ class TestAuthenticatedRequests:
         expected_msg = (
             "The email address is not valid. It must have exactly one @-sign."
         )
+        self.assert_form_error_message(response, expected_msg)
         assert form_error_message_element.text.strip() == expected_msg
 
     def test_email_distribution_request_valid_recipient(
