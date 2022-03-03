@@ -333,6 +333,13 @@ class TestAuthenticatedRequests:
         assert response.status_code == 302
         assert response.location == "http://localhost/"
 
+    def test_squarespace_order_webhook(
+        self,
+        authenticated_client: "FlaskClient",
+    ):
+        response = authenticated_client.post("/squarespace/order-webhook")
+        assert response.status_code == 401
+
 
 class TestSquarespaceOauth:
     def test_squarespace_oauth_login(
