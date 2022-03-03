@@ -262,6 +262,7 @@ def squarespace_oauth_login():
 
 
 @app.route("/squarespace/oauth/connect")
+@login_required
 @roles_required("admin")
 def squarespace_oauth_callback():
     log_extra = dict(request.args)
