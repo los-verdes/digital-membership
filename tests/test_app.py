@@ -7,6 +7,7 @@ from flask.testing import FlaskClient
 from member_card import utils
 from member_card.app import commit_on_success, recaptcha
 from member_card.models.user import User
+from member_card.squarespace import InvalidSquarespaceWebhookSignature
 
 if TYPE_CHECKING:
     from flask import Flask
@@ -94,6 +95,48 @@ class TestUnauthenticatedRequests:
 
     def test_squarespace_oauth_callback(self, client: "FlaskClient"):
         ensure_login_required(client, path="/squarespace/oauth/connect", method="GET")
+
+    def test_squarespace_order_webhook_sans_payload(
+        self,
+        client: "FlaskClient",
+        mocker: "MockerFixture",
+    ):
+        test_error_msg = "testing-an-unexpected-webhook-type"
+
+        mock_process_webhook = mocker.patch(
+            "member_card.app.process_order_webhook_payload"
+        )
+        mock_process_webhook.side_effect = NotImplementedError(test_error_msg)
+        response = client.post("/squarespace/order-webhook")
+        assert response.status_code == 422
+
+    def test_squarespace_order_webhook_invalid_signature(
+        self,
+        client: "FlaskClient",
+        mocker: "MockerFixture",
+    ):
+        test_error_msg = "testing-an-invalid-webhook-signature-deal"
+
+        mock_process_webhook = mocker.patch(
+            "member_card.app.process_order_webhook_payload"
+        )
+        mock_process_webhook.side_effect = InvalidSquarespaceWebhookSignature(
+            test_error_msg
+        )
+        response = client.post("/squarespace/order-webhook")
+        assert response.status_code == 401
+
+    def test_squarespace_order_webhook_success(
+        self,
+        client: "FlaskClient",
+        mocker: "MockerFixture",
+    ):
+        mock_process_webhook = mocker.patch(
+            "member_card.app.process_order_webhook_payload"
+        )
+        response = client.post("/squarespace/order-webhook")
+        mock_process_webhook.assert_called_once()
+        assert response.status_code == 200
 
 
 class TestAuthenticatedRequests:
