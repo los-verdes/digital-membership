@@ -134,3 +134,6 @@ def fake_card(fake_member: User) -> User:
     db.session.commit()
 
     yield fake_membership_card
+
+    db.session.delete(fake_membership_card)
+    db.session.commit()
