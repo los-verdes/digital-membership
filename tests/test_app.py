@@ -145,6 +145,14 @@ class TestUnauthenticatedRequests:
             client, path="/verify-pass/some-serial-number", method="GET"
         )
 
+    def test_logout(
+        self,
+        client: "FlaskClient",
+    ):
+        response = client.get("/logout")
+        assert response.status_code == 302
+        assert response.location == "http://localhost/"
+
 
 class TestAuthenticatedRequests:
     def test_modify_session(self, app, authenticated_client):
@@ -438,6 +446,17 @@ class TestAuthenticatedRequests:
             soup.find(id="card-validation-msg").text.strip()
             == f"CARD VALIDATED! (by {fake_card.user.first_name})"
         )
+
+    def test_logout(
+        self,
+        client: "FlaskClient",
+        mocker: "MockerFixture",
+    ):
+        mock_logout_user = mocker.patch("member_card.app.logout_user")
+        response = client.get("/logout")
+        assert response.status_code == 302
+        assert response.location == "http://localhost/"
+        mock_logout_user.assert_called_once()
 
 
 class TestSquarespaceOauth:
