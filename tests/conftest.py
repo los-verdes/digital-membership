@@ -1,3 +1,4 @@
+import contextlib
 import logging
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
@@ -5,10 +6,11 @@ from typing import TYPE_CHECKING
 import flask_migrate
 import pytest
 from flask.testing import FlaskClient, FlaskCliRunner
+from flask_security import SQLAlchemySessionUserDatastore
 from member_card import create_worker_app
 from member_card.db import db
 from member_card.models.annual_membership import AnnualMembership
-from member_card.models.user import User
+from member_card.models.user import Role, User
 from mock import Mock, patch
 
 if TYPE_CHECKING:
@@ -49,9 +51,9 @@ def runner_without_db(app: "Flask"):
     app.extensions["sqlalchemy"] = sql_alchemy_ext
 
 
-@pytest.fixture()
-def authenticated_client(app: "Flask", fake_user):
-    mock_get_user = patch("flask_login.utils._get_user", Mock(return_value=fake_user))
+@contextlib.contextmanager
+def client_with_mock_user(app, user):
+    mock_get_user = patch("flask_login.utils._get_user", Mock(return_value=user))
 
     with app.app_context():
         app.login_manager._login_disabled = True
@@ -59,6 +61,18 @@ def authenticated_client(app: "Flask", fake_user):
         yield app.test_client()
         mock_get_user.stop()
         app.login_manager._login_disabled = False
+
+
+@pytest.fixture()
+def authenticated_client(app: "Flask", fake_user):
+    with client_with_mock_user(app, fake_user) as authenticated_client:
+        yield authenticated_client
+
+
+@pytest.fixture()
+def admin_client(app: "Flask", fake_admin_user):
+    with client_with_mock_user(app, fake_admin_user) as admin_client:
+        yield admin_client
 
 
 @pytest.fixture()
@@ -71,7 +85,6 @@ def fake_user(app: "Flask") -> User:
             db.session.commit()
     user_cls = User
     email = "los.verdes.tester@gmail.com"
-    roles = None
 
     user = user_cls()
     user.first_name = "Verde"
@@ -81,11 +94,6 @@ def fake_user(app: "Flask") -> User:
     user.id = user_id
     user.password = "mypassword"
     user.active = True
-    if roles:
-        if isinstance(roles, list):
-            user.roles = roles
-        else:
-            user.roles = [roles]
 
     with app.app_context():
 
@@ -96,6 +104,31 @@ def fake_user(app: "Flask") -> User:
 
         db.session.delete(user)
         db.session.commit()
+
+
+@pytest.fixture()
+def fake_admin_role(app: "Flask") -> Role:
+    user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
+    admin_role = user_datastore.find_or_create_role(
+        name="admin",
+        description="Administrators allowed to connect Squarespace extensions, etc.",
+    )
+    yield admin_role
+    db.session.delete(admin_role)
+    db.session.commit()
+
+
+@pytest.fixture()
+def fake_admin_user(app: "Flask", fake_user: User, fake_admin_role: Role) -> Role:
+    fake_user.roles = [fake_admin_role]
+    db.session.add(fake_user)
+    db.session.commit()
+
+    yield fake_user
+
+    fake_user.roles = []
+    db.session.add(fake_user)
+    db.session.commit()
 
 
 @pytest.fixture()
