@@ -274,6 +274,7 @@ def squarespace_oauth_callback():
 
 
 @app.route("/squarespace/extension-details")
+@login_required
 @roles_required("admin")
 def squarespace_extension_details():
     from member_card.models import SquarespaceWebhook
