@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import binascii
-import os
 from datetime import datetime
 from functools import wraps
 
@@ -24,11 +23,6 @@ from member_card.squarespace import (
     ensure_orders_webhook_subscription,
     generate_oauth_authorize_url,
 )
-
-BASE_DIR = os.path.dirname(
-    os.path.join(os.path.dirname(os.path.abspath(__file__)), "member_card")
-)
-
 
 app = Flask(__name__)
 logger = app.logger
