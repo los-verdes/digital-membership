@@ -13,6 +13,8 @@ if TYPE_CHECKING:
     from flask import Flask
     from pytest_mock.plugin import MockerFixture
 
+    from member_card.models.membership_card import MembershipCard
+
 
 def assert_form_error_message(response, expected_msg):
     assert response.status_code == 200
