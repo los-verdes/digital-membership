@@ -17,6 +17,7 @@ class Settings(object):
         squarespace_oauth_connect_missing_code="Squarespace oauth connect error: code missing from request args",
         squarespace_oauth_connect_missing_state="Squarespace oauth connect error: state missing from request args",
         squarespace_oauth_state_mismatch="Squarespace oauth connect error: session versus request args mismatch",
+        verify_pass_invalid_signature="Unable to verify signature!",
     )
 
     APPLE_DEVELOPER_ORG_NAME: str = "Jeffrey Hogan"  # TODO: if LV is a legit 501c this can maybe become a less personal org...

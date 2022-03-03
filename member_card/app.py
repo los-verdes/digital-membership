@@ -20,10 +20,10 @@ from member_card.models.membership_card import get_or_create_membership_card
 from member_card.passes import get_apple_pass_for_user
 from member_card.pubsub import publish_message
 from member_card.squarespace import (
+    InvalidSquarespaceWebhookSignature,
     ensure_orders_webhook_subscription,
     generate_oauth_authorize_url,
     process_order_webhook_payload,
-    InvalidSquarespaceWebhookSignature,
 )
 
 app = Flask(__name__)
@@ -309,11 +309,15 @@ def squarespace_order_webhook():
 def verify_pass(serial_number):
     signature = request.args.get("signature")
     if not signature:
-        return "Unable to verify signature!", 401
+        raise MemberCardException(
+            form_error_message=utils.get_message_str("verify_pass_invalid_signature"),
+        )
 
     signature_verified = utils.verify(signature=signature, data=serial_number)
     if not signature_verified:
-        return "Unable to verify signature!", 401
+        raise MemberCardException(
+            form_error_message=utils.get_message_str("verify_pass_invalid_signature"),
+        )
 
     verified_card = (
         db.session.query(MembershipCard).filter_by(serial_number=serial_number).one()
