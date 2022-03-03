@@ -14,6 +14,7 @@ from social_flask.utils import load_strategy
 
 from member_card import utils
 from member_card.db import db
+from member_card.exceptions import MemberCardException
 from member_card.models import AnnualMembership, MembershipCard, SquarespaceWebhook
 from member_card.models.membership_card import get_or_create_membership_card
 from member_card.passes import get_apple_pass_for_user
@@ -97,6 +98,14 @@ def active_membership_card_required(f):
         return f(*args, membership_card=membership_card, **kwargs)
 
     return decorated_function
+
+
+@app.errorhandler(MemberCardException)
+def handle_bad_request(e):
+    redirect_url = url_for("login")
+    if url_params := e.to_params():
+        redirect_url = f"{redirect_url}?{url_params}"
+    return redirect(redirect_url)
 
 
 @app.route("/")
