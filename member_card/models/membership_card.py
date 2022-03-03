@@ -44,12 +44,7 @@ def get_or_create_membership_card(user):
     # TODO: do this more efficient like:
     if not membership_card.qr_code_message:
         logger.debug("generating QR code for message")
-        serial_number = str(membership_card.serial_number)
-        qr_code_signature = sign(serial_number)
-        verify_pass_url = (
-            f"{base_url}/verify-pass/{serial_number}?signature={qr_code_signature}"
-        )
-        qr_code_message = f"Content: {verify_pass_url}"
+        qr_code_message = f"Content: {membership_card.verify_pass_url}"
         logger.debug(f"{qr_code_message=}")
         setattr(membership_card, "qr_code_message", qr_code_message)
         db.session.add(membership_card)
@@ -109,6 +104,17 @@ class MembershipCard(db.Model):
     @property
     def google_pass_save_url(self):
         return f"https://pay.google.com/gp/v/save/{self.google_pay_jwt}"
+
+    @property
+    def verify_pass_url(self):
+        base_url = flask.current_app.config["BASE_URL"]
+        serial_number = str(self.serial_number)
+        verify_pass_url = f"{base_url}/verify-pass/{serial_number}?signature={self.verify_pass_signature}"
+        return verify_pass_url
+
+    @property
+    def verify_pass_signature(self):
+        return sign(str(self.serial_number))
 
     @property
     def google_pay_jwt(self):
