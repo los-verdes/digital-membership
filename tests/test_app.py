@@ -13,6 +13,16 @@ if TYPE_CHECKING:
     from pytest_mock.plugin import MockerFixture
 
 
+def assert_form_error_message(response, expected_msg):
+    assert response.status_code == 200
+
+    soup = BeautifulSoup(response.data.decode("utf-8"), "html.parser")
+
+    form_error_message_element = soup.find(id="form-error-message")
+    assert form_error_message_element
+    assert form_error_message_element.text.strip() == expected_msg
+
+
 def ensure_login_required(client: "FlaskClient", path, method="GET"):
     response = getattr(client, method.lower())(path=path)
     logging.debug(f"{response=}")
@@ -156,16 +166,6 @@ class TestAuthenticatedRequests:
         assert updated_fake_user.last_name == new_last_name
         assert updated_fake_user.fullname == new_fullname
 
-    @staticmethod
-    def assert_form_error_message(response, expected_msg):
-        assert response.status_code == 200
-
-        soup = BeautifulSoup(response.data.decode("utf-8"), "html.parser")
-
-        form_error_message_element = soup.find(id="form-error-message")
-        assert form_error_message_element
-        assert form_error_message_element.text.strip() == expected_msg
-
     def test_email_distribution_request_recaptcha_unverified(
         self, authenticated_client, mocker
     ):
@@ -175,7 +175,7 @@ class TestAuthenticatedRequests:
             follow_redirects=True,
         )
         mock_publish_message.assert_not_called()
-        self.assert_form_error_message(
+        assert_form_error_message(
             response=response,
             expected_msg=utils.get_message_str("captcha_not_verified"),
         )
@@ -190,7 +190,7 @@ class TestAuthenticatedRequests:
             follow_redirects=True,
         )
         mock_publish_message.assert_not_called()
-        self.assert_form_error_message(
+        assert_form_error_message(
             response=response,
             expected_msg=utils.get_message_str("missing_email_distribution_recipient"),
         )
@@ -215,7 +215,7 @@ class TestAuthenticatedRequests:
         expected_msg = (
             "The email address is not valid. It must have exactly one @-sign."
         )
-        self.assert_form_error_message(response, expected_msg)
+        assert_form_error_message(response, expected_msg)
         assert form_error_message_element.text.strip() == expected_msg
 
     def test_email_distribution_request_valid_recipient(
@@ -317,6 +317,14 @@ class TestAuthenticatedRequests:
         assert response.status_code == 302
         assert response.location == "http://localhost/"
 
+    def test_squarespace_oauth_callback(
+        self,
+        authenticated_client: "FlaskClient",
+    ):
+        response = authenticated_client.get("/squarespace/oauth/connect")
+        assert response.status_code == 302
+        assert response.location == "http://localhost/"
+
 
 class TestSquarespaceOauth:
     def test_squarespace_oauth_login(
@@ -332,3 +340,59 @@ class TestSquarespaceOauth:
         response = admin_client.get("/squarespace/oauth/login")
         assert response.status_code == 302
         assert response.location == test_auth_url_str
+
+    def test_squarespace_oauth_callback_error_in_args(
+        self,
+        admin_client: "FlaskClient",
+    ):
+        response = admin_client.get(
+            "/squarespace/oauth/connect?error=literally-anything-for-this-param",
+            follow_redirects=True,
+        )
+        assert response.history[0].status_code == 302
+        assert response.history[0].location.startswith(
+            "http://localhost/squarespace/extension-details?"
+        )
+        assert_form_error_message(
+            response=response,
+            expected_msg=utils.get_message_str("squarespace_oauth_connect_error"),
+        )
+
+    def test_squarespace_oauth_callback_missing_state(
+        self,
+        admin_client: "FlaskClient",
+    ):
+        response = admin_client.get(
+            "/squarespace/oauth/connect",
+            follow_redirects=True,
+        )
+        assert response.history[0].status_code == 302
+        assert response.history[0].location.startswith(
+            "http://localhost/squarespace/extension-details?"
+        )
+        assert_form_error_message(
+            response=response,
+            expected_msg=utils.get_message_str(
+                "squarespace_oauth_connect_missing_state"
+            ),
+        )
+
+    def test_squarespace_oauth_callback(
+        self,
+        admin_client: "FlaskClient",
+    ):
+
+        with admin_client.session_transaction() as session:
+            session["state"] = "test-state..."
+        response = admin_client.get(
+            f"/squarespace/oauth/connect?state={session['state']}",
+            follow_redirects=True,
+        )
+        assert response.history[0].status_code == 302
+        assert response.history[0].location.startswith(
+            "http://localhost/squarespace/extension-details?"
+        )
+        assert_form_error_message(
+            response=response,
+            expected_msg=utils.get_message_str("squarespace_oauth_state_mismatch"),
+        )
