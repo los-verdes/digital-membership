@@ -4,16 +4,7 @@ import os
 from datetime import datetime
 from functools import wraps
 
-from flask import (
-    Flask,
-    g,
-    redirect,
-    render_template,
-    request,
-    send_file,
-    session,
-    url_for,
-)
+from flask import Flask, g, redirect, render_template, request, send_file, url_for
 from flask_cdn import CDN
 from flask_recaptcha import ReCaptcha
 from flask_security import Security
@@ -30,10 +21,8 @@ from member_card.models.membership_card import get_or_create_membership_card
 from member_card.passes import get_apple_pass_for_user
 from member_card.pubsub import publish_message
 from member_card.squarespace import (
-    Squarespace,
     ensure_orders_webhook_subscription,
     generate_oauth_authorize_url,
-    request_new_oauth_token,
 )
 
 BASE_DIR = os.path.dirname(
@@ -265,75 +254,22 @@ def squarespace_oauth_login():
 @login_required
 @roles_required("admin")
 def squarespace_oauth_callback():
-    log_extra = dict(request.args)
-    if "code" in log_extra:
-        del log_extra["code"]
-
-    if error := request.args.get("error"):
-        logger.error(
-            f"Squarespace oauth connect error: {error=}",
-            extra=log_extra,
-        )
-        return redirect("/")
-
-    if session.get("oauth_state") != request.args["state"]:
-        logger.error(
-            f"Squarespace oauth connect error: {session.get('oauth_state')=} does not match {request.args['state']=}",
-            extra=log_extra,
-        )
-        return redirect("/")
-
-    code = request.args["code"]
-    logger.debug(
-        f"squarespace_oauth_callback: {list(request.args)=}",
-        extra=log_extra,
-    )
-    logger.debug(
-        f"squarespace_oauth_callback: {list(request.headers)=}",
-        extra=log_extra,
-    )
-
-    token_resp = request_new_oauth_token(
-        client_id=app.config["SQUARESPACE_CLIENT_ID"],
-        client_secret=app.config["SQUARESPACE_CLIENT_SECRET"],
-        code=code,
-        redirect_uri=app.config["SQUARESPACE_OAUTH_REDIRECT_URI"],
-    )
-    log_extra.update({k: v for k, v in token_resp.items() if not k.endswith("_token")})
-    token_account_id = token_resp["account_id"]
-    logger.debug(f"squarespace_oauth_callback(): {token_account_id=}", extra=log_extra)
-
-    squarespace = Squarespace(api_key=token_resp["access_token"])
-    webhook_subscriptions = ensure_orders_webhook_subscription(
-        squarespace=squarespace,
-        account_id=token_account_id,
-        endpoint_url=app.config["SQUARESPACE_ORDER_WEBHOOK_ENDPOINT"],
-    )
-    log_extra.update(
-        dict(
-            webhook_subscriptions=webhook_subscriptions,
-        )
-    )
-    logger.debug(
-        f"Webhook listing (after ensuring webhooks): {webhook_subscriptions=}",
-        extra=log_extra,
-    )
-
-    logger.debug(
-        "Sending test notifications for all configured webhooks now...",
-        extra=log_extra,
-    )
-    for webhook_subscription in webhook_subscriptions:
-        webhook_id = webhook_subscription["id"]
-        logger.debug(f"Sending test notifications for webhook {webhook_id}...")
-        test_notification_resp = squarespace.send_test_webhook_notification(
-            webhook_id=webhook_id,
-            topic="order.create",
+    try:
+        webhook_subscriptions = ensure_orders_webhook_subscription(
+            code=request.args.get("code"),
+            endpoint_url=app.config["SQUARESPACE_ORDER_WEBHOOK_ENDPOINT"],
         )
         logger.debug(
-            f"Test notifications for webhook {webhook_id}: {test_notification_resp=}",
-            extra=log_extra,
+            "Webhook ensurenment complete! :D",
+            extra=dict(webhook_subscriptions=webhook_subscriptions),
         )
+
+    except Exception as err:
+        logger.error(err)
+        return redirect(
+            f"{url_for('squarespace_extension_details')}?formErrorMessage={str(err)}"
+        )
+
     return redirect(url_for("squarespace_extension_details"))
 
 

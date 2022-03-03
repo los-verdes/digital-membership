@@ -1,17 +1,18 @@
 import logging
+import urllib.parse
 from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
-import urllib.parse
 import requests
 from dateutil.parser import parse
+from flask import current_app, request, session
 from requests.auth import HTTPBasicAuth
-from flask import session, current_app
+
+from member_card import utils
 from member_card.db import db, get_or_create, get_or_update
 from member_card.models import SquarespaceWebhook, table_metadata
 from member_card.models.user import ensure_user
-from member_card import utils
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -164,9 +165,52 @@ def load_single_order(squarespace_client, membership_skus, order_id):
     return memberships
 
 
-def ensure_orders_webhook_subscription(
-    squarespace, account_id, endpoint_url, delete_extant_first=False
-):
+def validate_oauth_connect_request():
+    invariants = [
+        (
+            request.args.get("error", None) is not None,
+            utils.get_message_str("squarespace_oauth_connect_error"),
+        ),
+        (
+            "state" not in request.args,
+            utils.get_message_str("squarespace_oauth_connect_missing_state"),
+        ),
+        (
+            session.get("oauth_state") != request.args.get("state"),
+            utils.get_message_str("squarespace_oauth_state_mismatch"),
+        ),
+        (
+            "code" not in request.args,
+            utils.get_message_str("squarespace_oauth_connect_missing_code"),
+        ),
+    ]
+
+    for invariant in invariants:
+        condition, error_message = invariant
+        if condition:
+            logger.error(error_message)
+            raise Exception(error_message)
+
+
+def get_client_from_oauth_code(code):
+    validate_oauth_connect_request()
+    token_resp = request_new_oauth_token(
+        client_id=current_app.config["SQUARESPACE_CLIENT_ID"],
+        client_secret=current_app.config["SQUARESPACE_CLIENT_SECRET"],
+        code=code,
+        redirect_uri=current_app.config["SQUARESPACE_OAUTH_REDIRECT_URI"],
+    )
+    log_extra = {k: v for k, v in token_resp.items() if not k.endswith("_token")}
+    token_account_id = token_resp["account_id"]
+    logger.debug(f"squarespace_oauth_callback(): {token_account_id=}", extra=log_extra)
+    squarespace = Squarespace(
+        api_key=token_resp["access_token"], account_id=token_account_id
+    )
+    return squarespace
+
+
+def ensure_orders_webhook_subscription(code, endpoint_url, delete_extant_first=False):
+    squarespace = get_client_from_oauth_code(code)
     if delete_extant_first:
         list_webhooks_resp = squarespace.list_webhook_subscriptions()
         webhook_subscriptions = list_webhooks_resp["webhookSubscriptions"]
@@ -187,12 +231,12 @@ def ensure_orders_webhook_subscription(
             rotate_secret_for_webhook(
                 squarespace=squarespace,
                 webhook_subscription=webhook_subscription,
-                account_id=account_id,
+                account_id=squarespace.account_id,
             )
     else:
         order_webhook = create_orders_webhook(
             squarespace=squarespace,
-            account_id=account_id,
+            account_id=squarespace.account_id,
             endpoint_url=endpoint_url,
         )
 
@@ -207,6 +251,9 @@ def ensure_orders_webhook_subscription(
         db.session.add(order_webhook)
         db.session.commit()
         logger.debug(f"order webhook committed!: {order_webhook=}")
+
+    send_test_notifications_for_webhooks(squarespace, webhook_subscriptions)
+
     return webhook_subscriptions
 
 
@@ -277,6 +324,22 @@ def create_orders_webhook(squarespace, account_id, endpoint_url):
     setattr(order_webhook, "created_on", orders_webhook_resp["createdOn"])
     setattr(order_webhook, "updated_on", orders_webhook_resp["updatedOn"])
     return order_webhook
+
+
+def send_test_notifications_for_webhooks(squarespace, webhook_subscriptions):
+    logger.debug(
+        "Sending test notifications for all configured webhooks now...",
+    )
+    for webhook_subscription in webhook_subscriptions:
+        webhook_id = webhook_subscription["id"]
+        logger.debug(f"Sending test notifications for webhook {webhook_id}...")
+        test_notification_resp = squarespace.send_test_webhook_notification(
+            webhook_id=webhook_id,
+            topic="order.create",
+        )
+        logger.debug(
+            f"Test notifications for webhook {webhook_id}: {test_notification_resp=}",
+        )
 
 
 def perform_oauth_token_request(client_id, client_secret, token_request_body):
@@ -368,10 +431,12 @@ class Squarespace(object):
         api_key,
         api_baseurl=api_baseurl,
         api_version=api_version,
+        account_id=None,
     ):
         self.api_key = api_key
         self.api_baseurl = api_baseurl
         self.api_version = api_version
+        self.account_id = account_id
 
         # Setup our HTTP session
         self.http = requests.Session()
