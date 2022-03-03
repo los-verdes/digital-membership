@@ -11,6 +11,7 @@ from member_card import create_worker_app
 from member_card.db import db
 from member_card.models.annual_membership import AnnualMembership
 from member_card.models.user import Role, User
+from member_card.models.membership_card import MembershipCard
 from mock import Mock, patch
 
 if TYPE_CHECKING:
@@ -159,7 +160,7 @@ def fake_member(fake_user: User, fake_membership_order: AnnualMembership) -> Use
 
 
 @pytest.fixture()
-def fake_card(fake_member: User) -> User:
+def fake_card(fake_member: User) -> MembershipCard:
     from member_card.models.membership_card import get_or_create_membership_card
 
     fake_membership_card = get_or_create_membership_card(fake_member)
