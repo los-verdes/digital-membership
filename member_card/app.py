@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import binascii
 import os
+import urllib.parse
 from datetime import datetime
 from functools import wraps
 
@@ -251,8 +252,6 @@ def passes_apple_pay(membership_card):
 @login_required
 @roles_required("admin")
 def squarespace_oauth_login():
-    import urllib.parse
-
     url = "https://login.squarespace.com/api/1/login/oauth/provider/authorize"
     state = utils.sign(datetime.utcnow().isoformat())
     session["oauth_state"] = state
