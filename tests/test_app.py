@@ -79,6 +79,9 @@ class TestUnauthenticatedRequests:
     def test_passes_apple_pay_redirects_to_login_page(self, client: "FlaskClient"):
         ensure_login_required(client, path="/passes/apple-pay", method="GET")
 
+    def test_squarespace_login(self, client: "FlaskClient"):
+        ensure_login_required(client, path="/squarespace/oauth/login", method="GET")
+
 
 class TestAuthenticatedRequests:
     def test_modify_session(self, app, authenticated_client):

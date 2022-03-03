@@ -248,6 +248,7 @@ def passes_apple_pay(membership_card):
 
 
 @app.route("/squarespace/oauth/login")
+@login_required
 @roles_required("admin")
 def squarespace_oauth_login():
     import urllib.parse
