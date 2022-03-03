@@ -325,6 +325,14 @@ class TestAuthenticatedRequests:
         assert response.status_code == 302
         assert response.location == "http://localhost/"
 
+    def test_squarespace_extension_details(
+        self,
+        authenticated_client: "FlaskClient",
+    ):
+        response = authenticated_client.get("/squarespace/extension-details")
+        assert response.status_code == 302
+        assert response.location == "http://localhost/"
+
 
 class TestSquarespaceOauth:
     def test_squarespace_oauth_login(
