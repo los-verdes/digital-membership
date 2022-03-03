@@ -313,3 +313,15 @@ class TestAuthenticatedRequests:
         response = authenticated_client.get("/squarespace/oauth/login")
         assert response.status_code == 302
         assert response.location == "http://localhost/"
+
+
+class TestSquarespaceOauth:
+    def test_squarespace_oauth_login(
+        self,
+        admin_client: "FlaskClient",
+    ):
+        response = admin_client.get("/squarespace/oauth/login")
+        assert response.status_code == 302
+        assert response.location.startswith(
+            "https://login.squarespace.com/api/1/login/oauth/provider/authorize?"
+        )
