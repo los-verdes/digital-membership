@@ -15,7 +15,7 @@ from social_flask.utils import load_strategy
 
 from member_card import utils
 from member_card.db import db
-from member_card.models import AnnualMembership
+from member_card.models import AnnualMembership, MembershipCard, SquarespaceWebhook
 from member_card.models.membership_card import get_or_create_membership_card
 from member_card.passes import get_apple_pass_for_user
 from member_card.pubsub import publish_message
@@ -271,8 +271,6 @@ def squarespace_oauth_callback():
 @login_required
 @roles_required("admin")
 def squarespace_extension_details():
-    from member_card.models import SquarespaceWebhook
-
     webhooks = SquarespaceWebhook.query.order_by(
         SquarespaceWebhook.created_on.desc()
     ).all()
@@ -285,8 +283,6 @@ def squarespace_extension_details():
 
 @app.route("/squarespace/order-webhook", methods=["POST"])
 def squarespace_order_webhook():
-    from member_card.models import SquarespaceWebhook
-
     webhook_payload = request.get_json()
 
     incoming_signature = request.headers.get("Squarespace-Signature")
@@ -388,8 +384,6 @@ def squarespace_order_webhook():
 # Note: get_or_create_membership_card() has this route hard-coded in it
 # TODO: ^ make that not the case
 def verify_pass(serial_number):
-    from member_card.models import AnnualMembership, MembershipCard
-
     signature = request.args.get("signature")
     if not signature:
         return "Unable to verify signature!", 401
