@@ -341,58 +341,57 @@ class TestSquarespaceOauth:
         assert response.status_code == 302
         assert response.location == test_auth_url_str
 
-    def test_squarespace_oauth_callback_error_in_args(
+    def test_squarespace_oauth_callback_error(
         self,
         admin_client: "FlaskClient",
+        mocker: "MockerFixture",
     ):
+        test_code = "its-a-test-code"
+        test_error_msg = "its-an-error"
+
+        mock_ensure_webhook_sub = mocker.patch(
+            "member_card.app.ensure_orders_webhook_subscription"
+        )
+        mock_ensure_webhook_sub.side_effect = Exception(test_error_msg)
+
         response = admin_client.get(
-            "/squarespace/oauth/connect?error=literally-anything-for-this-param",
+            f"/squarespace/oauth/connect?code={test_code}",
             follow_redirects=True,
-        )
-        assert response.history[0].status_code == 302
-        assert response.history[0].location.startswith(
-            "http://localhost/squarespace/extension-details?"
-        )
-        assert_form_error_message(
-            response=response,
-            expected_msg=utils.get_message_str("squarespace_oauth_connect_error"),
         )
 
-    def test_squarespace_oauth_callback_missing_state(
-        self,
-        admin_client: "FlaskClient",
-    ):
-        response = admin_client.get(
-            "/squarespace/oauth/connect",
-            follow_redirects=True,
-        )
         assert response.history[0].status_code == 302
         assert response.history[0].location.startswith(
             "http://localhost/squarespace/extension-details?"
         )
         assert_form_error_message(
             response=response,
-            expected_msg=utils.get_message_str(
-                "squarespace_oauth_connect_missing_state"
-            ),
+            expected_msg=test_error_msg,
         )
+
+        mock_ensure_webhook_sub.assert_called_once()
+        assert mock_ensure_webhook_sub.call_args.kwargs["code"] == test_code
 
     def test_squarespace_oauth_callback(
         self,
         admin_client: "FlaskClient",
+        mocker: "MockerFixture",
     ):
+        test_code = "its-a-test-code"
 
-        with admin_client.session_transaction() as session:
-            session["state"] = "test-state..."
+        mock_ensure_webhook_sub = mocker.patch(
+            "member_card.app.ensure_orders_webhook_subscription"
+        )
+
         response = admin_client.get(
-            f"/squarespace/oauth/connect?state={session['state']}",
+            f"/squarespace/oauth/connect?code={test_code}",
             follow_redirects=True,
         )
+
         assert response.history[0].status_code == 302
-        assert response.history[0].location.startswith(
-            "http://localhost/squarespace/extension-details?"
+        assert (
+            response.history[0].location
+            == "http://localhost/squarespace/extension-details"
         )
-        assert_form_error_message(
-            response=response,
-            expected_msg=utils.get_message_str("squarespace_oauth_state_mismatch"),
-        )
+
+        mock_ensure_webhook_sub.assert_called_once()
+        assert mock_ensure_webhook_sub.call_args.kwargs["code"] == test_code
