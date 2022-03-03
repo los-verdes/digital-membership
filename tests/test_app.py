@@ -162,6 +162,15 @@ class TestUnauthenticatedRequests:
         soup = BeautifulSoup(response.data.decode("utf-8"), "html.parser")
         assert soup.title.text.startswith("Privacy Policy")
 
+    def test_about(self, client: "FlaskClient"):
+        response = client.get("/about")
+        logging.debug(response)
+
+        assert response.status_code == 200
+
+        soup = BeautifulSoup(response.data.decode("utf-8"), "html.parser")
+        assert soup.title.text.startswith("Help & About")
+
 
 class TestAuthenticatedRequests:
     def test_modify_session(self, app, authenticated_client):
