@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import binascii
 from datetime import datetime
 from functools import wraps
 
@@ -22,6 +21,8 @@ from member_card.pubsub import publish_message
 from member_card.squarespace import (
     ensure_orders_webhook_subscription,
     generate_oauth_authorize_url,
+    process_order_webhook_payload,
+    InvalidSquarespaceWebhookSignature,
 )
 
 app = Flask(__name__)
@@ -283,99 +284,12 @@ def squarespace_extension_details():
 
 @app.route("/squarespace/order-webhook", methods=["POST"])
 def squarespace_order_webhook():
-    webhook_payload = request.get_json()
-
-    incoming_signature = request.headers.get("Squarespace-Signature")
-    webhook_id = webhook_payload["subscriptionId"]
-    website_id = webhook_payload["websiteId"]
-    allowed_website_ids = app.config["SQUARESPACE_ALLOWED_WEBSITE_IDS"]
-
-    log_extra = dict(
-        incoming_signature=incoming_signature,
-        webhook_payload=webhook_payload,
-        allowed_website_ids=allowed_website_ids,
-        website_id=website_id,
-        request_data=request.data,
-    )
-    logger.debug(
-        f"squarespace_order_webhook(): INCOMING WEBHOOK YO {webhook_payload=}",
-        extra=log_extra,
-    )
-    logger.debug(
-        f"squarespace_order_webhook(): {request.data=}",
-        extra=log_extra,
-    )
-
-    if website_id not in allowed_website_ids:
-        error_msg = f"Refusing to process webhook payload for {website_id=} (not in {allowed_website_ids=})"
-        logger.warning(error_msg, extra=log_extra)
-        return error_msg, 403
-
-    logger.debug(
-        f"Query database for extant webhook matching {webhook_id=} ({website_id=})",
-        extra=log_extra,
-    )
-    webhook = SquarespaceWebhook.query.filter_by(
-        webhook_id=webhook_id, website_id=website_id
-    ).one()
-    log_extra["webhook"] = webhook
-    logger.debug(f"{webhook_id}: {webhook=}", extra=log_extra)
-    logger.debug(
-        f"Verifying webhook payload signature ({incoming_signature=})", extra=log_extra
-    )
-    signature_key = binascii.unhexlify(webhook.secret.encode("utf-8"))
-    payload_verified = utils.verify_hex_digest(
-        signature=incoming_signature,
-        data=request.data,
-        key=signature_key,
-    )
-    log_extra["payload_verified"] = payload_verified
-    if not payload_verified:
-        expected_signature = utils.sign(
-            data=request.data,
-            key=signature_key,
-            use_hex_digest=True,
-        )
-        log_extra["expected_signature"] = expected_signature
-        logger.warning(
-            f"Unable to verify {incoming_signature} for {webhook_id} ({expected_signature=}).",
-            extra=log_extra,
-        )
-        return "unable to verify notification signature!", 401
-
-    webhook_topic = webhook_payload["topic"]
-
-    if webhook_topic == "extension.uninstall":
-        logger.debug(f"{webhook_topic=} => deleting {webhook=} from database...")
-        db.session.delete(webhook)
-        db.session.commit()
-    elif webhook_topic.startswith("order."):
-        message_data = dict(
-            type="sync_squarespace_order",
-            notification_id=webhook_payload["id"],
-            order_id=webhook_payload["data"]["orderId"],
-            website_id=website_id,
-            created_on=webhook_payload["createdOn"],
-        )
-
-        topic_id = app.config["GCLOUD_PUBSUB_TOPIC_ID"]
-        log_extra.update(
-            dict(
-                message_data=message_data,
-                topic_id=topic_id,
-            )
-        )
-        logger.info(
-            f"publishing sync_order message to pubsub {topic_id=} with data: {message_data=}",
-            extra=log_extra,
-        )
-        publish_message(
-            project_id=app.config["GCLOUD_PROJECT"],
-            topic_id=topic_id,
-            message_data=message_data,
-        )
-    else:
-        raise NotImplementedError(f"No handler available for {webhook_topic=}")
+    try:
+        process_order_webhook_payload()
+    except NotImplementedError as err:
+        return str(err), 422
+    except InvalidSquarespaceWebhookSignature as err:
+        return str(err), 401
     return "thanks buds!", 200
 
 
