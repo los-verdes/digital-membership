@@ -82,6 +82,9 @@ class TestUnauthenticatedRequests:
     def test_squarespace_login(self, client: "FlaskClient"):
         ensure_login_required(client, path="/squarespace/oauth/login", method="GET")
 
+    def test_squarespace_oauth_callback(self, client: "FlaskClient"):
+        ensure_login_required(client, path="/squarespace/oauth/connect", method="GET")
+
 
 class TestAuthenticatedRequests:
     def test_modify_session(self, app, authenticated_client):
