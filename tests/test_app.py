@@ -388,6 +388,25 @@ class TestAuthenticatedRequests:
         response = authenticated_client.post("/squarespace/order-webhook")
         assert response.status_code == 401
 
+    def test_verify_pass_no_signature(self, authenticated_client: "FlaskClient"):
+        response = authenticated_client.get(
+            "/verify-pass/some-serial-number", follow_redirects=True
+        )
+        assert_form_error_message(
+            response=response,
+            expected_msg=utils.get_message_str("verify_pass_invalid_signature"),
+        )
+
+    def test_verify_pass_invalid_signature(self, authenticated_client: "FlaskClient"):
+        response = authenticated_client.get(
+            "/verify-pass/some-serial-number?signature=not-a-real-signaure",
+            follow_redirects=True,
+        )
+        assert_form_error_message(
+            response=response,
+            expected_msg=utils.get_message_str("verify_pass_invalid_signature"),
+        )
+
 
 class TestSquarespaceOauth:
     def test_squarespace_oauth_login(
