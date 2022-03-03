@@ -32,7 +32,11 @@ class InvalidSquarespaceWebhookSignature(Exception):
 
 def process_order_webhook_payload():
     webhook_payload = request.get_json()
-
+    if webhook_payload is None:
+        # can't very well verify the signature with no signature...
+        raise InvalidSquarespaceWebhookSignature(
+            "unable to verify notification signature!"
+        )
     incoming_signature = request.headers.get("Squarespace-Signature")
     webhook_id = webhook_payload["subscriptionId"]
     website_id = webhook_payload["websiteId"]
