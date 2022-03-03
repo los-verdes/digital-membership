@@ -409,6 +409,36 @@ class TestAuthenticatedRequests:
             expected_msg=utils.get_message_str("verify_pass_invalid_signature"),
         )
 
+    def test_verify_pass_all_good(
+        self, authenticated_client: "FlaskClient", fake_card: "MembershipCard"
+    ):
+        response = authenticated_client.get(
+            fake_card.verify_pass_url,
+            follow_redirects=True,
+        )
+        logging.debug(response)
+
+        soup = BeautifulSoup(response.data.decode("utf-8"), "html.parser")
+
+        card_actions_classes = [
+            "save-google-pass-button",
+            "save-apple-pass-button",
+        ]
+        for card_actions_class in card_actions_classes:
+            matching_buttons = soup.find_all("a", {"class": card_actions_class})
+            logging.debug(matching_buttons)
+            assert len(matching_buttons) == 0
+
+        assert (
+            soup.find(id="membership-primary-info-text").text.strip()
+            == fake_card.user.fullname
+        )
+
+        assert (
+            soup.find(id="card-validation-msg").text.strip()
+            == f"CARD VALIDATED! (by {fake_card.user.first_name})"
+        )
+
 
 class TestSquarespaceOauth:
     def test_squarespace_oauth_login(
