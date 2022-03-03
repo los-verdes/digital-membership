@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import binascii
 import os
-from functools import wraps
 from datetime import datetime
+from functools import wraps
 
 from flask import (
     Flask,
@@ -27,6 +27,7 @@ from member_card import utils
 from member_card.db import db
 from member_card.models import AnnualMembership
 from member_card.models.membership_card import get_or_create_membership_card
+from member_card.passes import get_apple_pass_for_user
 from member_card.pubsub import publish_message
 
 BASE_DIR = os.path.dirname(
@@ -231,26 +232,19 @@ def passes_google_pay(membership_card):
 
 
 @app.route("/passes/apple-pay")
-@login_required
-def passes_apple_pay():
-
-    current_user = g.user
-    if current_user.is_authenticated:
-        from member_card.passes import get_apple_pass_for_user
-
-        attachment_filename = f"lv_apple_pass-{current_user.last_name.lower()}.pkpass"
-        membership_card = get_or_create_membership_card(current_user)
-        pkpass_out_path = get_apple_pass_for_user(
-            user=current_user,
-            membership_card=membership_card,
-        )
-        return send_file(
-            pkpass_out_path,
-            attachment_filename=attachment_filename,
-            mimetype="application/vnd.apple.pkpass",
-            as_attachment=True,
-        )
-    return redirect(url_for("home"))
+@active_membership_card_required
+def passes_apple_pay(membership_card):
+    attachment_filename = f"lv_apple_pass-{g.user.last_name.lower()}.pkpass"
+    pkpass_out_path = get_apple_pass_for_user(
+        user=g.user,
+        membership_card=membership_card,
+    )
+    return send_file(
+        pkpass_out_path,
+        attachment_filename=attachment_filename,
+        mimetype="application/vnd.apple.pkpass",
+        as_attachment=True,
+    )
 
 
 @app.route("/squarespace/oauth/login")

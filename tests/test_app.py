@@ -41,8 +41,11 @@ class TestUnauthenticatedRequests:
     def test_edit_user_name(self, client: "FlaskClient"):
         ensure_login_required(client, path="/edit-user-name", method="POST")
 
-    def test_google_pay_passes_redirects_to_login_page(self, client: "FlaskClient"):
+    def test_passes_google_pay_redirects_to_login_page(self, client: "FlaskClient"):
         ensure_login_required(client, path="/passes/google-pay", method="GET")
+
+    def test_passes_apple_pay_redirects_to_login_page(self, client: "FlaskClient"):
+        ensure_login_required(client, path="/passes/apple-pay", method="GET")
 
 
 class TestAuthenticatedRequests:
@@ -209,9 +212,6 @@ class TestAuthenticatedRequests:
         mock_generate_pass_jwt = mocker.patch(
             "member_card.models.membership_card.generate_pass_jwt"
         )
-        fake_jwt_str = "jwtest"
-        fake_jwt_bytes = fake_jwt_str.encode("utf-8")
-        mock_generate_pass_jwt.return_value = fake_jwt_bytes
         response = authenticated_client.get("/passes/google-pay")
 
         mock_generate_pass_jwt.assert_not_called()
@@ -234,6 +234,42 @@ class TestAuthenticatedRequests:
 
         mock_generate_pass_jwt.assert_called_once_with(fake_card)
         assert response.location == f"https://pay.google.com/gp/v/save/{fake_jwt_str}"
+
+    def test_passes_apple_pay_no_active_membership(
+        self,
+        authenticated_client: "FlaskClient",
+        mocker: "MockerFixture",
+    ):
+        mock_get_apple_pass_for_user = mocker.patch(
+            "member_card.app.get_apple_pass_for_user"
+        )
+        response = authenticated_client.get("/passes/apple-pay")
+
+        mock_get_apple_pass_for_user.assert_not_called()
+        assert response.location == "http://localhost/no-active-membership-found"
+
+    def test_passes_apple_pay_with_active_membership(
+        self,
+        authenticated_client: "FlaskClient",
+        fake_card,
+        mocker: "MockerFixture",
+        tmpdir,
+    ):
+        mock_get_apple_pass_for_user = mocker.patch(
+            "member_card.app.get_apple_pass_for_user"
+        )
+        fake_pkpass_content = "<insert pass here>"
+        p = tmpdir.join("path.pkpass")
+        p.write(fake_pkpass_content)
+        fake_pkpass_path = p.strpath
+        mock_get_apple_pass_for_user.return_value = fake_pkpass_path
+        response = authenticated_client.get("/passes/apple-pay")
+        assert fake_pkpass_content.encode("utf-8") in response.data
+        assert response.headers["Content-Type"] == "application/vnd.apple.pkpass"
+        mock_get_apple_pass_for_user.assert_called_once_with(
+            user=fake_card.user,
+            membership_card=fake_card,
+        )
 
 
 def test_db_commit_on_teardown(app, client, mocker):
