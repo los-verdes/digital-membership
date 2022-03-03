@@ -153,6 +153,15 @@ class TestUnauthenticatedRequests:
         assert response.status_code == 302
         assert response.location == "http://localhost/"
 
+    def test_privacy_policy(self, client: "FlaskClient"):
+        response = client.get("/privacy-policy")
+        logging.debug(response)
+
+        assert response.status_code == 200
+
+        soup = BeautifulSoup(response.data.decode("utf-8"), "html.parser")
+        assert soup.title.text.startswith("Privacy Policy")
+
 
 class TestAuthenticatedRequests:
     def test_modify_session(self, app, authenticated_client):
