@@ -3,13 +3,15 @@ from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
+import urllib.parse
 import requests
 from dateutil.parser import parse
 from requests.auth import HTTPBasicAuth
-
+from flask import session, current_app
 from member_card.db import db, get_or_create, get_or_update
 from member_card.models import SquarespaceWebhook, table_metadata
 from member_card.models.user import ensure_user
+from member_card import utils
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -19,6 +21,27 @@ api_baseurl = "https://api.squarespace.com"
 api_version = "1.0"
 
 logger = logging.getLogger(__name__)
+
+
+def generate_oauth_authorize_url():
+    base_url = "https://login.squarespace.com/api/1/login/oauth/provider/authorize"
+
+    state = utils.sign(datetime.utcnow().isoformat())
+    session["oauth_state"] = state
+
+    params = {
+        "client_id": current_app.config["SQUARESPACE_CLIENT_ID"],
+        "redirect_uri": current_app.config["SQUARESPACE_OAUTH_REDIRECT_URI"],
+        "scope": "website.orders,website.orders.read",
+        "state": state,
+    }
+    url_params = urllib.parse.urlencode(params)
+
+    authorize_url = f"{base_url}?{url_params}"
+
+    logger.debug(f"{base_url=} + {url_params=} => {authorize_url}")
+
+    return authorize_url
 
 
 def insert_order_as_membership(order, membership_skus):

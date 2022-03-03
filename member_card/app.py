@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import binascii
 import os
-import urllib.parse
 from datetime import datetime
 from functools import wraps
 
@@ -23,7 +22,7 @@ from flask_security.decorators import login_required, roles_required
 from flask_security.utils import logout_user
 from social_flask.template_filters import backends
 from social_flask.utils import load_strategy
-
+from member_card.squarespace import generate_oauth_authorize_url
 from member_card import utils
 from member_card.db import db
 from member_card.models import AnnualMembership
@@ -252,19 +251,7 @@ def passes_apple_pay(membership_card):
 @login_required
 @roles_required("admin")
 def squarespace_oauth_login():
-    url = "https://login.squarespace.com/api/1/login/oauth/provider/authorize"
-    state = utils.sign(datetime.utcnow().isoformat())
-    session["oauth_state"] = state
-    params = {
-        "client_id": app.config["SQUARESPACE_CLIENT_ID"],
-        "redirect_uri": app.config["SQUARESPACE_OAUTH_REDIRECT_URI"],
-        "scope": "website.orders,website.orders.read",
-        # "access_type": "offline",
-        "state": state,
-    }
-    url_params = urllib.parse.urlencode(params)
-    authorize_url = f"{url}?{url_params}"
-    logger.debug(f"{url=} + {url_params=} => {authorize_url}")
+    authorize_url = generate_oauth_authorize_url()
     return redirect(authorize_url)
 
 

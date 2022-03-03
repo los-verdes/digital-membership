@@ -319,9 +319,13 @@ class TestSquarespaceOauth:
     def test_squarespace_oauth_login(
         self,
         admin_client: "FlaskClient",
+        mocker: "MockerFixture",
     ):
+        mock_gen_auth_url = mocker.patch("member_card.app.generate_oauth_authorize_url")
+        test_auth_url_str = (
+            "http://localhost/this-would-redirect-to-squarespace-in-an-un-test"
+        )
+        mock_gen_auth_url.return_value = test_auth_url_str
         response = admin_client.get("/squarespace/oauth/login")
         assert response.status_code == 302
-        assert response.location.startswith(
-            "https://login.squarespace.com/api/1/login/oauth/provider/authorize?"
-        )
+        assert response.location == test_auth_url_str
