@@ -48,7 +48,7 @@ class TestUnauthenticatedRequests:
 class TestAuthenticatedRequests:
     def test_modify_session(self, app, authenticated_client):
 
-        response = authenticated_client.get("/")
+        response = authenticated_client.get("/", follow_redirects=True)
 
         from flask_security.core import current_user as current_login_user
 
@@ -215,7 +215,7 @@ class TestAuthenticatedRequests:
         response = authenticated_client.get("/passes/google-pay")
 
         mock_generate_pass_jwt.assert_not_called()
-        assert response.location == "http://localhost/"
+        assert response.location == "http://localhost/no-active-membership-found"
 
     def test_passes_google_pay_with_active_membership(
         self,
