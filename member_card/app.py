@@ -22,13 +22,19 @@ from flask_security.decorators import login_required, roles_required
 from flask_security.utils import logout_user
 from social_flask.template_filters import backends
 from social_flask.utils import load_strategy
-from member_card.squarespace import generate_oauth_authorize_url
+
 from member_card import utils
 from member_card.db import db
 from member_card.models import AnnualMembership
 from member_card.models.membership_card import get_or_create_membership_card
 from member_card.passes import get_apple_pass_for_user
 from member_card.pubsub import publish_message
+from member_card.squarespace import (
+    Squarespace,
+    ensure_orders_webhook_subscription,
+    generate_oauth_authorize_url,
+    request_new_oauth_token,
+)
 
 BASE_DIR = os.path.dirname(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "member_card")
@@ -258,12 +264,6 @@ def squarespace_oauth_login():
 @app.route("/squarespace/oauth/connect")
 @roles_required("admin")
 def squarespace_oauth_callback():
-    from member_card.squarespace import (
-        Squarespace,
-        ensure_orders_webhook_subscription,
-        request_new_oauth_token,
-    )
-
     log_extra = dict(request.args)
     if "code" in log_extra:
         del log_extra["code"]
