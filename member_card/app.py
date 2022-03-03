@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import binascii
 import os
+from functools import wraps
 from datetime import datetime
 
 from flask import (
@@ -91,22 +92,39 @@ app.context_processor(backends)
 app.jinja_env.globals["url"] = utils.social_url_for
 
 
+def active_membership_card_required(f):
+    @wraps(f)
+    @login_required
+    def decorated_function(*args, **kwargs):
+        if not g.user.has_active_memberships:
+            return redirect(
+                url_for("no_active_membership_landing_page", **request.args)
+            )
+
+        membership_card = get_or_create_membership_card(g.user)
+
+        return f(*args, membership_card=membership_card, **kwargs)
+
+    return decorated_function
+
+
 @app.route("/")
-@login_required
-def home():
-    if not g.user.has_active_memberships:
-        return render_template(
-            "no_membership_landing_page.html.j2",
-            user=g.user,
-            membership_orders=g.user.annual_memberships,
-            membership_table_keys=list(AnnualMembership().to_dict().keys()),
-        )
-
-    membership_card = get_or_create_membership_card(g.user)
-
+@active_membership_card_required
+def home(membership_card):
     return render_template(
         "member_card_and_history.html.j2",
         membership_card=membership_card,
+        membership_orders=g.user.annual_memberships,
+        membership_table_keys=list(AnnualMembership().to_dict().keys()),
+    )
+
+
+@app.route("/no-active-membership-found")
+@login_required
+def no_active_membership_landing_page():
+    return render_template(
+        "no_membership_landing_page.html.j2",
+        user=g.user,
         membership_orders=g.user.annual_memberships,
         membership_table_keys=list(AnnualMembership().to_dict().keys()),
     )
@@ -207,12 +225,8 @@ def email_distribution_request():
 
 
 @app.route("/passes/google-pay")
-@login_required
-def passes_google_pay():
-    if not g.user.has_active_memberships:
-        return redirect("/")
-
-    membership_card = get_or_create_membership_card(g.user)
+@active_membership_card_required
+def passes_google_pay(membership_card):
     return redirect(membership_card.google_pass_save_url)
 
 
