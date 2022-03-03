@@ -22,6 +22,38 @@ def ensure_login_required(client: "FlaskClient", path, method="GET"):
     assert response.location == f"http://localhost/login?next={next_param}"
 
 
+def test_db_commit_on_teardown(app, client, mocker):
+    from member_card.db import db
+
+    mock_session = mocker.patch.object(db, "session")
+
+    mock_session.start()
+
+    client.get("/")
+
+    mock_session.commit.assert_called_once()
+    mock_session.rollback.assert_not_called()
+    mock_session.remove.assert_called()
+    mock_session.stop()
+
+
+def test_db_teardown_rollback_on_error(client, mocker):
+    from member_card.db import db
+
+    assert client
+
+    mock_session = mocker.patch.object(db, "session")
+
+    mock_session.start()
+    logging.warning(f"test_db_error_on_teardown(): {id(mock_session)=}")
+    commit_on_success(Exception("just for testing tho"))
+
+    mock_session.commit.assert_not_called()
+    mock_session.rollback.assert_called_once()
+    mock_session.remove.assert_called()
+    mock_session.stop()
+
+
 class TestUnauthenticatedRequests:
     def test_home_redirects_to_login_page(self, client: "FlaskClient"):
         ensure_login_required(client, path="/", method="GET")
@@ -270,35 +302,3 @@ class TestAuthenticatedRequests:
             user=fake_card.user,
             membership_card=fake_card,
         )
-
-
-def test_db_commit_on_teardown(app, client, mocker):
-    from member_card.db import db
-
-    mock_session = mocker.patch.object(db, "session")
-
-    mock_session.start()
-
-    client.get("/")
-
-    mock_session.commit.assert_called_once()
-    mock_session.rollback.assert_not_called()
-    mock_session.remove.assert_called()
-    mock_session.stop()
-
-
-def test_db_teardown_rollback_on_error(client, mocker):
-    from member_card.db import db
-
-    assert client
-
-    mock_session = mocker.patch.object(db, "session")
-
-    mock_session.start()
-    logging.warning(f"test_db_error_on_teardown(): {id(mock_session)=}")
-    commit_on_success(Exception("just for testing tho"))
-
-    mock_session.commit.assert_not_called()
-    mock_session.rollback.assert_called_once()
-    mock_session.remove.assert_called()
-    mock_session.stop()
