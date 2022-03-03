@@ -305,3 +305,11 @@ class TestAuthenticatedRequests:
             user=fake_card.user,
             membership_card=fake_card,
         )
+
+    def test_squarespace_oauth_login(
+        self,
+        authenticated_client: "FlaskClient",
+    ):
+        response = authenticated_client.get("/squarespace/oauth/login")
+        assert response.status_code == 302
+        assert response.location == "http://localhost/"
