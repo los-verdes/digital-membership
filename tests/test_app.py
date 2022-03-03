@@ -138,6 +138,11 @@ class TestUnauthenticatedRequests:
         mock_process_webhook.assert_called_once()
         assert response.status_code == 200
 
+    def test_verify_pass(self, client: "FlaskClient"):
+        ensure_login_required(
+            client, path="/verify-pass/some-serial-number", method="GET"
+        )
+
 
 class TestAuthenticatedRequests:
     def test_modify_session(self, app, authenticated_client):
