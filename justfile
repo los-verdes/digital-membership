@@ -136,11 +136,11 @@ cloudbuild CONFIG_FILE *SUBSTITUTIONS="":
   echo "BUILD RESULTS:"
   jq -r '.' "$logfile"
   echo
-  
-  IMAGE="$(jq -r '.images[0]' "$logfile")"
-  if [[ -n "$IMAGE" ]]
+
+  IMAGE_OUTPUT="$(jq -r '.images[0]' "$logfile")"
+  if [[ -n "$IMAGE_OUTPUT" ]]
   then
-    echo "::set-output name=image::{build_result.images[0]}"
+    echo "::set-output name=image::$IMAGE_OUTPUT"
   fi
 
 cloudbuild-image-website:

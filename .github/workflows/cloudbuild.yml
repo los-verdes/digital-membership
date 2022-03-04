@@ -42,3 +42,7 @@ jobs:
 
       - name: Build
         run: just ${{ inputs.command }}
+
+      - name: Debug image Output
+        run: |
+          echo "steps.cloudbuild-command.outputs.image: ${{ steps.cloudbuild-command.outputs.image }}"
