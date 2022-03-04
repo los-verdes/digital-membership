@@ -303,23 +303,6 @@ gunicorn:
     --log-config=config/gunicron_logging.ini \
     'wsgi:create_app()'
 
-local-test:
-  python -m pytest \
-    --durations=10 \
-    --capture="tee-sys" \
-    --log-level=NOTSET \
-    --cov=member_card \
-    --cov-report=term-missing
-
-debug-test:
-  python -m pytest \
-    --durations=10 \
-    --capture="tee-sys" \
-    --log-level=NOTSET \
-    --cov=member_card \
-    --cov-report=term-missing \
-    --pdb
-
 ci-bootstrap-test-db:
   #!/bin/bash
 
@@ -330,9 +313,22 @@ ci-bootstrap-test-db:
     ./tests/config/sql/bootstrap.sh
   fi
 
-test: ci-install-test-python-reqs ci-bootstrap-test-db
+test *FLAGS:
   python -m pytest \
     --durations=10 \
     --log-level=DEBUG \
     --cov=member_card \
+    {{ FLAGS }}
+
+local-test *FLAGS:
+  just test \
+    --capture="tee-sys" \
+    --cov-report=term-missing \
+    {{ FLAGS }}
+
+debug-test *FLAGS:
+  just local-test --pdb {{ FLAGS }}
+
+ci-test: ci-install-test-python-reqs ci-bootstrap-test-db
+  just local-test \
     --cov-report=xml
