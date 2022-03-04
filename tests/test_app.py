@@ -245,6 +245,7 @@ class TestAuthenticatedRequests:
     def test_email_distribution_request_recaptcha_unverified(
         self, authenticated_client, mocker
     ):
+        mocker.patch.object(recaptcha, "verify", return_value=False)
         mock_publish_message = mocker.patch("member_card.app.publish_message")
         response = authenticated_client.post(
             "/email-distribution-request",
