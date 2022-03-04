@@ -132,12 +132,13 @@ cloudbuild CONFIG_FILE *SUBSTITUTIONS="":
     --substitutions='_IMAGE_TAG={{ image_tag }}{{ if SUBSTITUTIONS != "" { "," + SUBSTITUTIONS } else { "" } }}' \
   | tee "$logfile"
 
+  IMAGE_OUTPUT="$(jq -r '.images[0]' "$logfile")"
   echo
   echo "BUILD RESULTS:"
   jq -r '.' "$logfile"
+  echo "IMAGE_OUTPUT: ${IMAGE_OUTPUT}"
   echo
 
-  IMAGE_OUTPUT="$(jq -r '.images[0]' "$logfile")"
   if [[ -n "$IMAGE_OUTPUT" ]]
   then
     echo "::set-output name=image::$IMAGE_OUTPUT"

@@ -41,6 +41,7 @@ jobs:
         uses: google-github-actions/setup-gcloud@v0
 
       - name: Build
+        id: cloudbuild-command
         run: just ${{ inputs.command }}
 
       - name: Debug image Output
