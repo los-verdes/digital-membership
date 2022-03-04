@@ -1,0 +1,18 @@
+substitutions:
+  _IMAGE_TAG: "n/a"
+  _BUCKET_ID: "statics-gcs-bucket"
+
+steps:
+  - name: "gcr.io/$PROJECT_ID/website:${_IMAGE_TAG}"
+    entrypoint: "flask"
+    args:
+      - assets
+      - build
+
+  - name: "gcr.io/cloud-builders/gsutil"
+    args:
+      - "-m"
+      - "cp"
+      - "-r"
+      - "member_card/static/*"
+      - f"gs://${_BUCKET_ID}/static/"

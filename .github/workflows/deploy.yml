@@ -16,18 +16,18 @@ jobs:
     permissions:
       contents: "read"
       id-token: "write"
-    uses: los-verdes/digital-membership/.github/workflows/flask_command.yml@main
+    uses: los-verdes/digital-membership/.github/workflows/cloudbuild.yml@main
     with:
-      command: build-worker-image
+      command: cloudbuild-image-worker
 
   build-website-image:
     name: Build Website Image
     permissions:
       contents: "read"
       id-token: "write"
-    uses: los-verdes/digital-membership/.github/workflows/flask_command.yml@main
+    uses: los-verdes/digital-membership/.github/workflows/cloudbuild.yml@main
     with:
-      command: build-website-image
+      command: cloudbuild-image-website
 
   deploy-infra-and-services:
     name: Deploy Infrastructure & Services
@@ -102,10 +102,10 @@ jobs:
     permissions:
       contents: "read"
       id-token: "write"
-    uses: los-verdes/digital-membership/.github/workflows/flask_command.yml@main
+    uses: los-verdes/digital-membership/.github/workflows/cloudbuild.yml@main
     with:
       # TODO: add a CloudFlare cache purge somewhere 'round here....
-      command: upload-statics
+      command: cloudbuild-upload-statics
 
   apply-database-config:
     name: Apply Database Configuration

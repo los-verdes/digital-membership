@@ -2,7 +2,9 @@
 *.sqlite3
 **/static/style.css
 postgres-data/
-.srl
 tmp-certs/
-member_card/static/style.css
 .terraform/
+.git/
+.DS_Store
+*.pyc
+.vscode/

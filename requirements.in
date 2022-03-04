@@ -11,7 +11,6 @@ flask-cdn
 flask-login
 flask-security
 google-auth
-google-cloud-build
 google-cloud-firestore
 google-cloud-logging
 google-cloud-pubsub

@@ -676,23 +676,6 @@ def force_assets_bundle_build():
     utils.force_assets_bundle_build(app)
 
 
-@app.cli.command("upload-statics")
-def upload_statics():
-    from member_card.cloudbuild import create_upload_statics_build
-
-    utils.force_assets_bundle_build(app)
-    create_upload_statics_build()
-
-
-@app.cli.command("build-image")
-@click.argument("image_name")
-def build_image(image_name):
-    from member_card.cloudbuild import create_docker_image_build
-
-    build_result = create_docker_image_build(image_name=image_name)
-    print(f"::set-output name=image::{build_result.images[0]}")
-
-
 @app.cli.command("insert-google-pass-class")
 def insert_google_pass_class():
     from member_card import gpay
