@@ -1,0 +1,44 @@
+name: Cloud Build
+
+on:
+  workflow_call:
+    inputs:
+      command:
+        description: "The justfile + Cloud build-related recipe to run"
+        required: true
+        type: string
+    outputs:
+      image:
+        description: "GCR image produced by the command where applicable"
+        value: ${{ jobs.run_cloudbuild_command.outputs.image }}
+
+jobs:
+  run_cloudbuild_command:
+    name: Submit Build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: "read"
+      id-token: "write"
+    outputs:
+      image: ${{ steps.cloudbuild-command.outputs.image }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup just
+        uses: extractions/setup-just@v1
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v0
+        with:
+          workload_identity_provider: "projects/567739286055/locations/global/workloadIdentityPools/los-verdes-digital-membership/providers/los-verdes-digital-membership"
+          service_account: "github-deployer@lv-digital-membership.iam.gserviceaccount.com"
+          access_token_scopes: "https://www.googleapis.com/auth/cloud-platform,https://www.googleapis.com/auth/sqlservice.admin"
+          token_format: access_token
+          access_token_lifetime: 1800s
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0
+
+      - name: Build
+        run: just ${{ inputs.command }}

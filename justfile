@@ -120,17 +120,41 @@ build-worker:
 
 build: build-website build-worker
 
-build-website-image: ci-install-python-reqs
-  just flask build-image website
+cloudbuild CONFIG_FILE *SUBSTITUTIONS="":
+  #!/bin/bash
 
-build-worker-image: ci-install-python-reqs
-  just flask build-image worker
+  logfile=$(mktemp /tmp/local_config_apply.XXXXXXXXXX) || { echo "Failed to create temp file"; exit 1; }
 
-build-base-image: ci-install-python-reqs
-  just flask build-image base
+  gcloud builds submit {{ justfile_directory() }} \
+    --format='json' \
+    --config="{{ CONFIG_FILE }}" \
+    --suppress-logs \
+    --substitutions='_IMAGE_TAG={{ image_tag }}{{ if SUBSTITUTIONS != "" { "," + SUBSTITUTIONS } else { "" } }}' \
+  | tee "$logfile"
+
+  echo
+  echo "BUILD RESULTS:"
+  jq -r '.' "$logfile"
+  echo
+  
+  IMAGE="$(jq -r '.images[0]' "$logfile")"
+  if [[ -n "$IMAGE" ]]
+  then
+    echo "::set-output name=image::{build_result.images[0]}"
+  fi
+
+cloudbuild-image-website:
+  just cloudbuild 'cloudbuild.yaml' '_BUILD_TARGET=website'
+
+cloudbuild-image-worker:
+  just cloudbuild 'cloudbuild.yaml' '_BUILD_TARGET=worker'
+
+cloudbuild-upload-statics _BUCKET_ID='cstatic.losverd.es':
+  just cloudbuild 'cloudbuild-statics.yaml' '_BUCKET_ID={{ _BUCKET_ID }}'
 
 run-worker: build-worker
   docker run -it --rm '{{ worker_image_name }}:{{ image_tag }}'
+
 shell-worker: build-worker
   docker run -it --rm --entrypoint='' '{{ worker_image_name }}:{{ image_tag }}'  bash
 
@@ -138,9 +162,6 @@ shell-website: build-website
   docker run -it --rm --entrypoint='' '{{ website_image_name }}:{{ image_tag }}'  bash
 
 shell: shell-website
-
-upload-statics: ci-install-python-reqs
-  just flask upload-statics
 
 push: build
   echo "Pushing website image..."
@@ -155,8 +176,6 @@ push: build
   docker push '{{ worker_gcr_image_name }}:{{ image_tag }}'
   docker push '{{ worker_gcr_image_name }}:latest'
 
-  echo "Uploading statics..."
-  just flask upload-statics
 
 set-tf-output-output output_name:
   output_value="$(just tf output -raw {{ output_name }})"
@@ -190,7 +209,6 @@ apply-migrations: ci-install-python-reqs
   echo "DIGITAL_MEMBERSHIP_DB_ACCESS_TOKEN: $(head -c 5 <<<"$DIGITAL_MEMBERSHIP_DB_ACCESS_TOKEN")"
   just flask db upgrade
   echo 'Any outstanding migrations have now been applied! :D'
-
 
 sync-subscriptions: ci-install-python-reqs
   @echo "DIGITAL_MEMBERSHIP_DB_DATABASE_NAME: $DIGITAL_MEMBERSHIP_DB_DATABASE_NAME"
