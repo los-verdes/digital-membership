@@ -6,7 +6,7 @@ import flask
 from flask import current_app
 from wallet.models import Barcode, BarcodeFormat, Generic, Pass
 
-from member_card.apple_wallet import with_apple_developer_key
+from member_card.passes.apple_wallet import with_apple_developer_key
 from member_card.db import db
 from member_card.storage import upload_file_to_gcs
 from member_card.utils import sign
