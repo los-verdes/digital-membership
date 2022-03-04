@@ -115,18 +115,18 @@ def query_db(email):
     )
 
     logger.info(f"memberships matching {email}:\n{memberships}")
-
+    logger.info(f"{User.query.all()=}")
     try:
         user = User.query.filter_by(email=func.lower(email)).one()
+        print(f"User matching {email} found!: {user=}")
+        logger.info(f"user matching {email}:\n{user}")
+        logger.info(f"user roles {email}:\n{user.roles}")
+        logger.info(f"user memberships:\n{user.annual_memberships}")
+        logger.info(f"user membership cards:\n{user.membership_cards}")
+        return user
     except NoResultFound as err:
         logger.warning(f"No user found matching {email=} ({err=})")
         return None
-
-    logger.info(f"user matching {email}:\n{user}")
-    logger.info(f"user roles {email}:\n{user.roles}")
-    logger.info(f"user memberships:\n{user.annual_memberships}")
-    logger.info(f"user membership cards:\n{user.membership_cards}")
-    return User
 
 
 @app.cli.command("query-order-num")
