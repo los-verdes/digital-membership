@@ -15,11 +15,7 @@ from member_card.models.user import Role
 from member_card.passes import gpay
 from member_card.pubsub import publish_message
 from member_card.sendgrid import update_sendgrid_template
-from member_card.worker import (
-    process_email_distribution_request,
-    sync_squarespace_order,
-    sync_subscriptions_etl,
-)
+from member_card import worker
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +23,7 @@ logger = logging.getLogger(__name__)
 @app.cli.command("sync-subscriptions")
 @click.option("--load-all/--no-load-all", default=False)
 def sync_subscriptions(load_all):
-    etl_results = sync_subscriptions_etl(
+    etl_results = worker.sync_subscriptions_etl(
         message=dict(type="cli-sync-subscriptions"),
         load_all=load_all,
     )
@@ -37,7 +33,7 @@ def sync_subscriptions(load_all):
 @app.cli.command("sync-order-id")
 @click.argument("order_id")
 def sync_order_id(order_id):
-    sync_order_result = sync_squarespace_order(
+    sync_order_result = worker.sync_squarespace_order(
         message=dict(order_id=order_id),
     )
     logger.info(f"sync_order_id() => {sync_order_result=}")
@@ -51,7 +47,7 @@ def update_sendgrid_template_cli():
 @app.cli.command("send-test-email")
 @click.argument("email")
 def send_test_email(email):
-    process_email_distribution_request(message=dict(email_distribution_recipient=email))
+    worker.process_email_distribution_request(message=dict(email_distribution_recipient=email))
 
 
 @app.cli.command("generate-card-image")
