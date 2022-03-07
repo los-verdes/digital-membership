@@ -203,7 +203,7 @@ def add_role_to_user(user_email, role_name):
 
     user = user_datastore.get_user(user_email)
     admin_role = user_datastore.find_or_create_role(
-        name="admin",
+        name=role_name,
         description="Administrators allowed to connect Squarespace extensions, etc.",
     )
     db.session.add(admin_role)
