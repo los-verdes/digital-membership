@@ -99,8 +99,7 @@ def query_order_num(order_num):
         .order_by(AnnualMembership.created_on.desc())
         .all()
     )
-
-    logger.info(f"memberships matching {order_num}:\n{memberships}")
+    print(f"memberships matching {order_num}:\n{memberships}")
     users = [m.user for m in memberships]
     logger.info(f"user matching {order_num}:\n{users}")
     for user in users:
