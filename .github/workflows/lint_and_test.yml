@@ -79,7 +79,7 @@ jobs:
           key: ${{ env.pythonLocation }}-pip-${{ hashFiles('requirements-test.txt') }}
 
       - name: Run Tests
-        run: just test
+        run: just ci-test
         env:
           GITHUB_PAT: ${{ secrets.GH_PAT }}
           PGHOST: "127.0.0.1"
