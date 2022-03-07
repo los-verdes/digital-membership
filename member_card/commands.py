@@ -39,15 +39,17 @@ def sync_order_id(order_id):
     logger.info(f"sync_order_id() => {sync_order_result=}")
 
 
+@app.cli.command("send-email")
+@click.argument("email")
+def send_distribution_email(email):
+    worker.process_email_distribution_request(
+        message=dict(email_distribution_recipient=email)
+    )
+
+
 @app.cli.command("update-sendgrid-template")
 def update_sendgrid_template_cli():
     update_sendgrid_template()
-
-
-@app.cli.command("send-test-email")
-@click.argument("email")
-def send_test_email(email):
-    worker.process_email_distribution_request(message=dict(email_distribution_recipient=email))
 
 
 @app.cli.command("generate-card-image")
