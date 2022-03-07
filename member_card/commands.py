@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 @app.cli.command("sync-subscriptions")
-@click.option("-l", "--load-all", default=False)
+@click.option("--load-all/--no-load-all", default=False)
 def sync_subscriptions(load_all):
     etl_results = sync_subscriptions_etl(
         message=dict(type="cli-sync-subscriptions"),
