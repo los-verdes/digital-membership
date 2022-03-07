@@ -73,26 +73,49 @@ def admin_client(app: "Flask", fake_admin_user):
         yield admin_client
 
 
-@pytest.fixture()
-def fake_user(app: "Flask") -> User:
-    """Create fake user optionally with roles"""
-    user_id = 1
+def create_fake_user(app: "Flask", email):
+    # user_id = 1
     with app.app_context():
-        if extant_user := User.query.filter_by(id=user_id).first():
+        if extant_user := User.query.filter_by(email=email).first():
             db.session.delete(extant_user)
             db.session.commit()
     user_cls = User
-    email = "los.verdes.tester@gmail.com"
 
     user = user_cls()
     user.first_name = "Verde"
     user.last_name = "Tester"
     user.fullname = f"{user.first_name} {user.last_name}"
     user.email = email
-    user.id = user_id
+    # user.id = user_id
     user.password = "mypassword"
     user.active = True
+    return user
 
+
+@pytest.fixture()
+def fake_user(app: "Flask") -> User:
+    """Create fake user optionally with roles"""
+    user = create_fake_user(
+        app=app,
+        email="los.verdes.tester@gmail.com",
+    )
+    with app.app_context():
+
+        db.session.add(user)
+        db.session.commit()
+
+        yield user
+
+        db.session.delete(user)
+        db.session.commit()
+
+
+@pytest.fixture()
+def fake_other_user(app: "Flask") -> User:
+    user = create_fake_user(
+        app=app,
+        email="other-los.verdes.tester@gmail.com",
+    )
     with app.app_context():
 
         db.session.add(user)
@@ -138,6 +161,7 @@ def fake_membership_order(app: "Flask", fake_user: User) -> AnnualMembership:
     membership_order.created_on = today
     membership_order.order_number = "12345"
     membership_order.user_id = fake_user.id
+    membership_order.customer_email = fake_user.email
     with app.app_context():
 
         db.session.add(membership_order)
