@@ -7,6 +7,13 @@ if TYPE_CHECKING:
 
 
 class TestCommands:
+    def test_query_db_no_sqlalchemy(self, runner_without_db: "FlaskCliRunner"):
+        # TODO: contrived thing for getting a conditional branch covered. Can prob be moved elsewere or dropped eventually....
+        result = runner_without_db.invoke(
+            args=["query-db", "this-user-aint-here"],
+        )
+        assert result.exit_code == 1
+
     def test_query_db_no_user_match(self, runner: "FlaskCliRunner"):
         result = runner.invoke(
             args=["query-db", "this-user-aint-here"],
