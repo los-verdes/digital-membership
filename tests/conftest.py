@@ -136,6 +136,8 @@ def fake_membership_order(app: "Flask", fake_user: User) -> AnnualMembership:
     today = datetime.utcnow().replace(tzinfo=timezone.utc)
     # one_year_from_now = today + timedelta(days=366)
     membership_order.created_on = today
+    membership_order.order_number = "12345"
+    membership_order.user_id = fake_user.id
     with app.app_context():
 
         db.session.add(membership_order)
