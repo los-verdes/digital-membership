@@ -2,12 +2,24 @@
 import logging
 
 import click
+from flask_security import SQLAlchemySessionUserDatastore
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.sql import func
 
-from member_card import utils
 from member_card.app import app
-from member_card.models import User
+from member_card.db import db
+from member_card.image import generate_card_image
+from member_card.models import AnnualMembership, User
+from member_card.models.membership_card import get_or_create_membership_card
+from member_card.models.user import Role
+from member_card.passes import gpay
+from member_card.pubsub import publish_message
+from member_card.sendgrid import update_sendgrid_template
+from member_card.worker import (
+    process_email_distribution_request,
+    sync_squarespace_order,
+    sync_subscriptions_etl,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -15,8 +27,6 @@ logger = logging.getLogger(__name__)
 @app.cli.command("sync-subscriptions")
 @click.option("-l", "--load-all", default=False)
 def sync_subscriptions(load_all):
-    from member_card.worker import sync_subscriptions_etl
-
     etl_results = sync_subscriptions_etl(
         message=dict(type="cli-sync-subscriptions"),
         load_all=load_all,
@@ -27,8 +37,6 @@ def sync_subscriptions(load_all):
 @app.cli.command("sync-order-id")
 @click.argument("order_id")
 def sync_order_id(order_id):
-    from member_card.worker import sync_squarespace_order
-
     sync_order_result = sync_squarespace_order(
         message=dict(order_id=order_id),
     )
@@ -36,26 +44,19 @@ def sync_order_id(order_id):
 
 
 @app.cli.command("update-sendgrid-template")
-def update_sendgrid_template():
-    from member_card.sendgrid import update_sendgrid_template
-
+def update_sendgrid_template_cli():
     update_sendgrid_template()
 
 
 @app.cli.command("send-test-email")
 @click.argument("email")
 def send_test_email(email):
-    from member_card.worker import process_email_distribution_request
-
     process_email_distribution_request(message=dict(email_distribution_recipient=email))
 
 
 @app.cli.command("generate-card-image")
 @click.argument("email")
-def generate_card_image(email):
-    from member_card.image import generate_card_image
-    from member_card.models.membership_card import get_or_create_membership_card
-
+def generate_card_image_cli(email):
     user = User.query.filter_by(email=email).one()
     membership_card = get_or_create_membership_card(
         user=user,
@@ -71,8 +72,6 @@ def generate_card_image(email):
 @app.cli.command("query-db")
 @click.argument("email")
 def query_db(email):
-    from member_card.models import AnnualMembership
-
     memberships = (
         AnnualMembership.query.filter_by(customer_email=func.lower(email))
         .order_by(AnnualMembership.created_on.desc())
@@ -97,8 +96,6 @@ def query_db(email):
 @app.cli.command("query-order-num")
 @click.argument("order_num")
 def query_order_num(order_num):
-    from member_card.models import AnnualMembership
-
     memberships = (
         AnnualMembership.query.filter_by(order_number=order_num)
         .order_by(AnnualMembership.created_on.desc())
@@ -115,8 +112,6 @@ def query_order_num(order_num):
 
 @app.cli.command("insert-google-pass-class")
 def insert_google_pass_class():
-    from member_card.passes import gpay
-
     class_id = app.config["GOOGLE_PAY_PASS_CLASS_ID"]
     pass_class_payload = gpay.GooglePayPassClass(class_id).to_dict()
 
@@ -129,8 +124,6 @@ def insert_google_pass_class():
 
 @app.cli.command("update-google-pass-class")
 def update_google_pass_class():
-    from member_card.passes import gpay
-
     class_id = app.config["GOOGLE_PAY_PASS_CLASS_ID"]
     pass_class_payload = gpay.GooglePayPassClass(class_id).to_dict()
 
@@ -151,9 +144,6 @@ def apple_serial_num_to_hex(serial_num):
 
 @app.cli.command("publish-sync-subscriptions-msg")
 def publish_sync_subscriptions_msg():
-
-    from member_card.pubsub import publish_message
-
     topic_id = app.config["GCLOUD_PUBSUB_TOPIC_ID"]
     logger.info(f"publishing sync_subscriptions_etl message to pubsub {topic_id=}")
     publish_message(
@@ -170,9 +160,6 @@ def publish_sync_subscriptions_msg():
 @click.argument("user_email")
 def add_memberships_to_user_email(order_email, user_email):
     logger.debug(f"{order_email=} => {user_email=}")
-    from member_card.db import db
-    from member_card.models import AnnualMembership
-
     memberships = (
         AnnualMembership.query.filter_by(customer_email=order_email)
         .order_by(AnnualMembership.created_on.desc())
@@ -198,7 +185,6 @@ def add_memberships_to_user_email(order_email, user_email):
 @click.argument("last_name")
 def update_user_name(user_email, first_name, last_name):
     logger.debug(f"{user_email=} => {first_name=} {last_name=}")
-    from member_card.db import db
 
     user = User.query.filter_by(email=func.lower(user_email)).one()
     logger.debug(f"user returned for {user_email}: {user=}")
@@ -217,11 +203,6 @@ def update_user_name(user_email, first_name, last_name):
 @click.argument("user_email")
 @click.argument("role_name")
 def add_role_to_user(user_email, role_name):
-    from flask_security import SQLAlchemySessionUserDatastore
-
-    from member_card.db import db
-    from member_card.models.user import Role
-
     logger.debug(f"{user_email=} => {role_name=}")
     user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
 
