@@ -8,6 +8,19 @@ from flask_security import UserMixin, RoleMixin
 logger = logging.getLogger(__name__)
 
 
+def edit_user_name(user, new_first_name, new_last_name):
+    logger.info(
+        f"Update name for {user} from {user.fullname} to: {new_first_name} {new_last_name}"
+    )
+    setattr(user, "fullname", " ".join([new_first_name, new_last_name]))
+    setattr(user, "first_name", new_first_name)
+    setattr(user, "last_name", new_last_name)
+    db.session.add(user)
+    db.session.commit()
+    logger.debug(f"post-commit: {user=}")
+    return user
+
+
 def ensure_user(email, first_name, last_name, username=None, password=None):
 
     user = get_or_create(

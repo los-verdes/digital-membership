@@ -17,6 +17,7 @@ from member_card.db import db
 from member_card.exceptions import MemberCardException
 from member_card.models import AnnualMembership, MembershipCard, SquarespaceWebhook
 from member_card.models.membership_card import get_or_create_membership_card
+from member_card.models.user import edit_user_name
 from member_card.passes import get_apple_pass_for_user
 from member_card.pubsub import publish_message
 from member_card.squarespace import (
@@ -139,13 +140,12 @@ def edit_user_name_request():
     logger.debug(
         f"edit_user_name_request(): {new_first_name=} {new_last_name=}", extra=log_extra
     )
+    edit_user_name(
+        user=g.user,
+        new_first_name=new_first_name,
+        new_last_name=new_last_name,
+    )
     form_message = utils.get_message_str("edit_user_name_success")
-    setattr(g.user, "fullname", " ".join([new_first_name, new_last_name]))
-    setattr(g.user, "first_name", new_first_name)
-    setattr(g.user, "last_name", new_last_name)
-    db.session.add(g.user)
-    db.session.commit()
-    logger.debug(f"post-commit: {g.user=}")
     return redirect(f"{url_for('home')}?formMessage={form_message}")
 
 

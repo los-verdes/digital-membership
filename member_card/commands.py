@@ -5,6 +5,7 @@ import click
 from flask_security import SQLAlchemySessionUserDatastore
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.sql import func
+from member_card.models.user import edit_user_name
 
 from member_card.app import app
 from member_card.db import db
@@ -185,15 +186,12 @@ def update_user_name(user_email, first_name, last_name):
 
     user = User.query.filter_by(email=func.lower(user_email)).one()
     logger.debug(f"user returned for {user_email}: {user=}")
-    logger.info(
-        f"Update name for {user} from {user.fullname} to: {first_name} {last_name}"
+
+    edit_user_name(
+        user=user,
+        new_first_name=first_name,
+        new_last_name=last_name,
     )
-    setattr(user, "fullname", " ".join([first_name, last_name]))
-    setattr(user, "first_name", first_name)
-    setattr(user, "last_name", last_name)
-    db.session.add(user)
-    db.session.commit()
-    logger.debug(f"post-commit: {user=}")
 
 
 @app.cli.command("add-role-to-user")
