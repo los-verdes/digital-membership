@@ -95,19 +95,32 @@ def create_fake_user(app: "Flask", email):
 @pytest.fixture()
 def fake_user(app: "Flask") -> User:
     """Create fake user optionally with roles"""
+    user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
     user = create_fake_user(
         app=app,
         email="los.verdes.tester@gmail.com",
     )
-    with app.app_context():
 
+    with app.app_context():
         db.session.add(user)
         db.session.commit()
+        user_id = user.id
 
         yield user
 
-        db.session.delete(user)
-        db.session.commit()
+        user = db.session.query(User).filter(User.id == user_id).first()
+        if user:
+            for role in user.roles:
+                user_datastore.remove_role_from_user(user, role)
+                role.users.remove(user)
+                # db.session.add(user)
+                db.session.add(role)
+                db.session.commit()
+            db.session.add(user)
+
+            db.session.query(User).filter(User.id == user.id).first()
+            db.session.delete(user)
+            db.session.commit()
 
 
 @pytest.fixture()
@@ -128,28 +141,30 @@ def fake_other_user(app: "Flask") -> User:
 
 
 @pytest.fixture()
-def fake_admin_role(app: "Flask") -> Role:
+def fake_admin_role(app: "Flask", fake_user) -> Role:
     user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
     admin_role = user_datastore.find_or_create_role(
         name="admin",
         description="Administrators allowed to connect Squarespace extensions, etc.",
     )
+
     yield admin_role
+
+    user_datastore.remove_role_from_user(fake_user, admin_role)
     db.session.delete(admin_role)
     db.session.commit()
 
 
 @pytest.fixture()
 def fake_admin_user(app: "Flask", fake_user: User, fake_admin_role: Role) -> Role:
+    user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
     fake_user.roles = [fake_admin_role]
     db.session.add(fake_user)
     db.session.commit()
 
     yield fake_user
 
-    fake_user.roles = []
-    db.session.add(fake_user)
-    db.session.commit()
+    user_datastore.remove_role_from_user(fake_user, fake_admin_role)
 
 
 @pytest.fixture()
@@ -169,6 +184,13 @@ def fake_membership_order(app: "Flask", fake_user: User) -> AnnualMembership:
 
         yield membership_order
 
+        membership_order.user_id = None
+        db.session.add(membership_order)
+        db.session.commit()
+
+        membership_order = (
+            db.session.query(AnnualMembership).filter_by(id=membership_order.id).first()
+        )
         db.session.delete(membership_order)
         db.session.commit()
 
@@ -181,6 +203,10 @@ def fake_member(fake_user: User, fake_membership_order: AnnualMembership) -> Use
 
     yield fake_user
 
+    fake_membership_order.user_id = None
+    db.session.add(fake_membership_order)
+    db.session.commit()
+
 
 @pytest.fixture()
 def fake_card(fake_member: User) -> MembershipCard:
@@ -192,5 +218,8 @@ def fake_card(fake_member: User) -> MembershipCard:
 
     yield fake_membership_card
 
-    db.session.delete(fake_membership_card)
+    fake_membership_card.user_id = None
+    db.session.query(MembershipCard).filter_by(id=fake_membership_card.id).delete(
+        synchronize_session="fetch"
+    )
     db.session.commit()
