@@ -38,7 +38,9 @@ class AnnualMembership(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
-    user = relationship("User", back_populates="annual_memberships")
+    user = relationship(
+        "User", back_populates="annual_memberships", cascade="save-update"
+    )
     membership_cards = relationship(
         "MembershipCard",
         secondary=membership_card_to_membership_assoc_table,

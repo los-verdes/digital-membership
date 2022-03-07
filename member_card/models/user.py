@@ -89,7 +89,10 @@ class User(db.Model, UserMixin):
     annual_memberships = relationship("AnnualMembership", back_populates="user")
     membership_cards = relationship("MembershipCard", back_populates="user")
     roles = relationship(
-        "Role", secondary="roles_users", backref=backref("users", lazy="dynamic")
+        "Role",
+        secondary="roles_users",
+        backref=backref("users", lazy="dynamic", cascade="save-update"),
+        cascade="save-update",
     )
 
     def to_dict(self):
