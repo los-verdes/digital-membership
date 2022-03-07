@@ -428,7 +428,7 @@ class TestAuthenticatedRequests:
 
     def test_verify_pass_invalid_signature(self, authenticated_client: "FlaskClient"):
         response = authenticated_client.get(
-            "/verify-pass/some-serial-number?signature=not-a-real-signaure",
+            "/verify-pass/some-serial-number?signature=not-a-real-signature",
             follow_redirects=True,
         )
         assert_form_error_message(

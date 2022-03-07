@@ -35,41 +35,6 @@ def sync_order_id(order_id):
     logger.info(f"sync_order_id() => {sync_order_result=}")
 
 
-@app.cli.command("recreate-user")
-@click.argument("email")
-def recreate_user(email):
-    from social_core.actions import do_disconnect
-    from social_flask.utils import load_strategy
-
-    from member_card.db import db, get_or_create
-    from member_card.models import User
-    from member_card.utils import associations
-
-    user = User.query.filter_by(email=email).one()
-    memberships = list(user.annual_memberships)
-    user_associations = associations(user=user, strategy=load_strategy())
-    for association in user_associations:
-        with app.app_context():
-            disconnect_resp = do_disconnect(
-                backend=association.get_backend_instance(load_strategy()),
-                user=user,
-                association_id=association.id,
-            )
-            logger.info(f"{disconnect_resp=}")
-
-    db.session.delete(user)
-    db.session.commit()
-    member_user = get_or_create(
-        session=db.session,
-        model=User,
-        email=email,
-    )
-    member_user.memberships = memberships
-    db.session.add(member_user)
-    db.session.commit()
-    logger.debug(f"{memberships=}")
-
-
 @app.cli.command("update-sendgrid-template")
 def update_sendgrid_template():
     from member_card.sendgrid import update_sendgrid_template
@@ -148,22 +113,6 @@ def query_order_num(order_num):
         logger.info(f"user membership cards:\n{user.membership_cards}")
 
 
-@app.cli.command("create-apple-pass")
-@click.argument("email")
-@click.option("-z", "--zip-file-path")
-def create_apple_pass_cli(email, zip_file_path=None):
-    create_apple_pass(email=email, zip_file=zip_file_path)
-
-
-def create_apple_pass(email, zip_file=None):
-    pass
-
-
-@app.cli.command("force-assets-bundle-build")
-def force_assets_bundle_build():
-    utils.force_assets_bundle_build(app)
-
-
 @app.cli.command("insert-google-pass-class")
 def insert_google_pass_class():
     from member_card.passes import gpay
@@ -190,30 +139,6 @@ def update_google_pass_class():
         payload=pass_class_payload,
     )
     logger.debug(f"Class ID: {class_id} update response: {update_class_response=}")
-
-
-@app.cli.command("demo-google-pay-pass")
-@click.argument("email")
-def demo_google_pay_pass(email):
-    from member_card.passes import gpay
-    from member_card.models.membership_card import get_or_create_membership_card
-
-    SAVE_LINK = "https://pay.google.com/gp/v/save/"
-
-    user = User.query.filter_by(email=email).one()
-    membership_card = get_or_create_membership_card(
-        user=user,
-    )
-
-    pass_jwt = gpay.generate_pass_jwt(
-        membership_card=membership_card,
-    )
-
-    print(f"This is an 'object' jwt:\n{pass_jwt.decode('UTF-8')}\n")
-    print(
-        "you can decode it with a tool to see the unsigned JWT representation:\nhttps://jwt.io\n"
-    )
-    print(f"Try this save link in your browser:\n{SAVE_LINK}{pass_jwt.decode('UTF-8')}")
 
 
 @app.cli.command("apple-serial-num-to-hex")
