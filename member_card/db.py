@@ -64,30 +64,29 @@ def get_gcp_sql_engine_creator(
 def get_or_update(session, model, filters, kwargs):
     filters = {f: kwargs[f] for f in filters if f in kwargs}
     kwargs = {k: v for k, v in kwargs.items() if v is not None}
-    # for k, v in kwargs.items():
-    #     logger.warning(f"{k} : {type(v)}")
+
     instance = session.query(model).filter_by(**filters).first()
 
     logger.debug(f"Getting or updatin' {model.__name__} matching {filters=}")
     if instance:
+        logger.debug(f"Updating existing instance: {instance=}")
         for k, v in kwargs.items():
             setattr(instance, k, v)
         return instance
     else:
         instance = model(**kwargs)
+        logger.debug(f"New instance created!: {instance=}")
         return instance
 
 
 def get_or_create(session, model, **kwargs):
     kwargs = {k: v for k, v in kwargs.items() if v is not None}
-    # for k, v in kwargs.items():
-    #     logger.warning(f"{k} : {type(v)}")
+
     instance = session.query(model).filter_by(**kwargs).first()
+
     if instance:
         return instance
     else:
         logger.debug(f"Creating {model.__name__} with {kwargs=}")
         instance = model(**kwargs)
-        # session.add(instance)
-        # session.commit()
         return instance
