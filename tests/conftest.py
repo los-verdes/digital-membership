@@ -1,7 +1,7 @@
 import contextlib
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
-
+import uuid
 import flask_migrate
 import pytest
 from flask.testing import FlaskClient, FlaskCliRunner
@@ -184,9 +184,12 @@ def fake_membership_order(app: "Flask", fake_user: User) -> AnnualMembership:
     today = datetime.utcnow().replace(tzinfo=timezone.utc)
     # one_year_from_now = today + timedelta(days=366)
     membership_order.created_on = today
-    membership_order.order_number = "12345"
+    membership_order.order_number = str(uuid.uuid4())[:30]
+    membership_order.order_id = str(uuid.uuid4())[:30]
     membership_order.user_id = fake_user.id
     membership_order.customer_email = fake_user.email
+    membership_order.channel_name = "test-fixture"
+    membership_order.fulfillment_status = "PENDING"
     with app.app_context():
 
         db.session.add(membership_order)
