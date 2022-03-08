@@ -15,12 +15,14 @@ migrate = Migrate()
 logger = logging.getLogger(__name__)
 
 
-def get_gcp_sql_engine_creator(instance_connection_string, settings):
+def get_gcp_sql_engine_creator(
+    instance_connection_string, db_name, db_user, db_pass=None
+):
     db_connection_kwargs = dict(
         instance_connection_string=instance_connection_string,
-        db_user=settings.DB_USERNAME,
-        db_name=settings.DB_DATABASE_NAME,
-        db_pass=settings.DB_PASSWORD,
+        db_user=db_user,
+        db_name=db_name,
+        db_pass=db_pass,
     )
     redacted_db_kwargs = {
         k: f"{v[:3]}...{v[-3:]}"

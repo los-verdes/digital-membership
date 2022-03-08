@@ -251,7 +251,9 @@ class ProductionSettings(Settings):
             instance_connection_string=os.environ[
                 "DIGITAL_MEMBERSHIP_GCP_SQL_CONNECTION_NAME"
             ],
-            settings=self,
+            db_name=self.DB_DATABASE_NAME,
+            db_user=self.DB_USERNAME,
+            db_pass=self.DB_PASSWORD,
         )
         self.SQLALCHEMY_ENGINE_OPTIONS = dict(
             creator=engine_creator,
