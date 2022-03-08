@@ -9,7 +9,7 @@ from member_card.models.user import User, Role
 from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from member_card import utils
 from member_card import monitoring
-from member_card.db import MemberCardDatastore
+from flask_security import SQLAlchemySessionUserDatastore
 
 if TYPE_CHECKING:
     from flask import Flask
@@ -62,7 +62,7 @@ def create_app(env=None) -> "Flask":
     init_social(app, db.session)
     migrate.init_app(app, db)
 
-    user_datastore = MemberCardDatastore(db.session, User, Role)
+    user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
     security.init_app(
         app=app,
         datastore=user_datastore,
