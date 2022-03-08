@@ -126,12 +126,6 @@ class MembershipCard(db.Model):
         return self._google_pay_jwt
 
     @property
-    def icon_uri(self):
-        from flask import current_app
-
-        return f"{current_app.config['STATIC_ASSET_BASE_URL']}/{self.icon}"
-
-    @property
     def is_voided(self):
         return self.member_until < datetime.now()
 
