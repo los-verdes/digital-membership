@@ -12,6 +12,23 @@ from member_card.utils import get_jinja_template
 logger = logging.getLogger(__name__)
 
 
+def remove_image_background(img):
+    img = img.convert("RGBA")
+
+    img_data = img.getdata()
+
+    updated_img_data = []
+
+    for pixel in img_data:
+        if pixel[0] == 255 and pixel[1] == 255 and pixel[2] == 255:
+            updated_img_data.append((255, 255, 255, 0))
+        else:
+            updated_img_data.append(pixel)
+
+    img.putdata(updated_img_data)
+    return img
+
+
 def trim(im):
     bg = Image.new(im.mode, im.size, im.getpixel((0, 0)))
     diff = ImageChops.difference(im, bg)
@@ -42,23 +59,6 @@ def generate_and_upload_card_image(membership_card, bucket):
             f"{card_image_filename=} uploaded for {membership_card=}: {card_image_url=} ({blob=})"
         )
     return card_image_url
-
-
-def remove_image_background(img):
-    img = img.convert("RGBA")
-
-    img_data = img.getdata()
-
-    updated_img_data = []
-
-    for pixel in img_data:
-        if pixel[0] == 255 and pixel[1] == 255 and pixel[2] == 255:
-            updated_img_data.append((255, 255, 255, 0))
-        else:
-            updated_img_data.append(pixel)
-
-    img.putdata(updated_img_data)
-    return img
 
 
 def generate_card_image(membership_card, output_path):
