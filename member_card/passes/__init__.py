@@ -20,8 +20,8 @@ class MemberCardPass(object):
     icon = "LV_Tee_Crest_onVerde_rgb_filled_icon@2x.png"
     description = "Los Verdes Membership Card"
 
-    background_color = "#00B140"
-    foreground_color = "#000000"
+    background_color = "rgb((0, 177, 64)"
+    foreground_color = "rgb(0, 0, 0)"
 
     @property
     def logo_uri(self):
@@ -269,25 +269,6 @@ class GooglePayPassObject(object):
         return payload
 
 
-def hex2rgb(hex, alpha=None):
-    """Convert a string to all caps."""
-    if not hex.startswith("#"):
-        return hex
-    h = hex.lstrip("#")
-    try:
-        rgb = tuple(int(h[i : i + 2], 16) for i in (0, 2, 4))  # noqa
-    except Exception as err:
-        logger.exception(
-            f"unable to convert {hex=} to rgb: {err}",
-            extra=dict(hex=hex, alpha=alpha, err=err),
-        )
-        return h
-    if alpha is None:
-        return f"rgb({rgb[0]}, {rgb[1]}, {rgb[2]})"
-    else:
-        return f"rgba({rgb[0]}, {rgb[1]}, {rgb[2]}, {alpha})"
-
-
 def create_passfile(membership_card):
 
     pass_info = Generic()
@@ -325,8 +306,8 @@ def create_passfile(membership_card):
     passfile_attrs = dict(
         description=AppleWalletPass.description,
         serialNumber=membership_card.apple_pass_serial_number,
-        backgroundColor=hex2rgb(AppleWalletPass.background_color),
-        foregroundColor=hex2rgb(AppleWalletPass.foreground_color),
+        backgroundColor=AppleWalletPass.background_color,
+        foregroundColor=AppleWalletPass.foreground_color,
         logoText=membership_card.logo_text,
         barcode=qr_code,
         webServiceURL=membership_card.web_service_url,
