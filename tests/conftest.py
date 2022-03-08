@@ -73,6 +73,12 @@ def admin_client(app: "Flask", fake_admin_user):
         yield admin_client
 
 
+@pytest.fixture()
+def user_datastore(app: "Flask") -> SQLAlchemySessionUserDatastore:
+    user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
+    return user_datastore
+
+
 def create_fake_user(app: "Flask", email):
     # user_id = 1
     with app.app_context():
@@ -93,9 +99,8 @@ def create_fake_user(app: "Flask", email):
 
 
 @pytest.fixture()
-def fake_user(app: "Flask") -> User:
+def fake_user(app: "Flask", user_datastore: SQLAlchemySessionUserDatastore) -> User:
     """Create fake user optionally with roles"""
-    user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
     user = create_fake_user(
         app=app,
         email="los.verdes.tester@gmail.com",
@@ -141,8 +146,9 @@ def fake_other_user(app: "Flask") -> User:
 
 
 @pytest.fixture()
-def fake_admin_role(app: "Flask", fake_user) -> Role:
-    user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
+def fake_admin_role(
+    app: "Flask", user_datastore: SQLAlchemySessionUserDatastore, fake_user
+) -> Role:
     admin_role = user_datastore.find_or_create_role(
         name="admin",
         description="Administrators allowed to connect Squarespace extensions, etc.",
@@ -156,8 +162,12 @@ def fake_admin_role(app: "Flask", fake_user) -> Role:
 
 
 @pytest.fixture()
-def fake_admin_user(app: "Flask", fake_user: User, fake_admin_role: Role) -> Role:
-    user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
+def fake_admin_user(
+    app: "Flask",
+    user_datastore: SQLAlchemySessionUserDatastore,
+    fake_user: User,
+    fake_admin_role: Role,
+) -> Role:
     fake_user.roles = [fake_admin_role]
     db.session.add(fake_user)
     db.session.commit()
