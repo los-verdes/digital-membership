@@ -45,10 +45,5 @@ class AppleDeviceRegistration(db.Model):
         back_populates="apple_device_registrations",
     )
 
-    # def __init__(self, device_library_identifier, push_token, membership_card):
-    #     self.device_library_identifier = device_library_identifier
-    #     self.push_token = push_token
-    #     self.membership_card = membership_card
-
     def __repr__(self):
-        return "<Registration %s>" % self.device_library_identifier
+        return "<AppleDeviceRegistration %s>" % self.device_library_identifier
