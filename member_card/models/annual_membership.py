@@ -94,7 +94,7 @@ class AnnualMembership(db.Model):
         return re.sub(
             " +",
             " ",
-            f"AnnualSubscription(\
+            f"<AnnualMembership(\
                 id={self.id}, \
                 order_number={self.order_number}, \
                 name={self.billing_address_first_name} {self.billing_address_last_name}, \
@@ -104,7 +104,7 @@ class AnnualMembership(db.Model):
                 fulfillment_status={self.fulfillment_status}, \
                 is_active={self.is_active}, \
                 is_canceled={self.is_canceled}\
-            )",
+            ) />",
         )
 
     @property
