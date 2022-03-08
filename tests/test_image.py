@@ -56,6 +56,14 @@ def test_trim_with_image_background(untrimmed_with_bg_img: "Image"):
 def test_generate_and_upload_card_image(
     fake_card: "MembershipCard", mocker: "MockerFixture"
 ):
+    mock_image = mocker.patch("member_card.image.Image")
+    # since these Image instances have a bunch of chained calls...:
+    chained_image_methods = ["open", "convert", "crop"]
+    for chained_image_method in chained_image_methods:
+        getattr(mock_image, chained_image_method).return_value = mock_image
+
+    mock_html2image = mocker.patch("member_card.image.Html2Image")
+    mock_hti = mock_html2image.return_value
     mock_upload = mocker.patch("member_card.image.upload_file_to_gcs")
 
     test_bucket_id = "this-os-a-test-bucket"
@@ -77,3 +85,6 @@ def test_generate_and_upload_card_image(
         local_file=ANY,
         remote_path=ANY,
     )
+
+    mock_hti.screenshot.assert_called_once()
+    mock_image.save.assert_called_once()
