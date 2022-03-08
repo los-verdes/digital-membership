@@ -108,10 +108,6 @@ class AnnualMembership(db.Model):
         )
 
     @property
-    def full_name(self):
-        return f"{self.billing_address_first_name} {self.billing_address_last_name}"
-
-    @property
     def is_canceled(self):
         return self.fulfillment_status == "CANCELED"
 
