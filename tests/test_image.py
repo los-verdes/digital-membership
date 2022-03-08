@@ -1,9 +1,12 @@
 from typing import TYPE_CHECKING
 
 from member_card import image
+from mock import ANY
 
 if TYPE_CHECKING:
+    from member_card.models import MembershipCard
     from PIL import Image
+    from pytest_mock.plugin import MockerFixture
 
 
 def test_remove_image_background(untrimmed_with_bg_img: "Image"):
@@ -48,3 +51,29 @@ def test_trim_with_image_background(untrimmed_with_bg_img: "Image"):
     # have the dimensions as the original:
     assert trimmed_img.width == untrimmed_with_bg_img.width
     assert trimmed_img.height == untrimmed_with_bg_img.height
+
+
+def test_generate_and_upload_card_image(
+    fake_card: "MembershipCard", mocker: "MockerFixture"
+):
+    mock_upload = mocker.patch("member_card.image.upload_file_to_gcs")
+
+    test_bucket_id = "this-os-a-test-bucket"
+    test_bucket = mocker.Mock()
+    test_bucket.id = test_bucket_id
+
+    card_image_url = image.generate_and_upload_card_image(
+        membership_card=fake_card,
+        bucket=test_bucket,
+    )
+
+    expected_url = (
+        f"{test_bucket_id}/membership-cards/images/{fake_card.serial_number.hex}.png"
+    )
+    assert card_image_url == expected_url
+
+    mock_upload.assert_called_once_with(
+        bucket=test_bucket,
+        local_file=ANY,
+        remote_path=ANY,
+    )
