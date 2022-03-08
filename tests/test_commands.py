@@ -137,17 +137,10 @@ class TestCommands:
 
     def test_insert_google_pass_class(
         self,
-        app: "Flask",
         runner: "FlaskCliRunner",
         mocker: "MockerFixture",
     ):
         mock_gpay = mocker.patch("member_card.commands.gpay")
-
-        mock_pass_class = mock_gpay.GooglePayPassClass.return_value
-        mock_pass_class_payload = dict(testPayload=True)
-        mock_pass_class.to_dict.return_value = mock_pass_class_payload
-
-        mock_client = mock_gpay.new_client.return_value
 
         result = runner.invoke(
             args=["insert-google-pass-class"],
@@ -155,24 +148,14 @@ class TestCommands:
 
         assert result.exit_code == 0
 
-        mock_client.insert_class.assert_called_once_with(
-            class_id=app.config["GOOGLE_PAY_PASS_CLASS_ID"],
-            payload=mock_pass_class_payload,
-        )
+        mock_gpay.modify_pass_class.assert_called_once_with(operation="insert")
 
     def test_update_google_pass_class(
         self,
-        app: "Flask",
         runner: "FlaskCliRunner",
         mocker: "MockerFixture",
     ):
         mock_gpay = mocker.patch("member_card.commands.gpay")
-
-        mock_pass_class = mock_gpay.GooglePayPassClass.return_value
-        mock_pass_class_payload = dict(testPayload=True)
-        mock_pass_class.to_dict.return_value = mock_pass_class_payload
-
-        mock_client = mock_gpay.new_client.return_value
 
         result = runner.invoke(
             args=["update-google-pass-class"],
@@ -180,10 +163,7 @@ class TestCommands:
 
         assert result.exit_code == 0
 
-        mock_client.patch_class.assert_called_once_with(
-            class_id=app.config["GOOGLE_PAY_PASS_CLASS_ID"],
-            payload=mock_pass_class_payload,
-        )
+        mock_gpay.modify_pass_class.assert_called_once_with(operation="patch")
 
     def test_apple_serial_num_to_hex(
         self,

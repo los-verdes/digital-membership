@@ -110,26 +110,12 @@ def query_order_num(order_num):
 
 @app.cli.command("insert-google-pass-class")
 def insert_google_pass_class():
-    class_id = app.config["GOOGLE_PAY_PASS_CLASS_ID"]
-    pass_class_payload = gpay.GooglePayPassClass(class_id).to_dict()
-
-    insert_class_response = gpay.new_client().insert_class(
-        class_id=class_id,
-        payload=pass_class_payload,
-    )
-    logger.debug(f"Class ID: {class_id} insert response: {insert_class_response=}")
+    return gpay.modify_pass_class(operation="insert")
 
 
 @app.cli.command("update-google-pass-class")
 def update_google_pass_class():
-    class_id = app.config["GOOGLE_PAY_PASS_CLASS_ID"]
-    pass_class_payload = gpay.GooglePayPassClass(class_id).to_dict()
-
-    update_class_response = gpay.new_client().patch_class(
-        class_id=class_id,
-        payload=pass_class_payload,
-    )
-    logger.debug(f"Class ID: {class_id} update response: {update_class_response=}")
+    return gpay.modify_pass_class(operation="patch")
 
 
 @app.cli.command("apple-serial-num-to-hex")
