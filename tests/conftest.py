@@ -1,7 +1,9 @@
 import contextlib
+import os
+import uuid
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
-import uuid
+
 import flask_migrate
 import pytest
 from flask.testing import FlaskClient, FlaskCliRunner
@@ -12,9 +14,13 @@ from member_card.models.annual_membership import AnnualMembership
 from member_card.models.membership_card import MembershipCard
 from member_card.models.user import Role, User
 from mock import Mock, patch
+from PIL import Image
 
 if TYPE_CHECKING:
     from flask import Flask
+
+
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 
 @pytest.fixture(scope="session")
@@ -236,3 +242,17 @@ def fake_card(fake_member: User) -> MembershipCard:
         synchronize_session="fetch"
     )
     db.session.commit()
+
+
+def get_test_file_path(filename):
+    return os.path.join(BASE_DIR, "files", filename)
+
+
+@pytest.fixture()
+def untrimmed_with_bg_img() -> "Image":
+    return Image.open(get_test_file_path("untrimmed_with_bg_img.png"))
+
+
+@pytest.fixture()
+def untrimmed_img() -> "Image":
+    return Image.open(get_test_file_path("untrimmed_img.png"))
