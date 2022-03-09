@@ -5,7 +5,7 @@ from os.path import join
 import flask
 from flask import current_app
 from member_card.db import db
-from member_card.passes.apple_wallet import with_apple_developer_key
+from member_card.passes.apple_wallet import tmp_apple_developer_key
 from member_card.gcp import upload_file_to_gcs
 from member_card.utils import sign
 from wallet.models import Barcode, BarcodeFormat, Generic, Pass
@@ -372,18 +372,18 @@ def create_pkpass(membership_card, key_filepath, key_password, pkpass_out_path=N
     return pkpass_string_buffer
 
 
-@with_apple_developer_key()
-def get_apple_pass_from_card(membership_card, key_filepath=None):
-    app = flask.current_app
+def get_apple_pass_from_card(membership_card):
     db.session.add(membership_card)
     db.session.commit()
+
     _, pkpass_out_path = tempfile.mkstemp()
-    create_pkpass(
-        membership_card=membership_card,
-        key_filepath=key_filepath,
-        key_password=app.config["APPLE_PASS_PRIVATE_KEY_PASSWORD"],
-        pkpass_out_path=pkpass_out_path,
-    )
+    with tmp_apple_developer_key() as key_filepath:
+        create_pkpass(
+            membership_card=membership_card,
+            key_filepath=key_filepath,
+            key_password=flask.current_app.config["APPLE_PASS_PRIVATE_KEY_PASSWORD"],
+            pkpass_out_path=pkpass_out_path,
+        )
     return pkpass_out_path
 
 
