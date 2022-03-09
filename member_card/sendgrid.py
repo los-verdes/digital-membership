@@ -3,6 +3,8 @@ import logging
 from datetime import datetime
 
 import flask
+from jinja2 import Environment, PackageLoader, select_autoescape
+
 from sendgrid import Asm, SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
@@ -74,7 +76,6 @@ def update_sendgrid_template():
     template = json.loads(get_template_resp.body.decode())
     version = template["versions"][0]
     version_id = version["id"]
-    from jinja2 import Environment, PackageLoader, select_autoescape
 
     env = Environment(
         loader=PackageLoader(__name__),
