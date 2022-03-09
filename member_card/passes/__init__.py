@@ -340,14 +340,11 @@ def create_passfile(membership_card):
     return passfile
 
 
-def get_certificate_path(filename):
-    return join(current_app.config["BASE_DIR"], "certificates", filename)
-
-
 def create_pkpass(membership_card, key_filepath, key_password, pkpass_out_path=None):
     serial_number = membership_card.id
-    cert_filepath = get_certificate_path("certificate.pem")
-    wwdr_cert_filepath = get_certificate_path("wwdr.pem")
+    cert_dir = join(current_app.config["BASE_DIR"], "certificates")
+    cert_filepath = join(cert_dir, "certificate.pem")
+    wwdr_cert_filepath = join(cert_dir, "wwdr.pem")
     log_extra = dict(
         apple_serial_number=membership_card.apple_pass_serial_number,
         serial_number=membership_card.serial_number_hex,
