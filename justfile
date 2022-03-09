@@ -324,6 +324,7 @@ local-test *FLAGS:
   just test \
     --capture="tee-sys" \
     --cov-report=term-missing \
+    --verbose \
     {{ FLAGS }}
 
 debug-test *FLAGS:
