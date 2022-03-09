@@ -1,9 +1,8 @@
-import os
 import json
-from google.cloud.secretmanager import SecretManagerServiceClient
-
-# from logzero import logger
 import logging
+import os
+
+from google.cloud.secretmanager import SecretManagerServiceClient
 
 DEFAULT_SECRET_PLACEHOLDERS = {
     "SLACK_SIGNING_SECRET": os.getenv("SLACK_SIGNING_SECRET"),
