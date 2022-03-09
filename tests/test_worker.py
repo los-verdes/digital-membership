@@ -113,29 +113,39 @@ class TestPubsubIngress:
 
 class TestEmailDistribution:
     def test_no_matching_user(self, mocker):
-        mock_send_email = mocker.patch("member_card.worker.generate_and_send_email")
+        mock_generate_email = mocker.patch("member_card.worker.generate_email_message")
+        mock_send_email = mocker.patch("member_card.worker.send_email_message")
         test_message = dict(
             type="email_distribution_request",
             email_distribution_recipient="los.verdes.tester+pls-no-matchy@gmail.com",
         )
+
         return_value = worker.process_email_distribution_request(
             message=test_message,
         )
         logging.debug(f"{return_value=}")
+
         assert return_value is None
+
+        mock_generate_email.assert_not_called()
         mock_send_email.assert_not_called()
 
     def test_with_matching_user_no_memberships(self, mocker, fake_user):
-        mock_send_email = mocker.patch("member_card.worker.generate_and_send_email")
+        mock_generate_email = mocker.patch("member_card.worker.generate_email_message")
+        mock_send_email = mocker.patch("member_card.worker.send_email_message")
         test_message = dict(
             type="email_distribution_request",
             email_distribution_recipient=fake_user.email,
         )
+
         return_value = worker.process_email_distribution_request(
             message=test_message,
         )
         logging.debug(f"{return_value=}")
+
         assert return_value is None
+
+        mock_generate_email.assert_not_called()
         mock_send_email.assert_not_called()
 
     def test_with_matching_user_with_memberships(self, mocker, fake_member):
@@ -145,16 +155,23 @@ class TestEmailDistribution:
         mock_upload_apple_pass = mocker.patch(
             "member_card.worker.generate_and_upload_apple_pass"
         )
-        mock_send_email = mocker.patch("member_card.worker.generate_and_send_email")
+        mock_generate_email = mocker.patch("member_card.worker.generate_email_message")
+        mock_send_email = mocker.patch("member_card.worker.send_email_message")
         test_message = dict(
             type="email_distribution_request",
             email_distribution_recipient=fake_member.email,
         )
+
         return_value = worker.process_email_distribution_request(
             message=test_message,
         )
         logging.debug(f"{return_value=}")
+
         assert return_value is mock_send_email.return_value
+
         mock_upload_image.assert_called_once()
         mock_upload_apple_pass.assert_called_once()
-        mock_send_email.assert_called_once()
+
+        mock_generate_email.assert_called_once()
+
+        mock_send_email.assert_called_once_with(mock_generate_email.return_value)

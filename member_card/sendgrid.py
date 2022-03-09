@@ -9,7 +9,7 @@ from sendgrid.helpers.mail import Mail
 logger = logging.getLogger(__name__)
 
 
-def generate_and_send_email(
+def generate_email_message(
     membership_card,
     card_image_url,
     apple_pass_url,
@@ -48,24 +48,21 @@ def generate_and_send_email(
         "googlePassUrl": membership_card.google_pass_save_url,
     }
 
-    to_email = membership_card.user.email
+    return message
+
+
+def send_email_message(email_message):
+    tos = [p.tos for p in email_message.personalizations]
     logger.info(
-        f"sending '{subject}' email to: {to_email}",
-        extra=dict(subject=subject, to_email=to_email, template_id=message.template_id),
+        f"sending email message to: {tos}",
+        extra=dict(tos=tos, template_id=email_message.template_id),
     )
-    send_card_email(message)
-
-
-def send_card_email(message):
     sg = SendGridAPIClient(flask.current_app.config["SENDGRID_API_KEY"])
-    try:
-        message_json = json.dumps(message.get(), sort_keys=True, indent=4)
-        logger.debug(f"Outgoing email message {message_json=}")
-        response = sg.send(message)
-        logger.debug(f"SendGrid response: {response=}")
-
-    except Exception as err:
-        logger.error(f"Error sending email via SendGrid: {err=}", extra=dict(err=err))
+    message_json = json.dumps(email_message.get(), sort_keys=True, indent=4)
+    logger.debug(f"Outgoing email message {message_json=}")
+    response = sg.send(email_message)
+    logger.debug(f"SendGrid response: {response=}")
+    return response
 
 
 def update_sendgrid_template():
