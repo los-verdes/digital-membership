@@ -120,7 +120,7 @@ class User(db.Model, UserMixin):
         return any(m.is_active for m in self.annual_memberships)
 
     def has_memberships(self):
-        return bool(self.annual_memberships)
+        return len(self.annual_memberships) > 0
 
     @property
     def latest_membership_card(self):
