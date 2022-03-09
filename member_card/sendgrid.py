@@ -110,4 +110,6 @@ def update_sendgrid_template():
     )
 
     logger.debug(f"{patch_version_resp.status_code=}:: {patch_version_resp.headers=}")
-    logger.info(f"{json.loads(patch_version_resp.body.decode())}")
+    logger.info(f"{patch_version_resp.body}")
+
+    return version
