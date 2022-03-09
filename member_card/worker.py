@@ -9,7 +9,7 @@ from member_card.passes import generate_and_upload_apple_pass
 from member_card.models.membership_card import get_or_create_membership_card
 from member_card.db import db
 from member_card.models import AnnualMembership, User
-from member_card.sendgrid import generate_and_send_email
+from member_card.sendgrid import generate_email_message, send_email_message
 from member_card.squarespace import (
     Squarespace,
     squarespace_orders_etl,
@@ -86,13 +86,17 @@ def process_email_distribution_request(message):
 
     apple_pass_url = generate_and_upload_apple_pass(membership_card)
 
-    return generate_and_send_email(
+    email_message = generate_email_message(
         membership_card=membership_card,
         card_image_url=card_image_url,
         apple_pass_url=apple_pass_url,
         submitting_ip_address=message.get("remote_addr"),
         submitted_on=message.get("submitted_on"),
     )
+
+    send_email_resp = send_email_message(email_message)
+    logger.debug(f"send_email_message() response: {send_email_resp=}")
+    return send_email_resp
 
 
 def sync_subscriptions_etl(message, load_all=False):
