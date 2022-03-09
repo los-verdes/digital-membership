@@ -14,7 +14,7 @@ from member_card.models import AnnualMembership, User
 from member_card.models.membership_card import get_or_create_membership_card
 from member_card.models.user import Role
 from member_card.passes import gpay
-from member_card.pubsub import publish_message
+from member_card.gcp import publish_message
 from member_card.sendgrid import update_sendgrid_template
 from member_card import worker
 

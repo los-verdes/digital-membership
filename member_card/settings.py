@@ -219,7 +219,7 @@ class Settings(object):
             self._secrets = json.loads(secrets_json)
         elif secret_name := os.getenv("DIGITAL_MEMBERSHIP_GCP_SECRET_NAME"):
             logger.info(f"Loading secrets from {secret_name=}")
-            from member_card.secrets import retrieve_app_secrets
+            from member_card.gcp import retrieve_app_secrets
 
             if not self._secrets:
                 self._secrets = retrieve_app_secrets(secret_name)

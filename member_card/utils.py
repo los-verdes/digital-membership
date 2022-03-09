@@ -1,18 +1,12 @@
 import hashlib
 import hmac
-import json
 import logging
-import os
 import uuid
-from base64 import b64decode as b64d
 from base64 import urlsafe_b64encode as b64e
 
 import flask
-import google.auth
 from flask_assets import Bundle, Environment
 from flask_login import LoginManager
-from google.auth import impersonated_credentials
-from google.oauth2 import service_account
 from social_core.backends.google import GooglePlusAuth
 from social_core.backends.utils import load_backends
 from social_core.pipeline.user import get_username as social_get_username
@@ -216,30 +210,6 @@ def get_jinja_template(template_path):
         autoescape=select_autoescape(),
     )
     return env.get_template(template_path)
-
-
-DEFAULT_GCP_SCOPES = [
-    "https://www.googleapis.com/auth/cloud-platform",
-]
-
-
-def load_gcp_credentials(scopes=DEFAULT_GCP_SCOPES):
-    credentials, _ = google.auth.default(scopes=scopes)
-    if service_account_info := flask.current_app.config["SERVICE_ACCOUNT_KEY"]:
-        credentials = service_account.Credentials.from_service_account_info(
-            json.loads(b64d(service_account_info).decode()), scopes=scopes
-        )
-    if sa_email := os.getenv("DIGITAL_MEMBERSHIP_SA_EMAIL"):
-        logging.info(f"Impersonating service account: {sa_email}")
-        source_credentials = credentials
-        target_principal = sa_email
-        credentials = impersonated_credentials.Credentials(
-            source_credentials=source_credentials,
-            target_principal=target_principal,
-            target_scopes=scopes,
-            lifetime=500,
-        )
-    return credentials
 
 
 def get_message_str(message_key):

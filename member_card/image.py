@@ -6,7 +6,7 @@ from flask import current_app
 from html2image import Html2Image
 from PIL import Image, ImageChops
 
-from member_card.storage import upload_file_to_gcs
+from member_card.gcp import upload_file_to_gcs
 from member_card.utils import get_jinja_template
 
 logger = logging.getLogger(__name__)
