@@ -14,7 +14,7 @@ from member_card import utils
 from member_card.db import db, get_or_create, get_or_update
 from member_card.models import SquarespaceWebhook, table_metadata
 from member_card.models.user import ensure_user
-from member_card.pubsub import publish_message
+from member_card.gcp import publish_message
 
 if TYPE_CHECKING:
     from collections.abc import Iterable

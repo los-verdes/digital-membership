@@ -19,7 +19,7 @@ from member_card.models import AnnualMembership, MembershipCard, SquarespaceWebh
 from member_card.models.membership_card import get_or_create_membership_card
 from member_card.models.user import edit_user_name
 from member_card.passes import get_apple_pass_from_card
-from member_card.pubsub import publish_message
+from member_card.gcp import publish_message
 from member_card.squarespace import (
     InvalidSquarespaceWebhookSignature,
     ensure_orders_webhook_subscription,
