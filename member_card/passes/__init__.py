@@ -365,10 +365,8 @@ def create_pkpass(membership_card, key_filepath, key_password, pkpass_out_path=N
         key=key_filepath,
         wwdr_certificate=wwdr_cert_filepath,
         password=key_password,
-        zip_file=pkpass_out_path,  # os.path.join(secrets_dir, "test.pkpass"),
+        zip_file=pkpass_out_path,
     )
-    if pkpass_out_path:
-        return pkpass_out_path
     return pkpass_string_buffer
 
 
