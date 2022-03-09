@@ -367,12 +367,12 @@ class TestAuthenticatedRequests:
         authenticated_client: "FlaskClient",
         mocker: "MockerFixture",
     ):
-        mock_get_apple_pass_for_user = mocker.patch(
-            "member_card.app.get_apple_pass_for_user"
+        mock_get_apple_pass_from_card = mocker.patch(
+            "member_card.app.get_apple_pass_from_card"
         )
         response = authenticated_client.get("/passes/apple-pay")
 
-        mock_get_apple_pass_for_user.assert_not_called()
+        mock_get_apple_pass_from_card.assert_not_called()
         assert response.location == "http://localhost/no-active-membership-found"
 
     def test_passes_apple_pay_with_active_membership(
@@ -382,19 +382,18 @@ class TestAuthenticatedRequests:
         mocker: "MockerFixture",
         tmpdir,
     ):
-        mock_get_apple_pass_for_user = mocker.patch(
-            "member_card.app.get_apple_pass_for_user"
+        mock_get_apple_pass_from_card = mocker.patch(
+            "member_card.app.get_apple_pass_from_card"
         )
         fake_pkpass_content = "<insert pass here>"
         p = tmpdir.join("path.pkpass")
         p.write(fake_pkpass_content)
         fake_pkpass_path = p.strpath
-        mock_get_apple_pass_for_user.return_value = fake_pkpass_path
+        mock_get_apple_pass_from_card.return_value = fake_pkpass_path
         response = authenticated_client.get("/passes/apple-pay")
         assert fake_pkpass_content.encode("utf-8") in response.data
         assert response.headers["Content-Type"] == "application/vnd.apple.pkpass"
-        mock_get_apple_pass_for_user.assert_called_once_with(
-            user=fake_card.user,
+        mock_get_apple_pass_from_card.assert_called_once_with(
             membership_card=fake_card,
         )
 

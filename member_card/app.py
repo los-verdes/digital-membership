@@ -18,7 +18,7 @@ from member_card.exceptions import MemberCardException
 from member_card.models import AnnualMembership, MembershipCard, SquarespaceWebhook
 from member_card.models.membership_card import get_or_create_membership_card
 from member_card.models.user import edit_user_name
-from member_card.passes import get_apple_pass_for_user
+from member_card.passes import get_apple_pass_from_card
 from member_card.pubsub import publish_message
 from member_card.squarespace import (
     InvalidSquarespaceWebhookSignature,
@@ -234,8 +234,7 @@ def passes_google_pay(membership_card):
 @active_membership_card_required
 def passes_apple_pay(membership_card):
     attachment_filename = f"lv_apple_pass-{g.user.last_name.lower()}.pkpass"
-    pkpass_out_path = get_apple_pass_for_user(
-        user=g.user,
+    pkpass_out_path = get_apple_pass_from_card(
         membership_card=membership_card,
     )
     return send_file(

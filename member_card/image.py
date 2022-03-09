@@ -39,7 +39,7 @@ def trim(im):
     return im
 
 
-def generate_and_upload_card_image(membership_card, bucket):
+def generate_and_upload_card_image(membership_card):
     with TemporaryDirectory() as image_output_path:
         image_path = generate_card_image(
             membership_card=membership_card,
@@ -48,13 +48,13 @@ def generate_and_upload_card_image(membership_card, bucket):
 
         card_image_filename = os.path.basename(image_path)
         remote_card_image_path = f"membership-cards/images/{card_image_filename}"
-        card_image_url = f"{bucket.id}/{remote_card_image_path}"
 
         blob = upload_file_to_gcs(
-            bucket=bucket,
             local_file=image_path,
             remote_path=remote_card_image_path,
         )
+
+        card_image_url = f"{blob.bucket.id}/{remote_card_image_path}"
         logger.info(
             f"{card_image_filename=} uploaded for {membership_card=}: {card_image_url=} ({blob=})"
         )

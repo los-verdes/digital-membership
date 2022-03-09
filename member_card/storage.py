@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import logging
-
+from flask import current_app
 from google.cloud import storage
 
 from member_card.utils import load_gcp_credentials
@@ -11,17 +11,25 @@ logger = logging.getLogger(__name__)
 def get_client(credentials=None):
     if credentials is None:
         credentials = load_gcp_credentials()
-    return storage.Client()
+    return storage.Client(credentials=credentials)
 
 
-def upload_file_to_gcs(bucket, local_file, remote_path, content_type=None):
-    blob = bucket.blob(remote_path)
+def get_bucket(client=None):
+    if client is None:
+        client = get_client()
+    return client.get_bucket(current_app.config["GCS_BUCKET_ID"])
+
+
+def upload_file_to_gcs(local_file, remote_path, content_type=None):
+    blob = get_bucket().blob(remote_path)
     if content_type is not None:
         blob.content_type = content_type
     blob.cache_control = "no-cache"
+
     logger.debug(f"Uploading {local_file=}) to {remote_path=}")
-    # logger.debug(f"Uploading {blob=} ({local_file=}) to: {bucket=}")
+
     blob.upload_from_filename(local_file)
+
     return blob
 
 
