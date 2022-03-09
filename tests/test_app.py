@@ -348,19 +348,11 @@ class TestAuthenticatedRequests:
         self,
         authenticated_client: "FlaskClient",
         fake_card,
-        mocker: "MockerFixture",
     ):
-        # mock_get_card.return_value
-        mock_generate_pass_jwt = mocker.patch(
-            "member_card.models.membership_card.generate_pass_jwt"
-        )
-        fake_jwt_str = "jwtest"
-        fake_jwt_bytes = fake_jwt_str.encode("utf-8")
-        mock_generate_pass_jwt.return_value = fake_jwt_bytes
+        fake_card._google_pay_jwt = "test_google_pay_jwt"
         response = authenticated_client.get("/passes/google-pay")
 
-        mock_generate_pass_jwt.assert_called_once_with(fake_card)
-        assert response.location == f"https://pay.google.com/gp/v/save/{fake_jwt_str}"
+        assert response.location == fake_card.google_pass_save_url
 
     def test_passes_apple_pay_no_active_membership(
         self,

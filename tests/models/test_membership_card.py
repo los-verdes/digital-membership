@@ -7,21 +7,19 @@ if TYPE_CHECKING:
     from pytest_mock.plugin import MockerFixture
 
 
-def test_google_pay_jwt_cached_locally(
-    fake_card: "MembershipCard", mocker: "MockerFixture"
-):
+def test_google_pay_jwt_cached_locally(mocker: "MockerFixture"):
     mock_gen_jwt = mocker.patch("member_card.models.membership_card.generate_pass_jwt")
+    fake_card = MembershipCard()
     assert fake_card.google_pay_jwt
     assert fake_card.google_pay_jwt
     mock_gen_jwt.assert_called_once()
 
 
 def test_google_pass_save_url(fake_card: "MembershipCard", mocker: "MockerFixture"):
-    mock_gen_jwt = mocker.patch("member_card.models.membership_card.generate_pass_jwt")
+    mocker.patch("member_card.models.membership_card.generate_pass_jwt")
     assert fake_card.google_pass_save_url.startswith(
         "https://pay.google.com/gp/v/save/"
     )
-    mock_gen_jwt.assert_called_once()
 
 
 def test_is_voided(fake_card: "MembershipCard"):
