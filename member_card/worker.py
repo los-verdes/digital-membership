@@ -4,6 +4,9 @@ import logging
 
 from flask import Blueprint, current_app, request
 
+from member_card.image import generate_and_upload_card_image
+from member_card.passes import generate_and_upload_apple_pass
+from member_card.models.membership_card import get_or_create_membership_card
 from member_card.db import db
 from member_card.models import AnnualMembership, User
 from member_card.sendgrid import generate_and_send_email
@@ -76,8 +79,17 @@ def process_email_distribution_request(message):
         f"Found {user=} for {email_distribution_recipient=}. Generating and sending email now",
         extra=log_extra,
     )
+
+    membership_card = get_or_create_membership_card(user)
+
+    card_image_url = generate_and_upload_card_image(membership_card)
+
+    apple_pass_url = generate_and_upload_apple_pass(membership_card)
+
     return generate_and_send_email(
-        user=user,
+        membership_card=membership_card,
+        card_image_url=card_image_url,
+        apple_pass_url=apple_pass_url,
         submitting_ip_address=message.get("remote_addr"),
         submitted_on=message.get("submitted_on"),
     )

@@ -376,7 +376,7 @@ def create_pkpass(membership_card, key_filepath, key_password, pkpass_out_path=N
 
 
 @with_apple_developer_key()
-def get_apple_pass_for_user(user, membership_card, key_filepath=None):
+def get_apple_pass_from_card(membership_card, key_filepath=None):
     app = flask.current_app
     db.session.add(membership_card)
     db.session.commit()
@@ -390,22 +390,19 @@ def get_apple_pass_for_user(user, membership_card, key_filepath=None):
     return pkpass_out_path
 
 
-def generate_and_upload_apple_pass(user, membership_card, bucket):
-    local_apple_pass_path = get_apple_pass_for_user(
-        user=user, membership_card=membership_card
-    )
+def generate_and_upload_apple_pass(membership_card):
+    local_apple_pass_path = get_apple_pass_from_card(membership_card)
     remote_apple_pass_path = f"membership-cards/apple-passes/{membership_card.apple_pass_serial_number}.pkpass"
-    apple_pass_url = f"{bucket.id}/{remote_apple_pass_path}"
     blob = upload_file_to_gcs(
-        bucket=bucket,
         local_file=local_apple_pass_path,
         remote_path=remote_apple_pass_path,
         content_type="application/vnd.apple.pkpass",
     )
+    apple_pass_url = f"{blob.bucket.id}/{remote_apple_pass_path}"
     logger.info(
         f"{local_apple_pass_path=} uploaded for {membership_card.apple_pass_serial_number} ({str(membership_card.serial_number)})",
         extra=dict(
-            bucket=str(bucket),
+            bucket=str(blob.bucket),
             local_apple_pass_path=local_apple_pass_path,
             remote_apple_pass_path=remote_apple_pass_path,
             apple_pass_url=apple_pass_url,

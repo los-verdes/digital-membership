@@ -139,6 +139,12 @@ class TestEmailDistribution:
         mock_send_email.assert_not_called()
 
     def test_with_matching_user_with_memberships(self, mocker, fake_member):
+        mock_upload_image = mocker.patch(
+            "member_card.worker.generate_and_upload_card_image"
+        )
+        mock_upload_apple_pass = mocker.patch(
+            "member_card.worker.generate_and_upload_apple_pass"
+        )
         mock_send_email = mocker.patch("member_card.worker.generate_and_send_email")
         test_message = dict(
             type="email_distribution_request",
@@ -149,4 +155,6 @@ class TestEmailDistribution:
         )
         logging.debug(f"{return_value=}")
         assert return_value is mock_send_email.return_value
+        mock_upload_image.assert_called_once()
+        mock_upload_apple_pass.assert_called_once()
         mock_send_email.assert_called_once()

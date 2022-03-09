@@ -259,7 +259,7 @@ def passkit_get_latest_version_of_pass(membership_card_pass, device_library_iden
 
     logger.debug(f"found in {membership_card_pass=} ({device_library_identifier=}).")
 
-    from member_card.passes import get_apple_pass_for_user
+    from member_card.passes import get_apple_pass_from_card
 
     attachment_filename = (
         f"lv_apple_pass-{membership_card_pass.user.last_name.lower()}.pkpass"
@@ -269,8 +269,7 @@ def passkit_get_latest_version_of_pass(membership_card_pass, device_library_iden
         extra=log_extra,
     )
 
-    pkpass_out_path = get_apple_pass_for_user(
-        user=membership_card_pass.user,
+    pkpass_out_path = get_apple_pass_from_card(
         membership_card=membership_card_pass,
     )
     logger.info(
