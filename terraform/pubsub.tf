@@ -21,7 +21,10 @@ resource "google_pubsub_subscription" "worker" {
 
   message_retention_duration = "${60 * 60 * 12}s"
   ack_deadline_seconds       = 600
-  expiration_policy          = ""
+
+  expiration_policy {
+    ttl = ""
+  }
 
   push_config {
     push_endpoint = local.worker_pubsub_ingress_url
