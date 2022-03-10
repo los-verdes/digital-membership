@@ -12,7 +12,8 @@ logger = logging.getLogger(__name__)
 def tmp_apple_developer_key():
     key_filepath = current_app.config["APPLE_KEY_FILEPATH"]
     if os.path.exists(key_filepath):
-        return key_filepath
+        yield key_filepath
+        return
 
     unformatted_key = current_app.config.get("APPLE_DEVELOPER_PRIVATE_KEY")
     with tempfile.NamedTemporaryFile(mode="w", suffix=".key") as key_fp:
@@ -23,3 +24,4 @@ def tmp_apple_developer_key():
         key_fp.write(formatted_key)
         key_fp.seek(0)
         yield key_fp.name
+        return
