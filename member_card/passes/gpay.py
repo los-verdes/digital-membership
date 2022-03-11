@@ -323,8 +323,6 @@ def generate_pass_jwt(membership_card):
         payload=pass_object_payload,
     )
     response_body = insert_object_response.text
-    if "application/json" in insert_object_response.headers.get("Content-Type"):
-        response_body = insert_object_response.json()
     log_extra.update(
         dict(
             insert_object_response=insert_object_response,
