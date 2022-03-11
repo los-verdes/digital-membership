@@ -277,6 +277,7 @@ def modify_pass_class(pass_class=GooglePayPassClass, operation="patch"):
         payload=pass_class_payload,
     )
     logger.debug(f"Class ID: {class_id} update response: {update_class_response=}")
+    return update_class_response
 
 
 def new_client():
