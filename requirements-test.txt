@@ -150,7 +150,6 @@ google-api-core[grpc]==2.4.0
     #   -r ./requirements.txt
     #   google-api-python-client
     #   google-cloud-appengine-logging
-    #   google-cloud-build
     #   google-cloud-core
     #   google-cloud-firestore
     #   google-cloud-logging
@@ -182,8 +181,6 @@ google-cloud-audit-log==0.2.0
     # via
     #   -r ./requirements.txt
     #   google-cloud-logging
-google-cloud-build==3.7.1
-    # via -r ./requirements.txt
 google-cloud-core==2.2.1
     # via
     #   -r ./requirements.txt
@@ -375,7 +372,6 @@ proto-plus==1.19.8
     # via
     #   -r ./requirements.txt
     #   google-cloud-appengine-logging
-    #   google-cloud-build
     #   google-cloud-firestore
     #   google-cloud-logging
     #   google-cloud-pubsub
@@ -460,8 +456,11 @@ requests==2.27.1
     #   flask-recaptcha
     #   google-api-core
     #   google-cloud-storage
+    #   requests-mock
     #   requests-oauthlib
     #   social-auth-core
+requests-mock==1.9.3
+    # via -r requirements-test.in
 requests-oauthlib==1.3.0
     # via
     #   -r ./requirements.txt
@@ -485,6 +484,7 @@ six==1.16.0
     #   libsass
     #   pyopenssl
     #   python-dateutil
+    #   requests-mock
     #   social-auth-app-flask
     #   social-auth-app-flask-sqlalchemy
     #   social-auth-storage-sqlalchemy
