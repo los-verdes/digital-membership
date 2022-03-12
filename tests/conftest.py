@@ -12,6 +12,7 @@ from member_card import create_worker_app
 from member_card.db import db
 from member_card.models.annual_membership import AnnualMembership
 from member_card.models.membership_card import MembershipCard
+from member_card.models import AppleDeviceRegistration
 from member_card.models.user import Role, User
 from mock import Mock, patch
 from PIL import Image
@@ -238,6 +239,9 @@ def fake_card(fake_member: User) -> MembershipCard:
     yield fake_membership_card
 
     fake_membership_card.user_id = None
+    db.session.query(AppleDeviceRegistration).filter_by(
+        membership_card_id=fake_membership_card.id
+    ).delete(synchronize_session="fetch")
     db.session.query(MembershipCard).filter_by(id=fake_membership_card.id).delete(
         synchronize_session="fetch"
     )
