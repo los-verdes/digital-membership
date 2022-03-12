@@ -277,6 +277,11 @@ ignored-modules=flask,
                 alembic,
                 social_sqlalchemy,
                 flask_security,
+                pytest,
+                member_card,
+                tests,
+                mock,
+                bs4,
                 click
 
 # Show a hint with possible names when a member name was not found. The aspect

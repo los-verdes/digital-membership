@@ -46,7 +46,7 @@
                   <span id="emailDistributionRecipientError" class="mdl-textfield__error">Please enter a valid email
                     before submitting.</span>
                 </div>
-                <div class="error-messages mdl-color-text--red">{{ form_error_message }}</div>
+                <div id="form-error-message" class="error-messages mdl-color-text--red">{{ form_error_message }}</div>
                 <div id='recaptcha' class="g-recaptcha" data-callback="onSubmit" data-expired-callback="onCaptchaExpired" data-error-callback="onCaptchaError"
                      data-sitekey="{{ recaptcha_site_key }}" data-size="invisible">
                 </div>

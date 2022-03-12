@@ -1,18 +1,24 @@
 import json
 import logging
 import os
-from functools import partial
-from typing import TYPE_CHECKING, Tuple
-from google.cloud.sql.connector import connector
-
-if TYPE_CHECKING:
-    from pg8000 import dbapi
+from typing import Tuple
 
 logger = logging.getLogger("member_card")
 
 
 class Settings(object):
     _secrets: dict = dict()
+
+    MESSAGES = dict(
+        edit_user_name_success="User display name updated!",
+        captcha_not_verified="Request not verified via ReCaptcha! Please try again or contact support@losverd.es for assistance.",
+        missing_email_distribution_recipient="No email address in request form data! Please try again or contact support@losverd.es for assistance.",
+        squarespace_oauth_connect_error="Squarespace oauth connect error: error returned in response from Squarespace",
+        squarespace_oauth_connect_missing_code="Squarespace oauth connect error: code missing from request args",
+        squarespace_oauth_connect_missing_state="Squarespace oauth connect error: state missing from request args",
+        squarespace_oauth_state_mismatch="Squarespace oauth connect error: session versus request args mismatch",
+        verify_pass_invalid_signature="Unable to verify signature!",
+    )
 
     APPLE_DEVELOPER_ORG_NAME: str = "Jeffrey Hogan"  # TODO: if LV is a legit 501c this can maybe become a less personal org...
     APPLE_DEVELOPER_PASS_TYPE_ID: str = "pass.es.losverd.card"
@@ -84,9 +90,8 @@ class Settings(object):
     CDN_HTTPS = True
     FLASK_ASSETS_USE_CDN = True
 
-    DB_CONNECTION_NAME: str = os.environ["DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME"]
-    DB_USERNAME: str = os.environ["DIGITAL_MEMBERSHIP_DB_USERNAME"]
-    DB_DATABASE_NAME: str = os.environ["DIGITAL_MEMBERSHIP_DB_DATABASE_NAME"]
+    DB_USERNAME: str = os.getenv("DIGITAL_MEMBERSHIP_DB_USERNAME", "")
+    DB_DATABASE_NAME: str = os.getenv("DIGITAL_MEMBERSHIP_DB_DATABASE_NAME", "")
     DB_PASSWORD: str = os.getenv("DIGITAL_MEMBERSHIP_DB_ACCESS_TOKEN")
 
     BASE_URL: str = (
@@ -194,7 +199,7 @@ class Settings(object):
     SECRET_KEY: str = os.environ.get("SECRET_KEY", "not-very-secret-at-all")
     SESSION_COOKIE_NAME: str = "psa_session"
 
-    SQLALCHEMY_DATABASE_URI: str = "postgresql://member-card-user:member-card-password@127.0.0.1:5433/digital-membership"
+    SQLALCHEMY_DATABASE_URI: str = "postgresql://member-card-user:member-card-password@127.0.0.1:5433/lv-digital-membership"
     SQLALCHEMY_TRACK_MODIFICATIONS: bool = False
 
     def export_dict_as_settings(self, dict_to_export: dict[str, str]) -> None:
@@ -207,49 +212,6 @@ class Settings(object):
         logger.debug(f"Exporting {list(self._secrets.keys())} as setting attributes...")
         self.export_dict_as_settings(self._secrets)
 
-    def use_gcp_sql_connector(self) -> None:
-        db_connection_kwargs = dict(
-            instance_connection_string=self.DB_CONNECTION_NAME,
-            db_user=self.DB_USERNAME,
-            db_name=self.DB_DATABASE_NAME,
-            db_pass=self.DB_PASSWORD,
-        )
-
-        logger.debug(
-            {
-                k: f"{v[:3]}...{v[-3:]}"
-                for k, v in db_connection_kwargs.items()
-                if v is not None
-            }
-        )
-
-        def get_db_connector(
-            instance_connection_string: str, db_user: str, db_name: str, db_pass: str
-        ) -> "dbapi.Connection":
-            conn_kwargs = dict(
-                user=db_user,
-                db=db_name,
-                # enable_iam_auth=True,
-            )
-
-            conn_obj = connector.Connector()
-            if db_pass:
-                conn_kwargs["password"] = db_pass
-            else:
-                # TODO: drop this kludge pending release of https://github.com/GoogleCloudPlatform/cloud-sql-python-connector/pull/273
-                conn_obj._enable_iam_auth = not db_pass
-            conn: "dbapi.Connection" = conn_obj.connect(
-                instance_connection_string,
-                "pg8000",
-                **conn_kwargs,
-            )
-            return conn
-
-        engine_creator = partial(get_db_connector, **db_connection_kwargs)
-        self.SQLALCHEMY_ENGINE_OPTIONS = dict(
-            creator=engine_creator,
-        )
-
     def __init__(self) -> None:
         logger.debug(f"Initializing settings class: {type(self)}...")
         logger.info("env var keys", extra=dict(env_var_keys=list(os.environ.keys())))
@@ -257,7 +219,7 @@ class Settings(object):
             self._secrets = json.loads(secrets_json)
         elif secret_name := os.getenv("DIGITAL_MEMBERSHIP_GCP_SECRET_NAME"):
             logger.info(f"Loading secrets from {secret_name=}")
-            from member_card.secrets import retrieve_app_secrets
+            from member_card.gcp import retrieve_app_secrets
 
             if not self._secrets:
                 self._secrets = retrieve_app_secrets(secret_name)
@@ -282,6 +244,21 @@ class ProductionSettings(Settings):
     SQLALCHEMY_ECHO: bool = False
     CDN_DEBUG = False
 
+    def use_gcp_sql_connector(self) -> None:
+        from member_card.db import get_gcp_sql_engine_creator
+
+        engine_creator = get_gcp_sql_engine_creator(
+            instance_connection_string=os.environ[
+                "DIGITAL_MEMBERSHIP_GCP_SQL_CONNECTION_NAME"
+            ],
+            db_name=self.DB_DATABASE_NAME,
+            db_user=self.DB_USERNAME,
+            db_pass=self.DB_PASSWORD,
+        )
+        self.SQLALCHEMY_ENGINE_OPTIONS = dict(
+            creator=engine_creator,
+        )
+
     def __init__(self) -> None:
 
         super().__init__()
@@ -295,6 +272,15 @@ class ProductionSettings(Settings):
 
 class DevelopementSettings(Settings):
     SQLALCHEMY_ECHO: bool = False
+
+
+class TestSettings(Settings):
+    SQLALCHEMY_ECHO: bool = False
+    SQLALCHEMY_DATABASE_URI: str = "postgresql://test-runner:hi-im-testing@127.0.0.1:5433/lv-digital-membership-tests"
+
+    # Enabling tracing during tests to ensure we hit various tracing-specific conditional branches;
+    # however external clients / calls will (ideally!) be mocked out in such scenarios
+    TRACING_ENABLED = True
 
 
 class RemoteSqlProductionSettings(ProductionSettings):
@@ -311,6 +297,7 @@ def get_settings_obj_for_env(env: str = None, default_settings_class=Settings):
         "compose": DockerComposeSettings,
         "production": ProductionSettings,
         "remote-sql": RemoteSqlProductionSettings,
+        "tests": TestSettings,
     }
 
     return settings_objs_by_env.get(env, default_settings_class)

@@ -267,6 +267,19 @@ class GooglePayApiClient(object):
         )
 
 
+def modify_pass_class(pass_class=GooglePayPassClass, operation="patch"):
+    class_id = current_app.config["GOOGLE_PAY_PASS_CLASS_ID"]
+    pass_class_payload = pass_class(class_id).to_dict()
+
+    class_api_method = f"{operation.lower()}_class"
+    update_class_response = getattr(new_client(), class_api_method)(
+        class_id=class_id,
+        payload=pass_class_payload,
+    )
+    logger.debug(f"Class ID: {class_id} update response: {update_class_response=}")
+    return update_class_response
+
+
 def new_client():
     return GooglePayApiClient(
         service_account_file=current_app.config["GOOGLE_PAY_SERVICE_ACCOUNT_FILE"],
@@ -310,8 +323,6 @@ def generate_pass_jwt(membership_card):
         payload=pass_object_payload,
     )
     response_body = insert_object_response.text
-    if "application/json" in insert_object_response.headers.get("Content-Type"):
-        response_body = insert_object_response.json()
     log_extra.update(
         dict(
             insert_object_response=insert_object_response,

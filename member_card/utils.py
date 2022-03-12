@@ -1,25 +1,12 @@
-import contextlib
 import hashlib
 import hmac
-import json
 import logging
-import os
 import uuid
-from base64 import b64decode as b64d
 from base64 import urlsafe_b64encode as b64e
 
 import flask
-import google.auth
 from flask_assets import Bundle, Environment
 from flask_login import LoginManager
-from google.auth import impersonated_credentials
-from google.oauth2 import service_account
-from opentelemetry import trace
-from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
-from opentelemetry.propagate import set_global_textmap
-from opentelemetry.propagators.cloud_trace_propagator import CloudTraceFormatPropagator
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from social_core.backends.google import GooglePlusAuth
 from social_core.backends.utils import load_backends
 from social_core.pipeline.user import get_username as social_get_username
@@ -28,28 +15,6 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from webassets.filter import get_filter
 
 from member_card.settings import get_settings_obj_for_env
-
-
-@contextlib.contextmanager
-def remember_cwd():
-    curdir = os.getcwd()
-    try:
-        yield
-    finally:
-        os.chdir(curdir)
-
-
-def initialize_tracer():
-    set_global_textmap(CloudTraceFormatPropagator())
-    tracer_provider = TracerProvider()
-    cloud_trace_exporter = CloudTraceSpanExporter()
-    tracer_provider.add_span_processor(
-        # BatchSpanProcessor buffers spans and sends them in batches in a
-        # background thread. The default parameters are sensible, but can be
-        # tweaked to optimize your performance
-        BatchSpanProcessor(cloud_trace_exporter)
-    )
-    trace.set_tracer_provider(tracer_provider)
 
 
 class MembershipLoginManager(LoginManager):
@@ -105,12 +70,12 @@ def verify_hex_digest(
     return hmac.compare_digest(expected, signature)
 
 
-def load_settings(app):
+def load_settings(app, env=None):
+    if env is None:
+        logging.debug(f"{app.config['ENV']=}")
+        env = app.config["ENV"].lower().strip()
 
-    logging.debug(f"{app.config['ENV']=}")
-    settings_env = app.config["ENV"].lower().strip()
-
-    settings_obj = get_settings_obj_for_env(settings_env)
+    settings_obj = get_settings_obj_for_env(env)
     app.config.from_object(settings_obj())
 
 
@@ -247,25 +212,6 @@ def get_jinja_template(template_path):
     return env.get_template(template_path)
 
 
-DEFAULT_GCP_SCOPES = [
-    "https://www.googleapis.com/auth/cloud-platform",
-]
-
-
-def load_gcp_credentials(scopes=DEFAULT_GCP_SCOPES):
-    credentials, _ = google.auth.default(scopes=scopes)
-    if service_account_info := flask.current_app.config["SERVICE_ACCOUNT_KEY"]:
-        credentials = service_account.Credentials.from_service_account_info(
-            json.loads(b64d(service_account_info).decode()), scopes=scopes
-        )
-    if sa_email := os.getenv("DIGITAL_MEMBERSHIP_SA_EMAIL"):
-        logging.info(f"Impersonating service account: {sa_email}")
-        source_credentials = credentials
-        target_principal = sa_email
-        credentials = impersonated_credentials.Credentials(
-            source_credentials=source_credentials,
-            target_principal=target_principal,
-            target_scopes=scopes,
-            lifetime=500,
-        )
-    return credentials
+def get_message_str(message_key):
+    message_str = flask.current_app.config["MESSAGES"][message_key]
+    return message_str

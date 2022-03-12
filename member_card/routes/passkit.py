@@ -31,17 +31,22 @@ def applepass_auth_token_required(f):
         # 128-bit integer for our apple passes
         serial_number = UUID(int=int(serial_number))
         auth_header = request.headers.get("Authorization")
-        auth_header_scheme, incoming_token = auth_header.split(" ", 1)
-        assert (
-            auth_header_scheme in supported_auth_header_schemes
-        ), f"{auth_header_scheme=} not in {supported_auth_header_schemes=}"
         log_extra = dict(
             pass_type_identifier=pass_type_identifier,
             serial_number=str(serial_number),
-            # TODO: drop this soonish
-            auth_header=auth_header,
-            incoming_token=incoming_token,
         )
+
+        if auth_header is None:
+            logger.warning("no authorization header in request", extra=log_extra)
+            return "unable to verify auth token", 401
+
+        auth_header_scheme, incoming_token = auth_header.split(" ", 1)
+        if auth_header_scheme not in supported_auth_header_schemes:
+            logger.warning(
+                f"{auth_header_scheme} not in {supported_auth_header_schemes}",
+                extra=log_extra,
+            )
+            return f"{auth_header_scheme=} not supported!", 401
 
         # See if we can find the relevant card:
         logger.debug(
@@ -49,7 +54,13 @@ def applepass_auth_token_required(f):
         )
         p = MembershipCard.query.filter_by(
             apple_pass_type_identifier=pass_type_identifier, serial_number=serial_number
-        ).first_or_404()
+        ).first()
+        if not p:
+            logger.warning(
+                f"unable to find membership card matching serial number: {serial_number} ({pass_type_identifier=})",
+                extra=log_extra,
+            )
+            return "unable to find membership card matching serial number", 401
 
         log_extra.update(dict(card=p, user_email=p.user.email))
 
@@ -99,17 +110,30 @@ def passkit_register_device_for_pass_push_notifications(
         f"registering passkit {device_library_identifier=} for {membership_card_pass=}",
         extra=log_extra,
     )
+
+    if request.json is None or request.json.get("pushToken") is None:
+        logger.warning(
+            f"unable to register device for {membership_card_pass=}, no push token provided!"
+        )
+        return "pushToken required!", 422
+
     push_token = request.json["pushToken"]
+
     # Next, see if we _already_ have a registration for this device
     logger.debug(
         f"Grabbed {push_token=}, looking up any existing registrations...",
         extra=log_extra,
     )
 
-    registration = membership_card_pass.apple_device_registrations.filter_by(
-        device_library_identifier=device_library_identifier, push_token=push_token
+    registration = AppleDeviceRegistration.query.filter_by(
+        device_library_identifier=device_library_identifier,
+        membership_card_id=membership_card_pass.id,
     ).first()
+
     if registration:
+        setattr(registration, "push_token", push_token)
+        db.session.add(registration)
+        db.session.commit()
         logger.warning(
             f"passkit {device_library_identifier=} / {membership_card_pass=} already registered!: {registration=}",
             extra=log_extra,
@@ -259,7 +283,7 @@ def passkit_get_latest_version_of_pass(membership_card_pass, device_library_iden
 
     logger.debug(f"found in {membership_card_pass=} ({device_library_identifier=}).")
 
-    from member_card.passes import get_apple_pass_for_user
+    from member_card.passes import get_apple_pass_from_card
 
     attachment_filename = (
         f"lv_apple_pass-{membership_card_pass.user.last_name.lower()}.pkpass"
@@ -268,8 +292,9 @@ def passkit_get_latest_version_of_pass(membership_card_pass, device_library_iden
         f"generating updated pass for {membership_card_pass.user=}",
         extra=log_extra,
     )
-    pkpass_out_path = get_apple_pass_for_user(
-        user=membership_card_pass.user,
+
+    pkpass_out_path = get_apple_pass_from_card(
+        membership_card=membership_card_pass,
     )
     logger.info(
         f"sending out updated pass with {attachment_filename=}",

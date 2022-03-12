@@ -3,22 +3,22 @@ import logging
 from datetime import datetime
 
 import flask
-from member_card.image import generate_and_upload_card_image
-from member_card.passes import generate_and_upload_apple_pass
-from member_card.models.membership_card import get_or_create_membership_card
-from member_card.storage import get_client as get_gcs_client
+from jinja2 import Environment, PackageLoader, select_autoescape
+
 from sendgrid import Asm, SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
 logger = logging.getLogger(__name__)
 
 
-def generate_and_send_email(
-    user, subject=None, submitted_on=None, submitting_ip_address=None
+def generate_email_message(
+    membership_card,
+    card_image_url,
+    apple_pass_url,
+    subject=None,
+    submitted_on=None,
+    submitting_ip_address=None,
 ):
-    if not user.has_active_memberships:
-        raise NotImplementedError
-
     app = flask.current_app
 
     if subject is None:
@@ -27,26 +27,9 @@ def generate_and_send_email(
     if submitted_on is None:
         submitted_on = datetime.utcnow().isoformat()
 
-    gcs_bucket = get_gcs_client().get_bucket(app.config["GCS_BUCKET_ID"])
-
-    membership_card = get_or_create_membership_card(
-        user=user,
-    )
-
-    card_image_url = generate_and_upload_card_image(
-        membership_card=membership_card,
-        bucket=gcs_bucket,
-    )
-
-    apple_pass_url = generate_and_upload_apple_pass(
-        user=user,
-        membership_card=membership_card,
-        bucket=gcs_bucket,
-    )
-
     message = Mail(
         from_email=app.config["EMAIL_FROM_ADDRESS"],
-        to_emails=user.email,
+        to_emails=membership_card.user.email,
     )
     message.asm = Asm(int(app.config["SENDGRID_GROUP_ID"]))
     message.template_id = app.config["SENDGRID_TEMPLATE_ID"]
@@ -67,24 +50,21 @@ def generate_and_send_email(
         "googlePassUrl": membership_card.google_pass_save_url,
     }
 
-    to_email = user.email
+    return message
+
+
+def send_email_message(email_message):
+    tos = [p.tos for p in email_message.personalizations]
     logger.info(
-        f"sending '{subject}' email to: {to_email}",
-        extra=dict(subject=subject, to_email=to_email, template_id=message.template_id),
+        f"sending email message to: {tos}",
+        extra=dict(tos=tos, template_id=email_message.template_id),
     )
-    send_card_email(message)
-
-
-def send_card_email(message):
     sg = SendGridAPIClient(flask.current_app.config["SENDGRID_API_KEY"])
-    try:
-        message_json = json.dumps(message.get(), sort_keys=True, indent=4)
-        logger.debug(f"Outgoing email message {message_json=}")
-        response = sg.send(message)
-        logger.debug(f"SendGrid response: {response=}")
-
-    except Exception as err:
-        logger.error(f"Error sending email via SendGrid: {err=}", extra=dict(err=err))
+    message_json = json.dumps(email_message.get(), sort_keys=True, indent=4)
+    logger.debug(f"Outgoing email message {message_json=}")
+    response = sg.send(email_message)
+    logger.debug(f"SendGrid response: {response=}")
+    return response
 
 
 def update_sendgrid_template():
@@ -96,7 +76,6 @@ def update_sendgrid_template():
     template = json.loads(get_template_resp.body.decode())
     version = template["versions"][0]
     version_id = version["id"]
-    from jinja2 import Environment, PackageLoader, select_autoescape
 
     env = Environment(
         loader=PackageLoader(__name__),
@@ -131,4 +110,6 @@ def update_sendgrid_template():
     )
 
     logger.debug(f"{patch_version_resp.status_code=}:: {patch_version_resp.headers=}")
-    logger.info(f"{json.loads(patch_version_resp.body.decode())}")
+    logger.info(f"{patch_version_resp.body}")
+
+    return version
