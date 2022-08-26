@@ -40,8 +40,7 @@ resource "google_cloud_run_service" "digital_membership" {
 
   metadata {
     annotations = {
-      "run.googleapis.com/launch-stage"          = "BETA"
-      "run.googleapis.com/execution-environment" = "gen2"
+      "run.googleapis.com/launch-stage" = "BETA"
     }
   }
 
