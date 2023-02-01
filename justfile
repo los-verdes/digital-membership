@@ -24,7 +24,7 @@ export DIGITAL_MEMBERSHIP_BASE_URL := "localcard.losverd.es:5000"
 export GCS_BUCKET_ID := "cstatic.losverd.es"
 
 set-tf-ver-output:
-  echo "::set-output name=terraform_version::$(cat {{ tf_subdir }}/.terraform-version)"
+  echo "terraform_version=$(cat {{ tf_subdir }}/.terraform-version)" | tee --append "$GITHUB_OUTPUT"
 
 tf-db +CMD:
   terraform -chdir="{{ justfile_directory() + "/" + db_tf_subdir }}" \
@@ -155,7 +155,7 @@ cloudbuild CONFIG_FILE *SUBSTITUTIONS="":
 
   if [[ -n "$IMAGE_OUTPUT" ]]
   then
-    echo "::set-output name=image::$IMAGE_OUTPUT"
+    echo "image=$IMAGE_OUTPUT" | tee --append "$GITHUB_OUTPUT"
   fi
 
 cloudbuild-image-website:
@@ -194,7 +194,7 @@ push: build
 
 set-tf-output-output output_name:
   output_value="$(just tf output -raw {{ output_name }})"
-  echo "::set-output name=output::$output_value"
+  echo "output=$output_value" | tee --append "$GITHUB_OUTPUT"
 
 deploy: ci-install-python-reqs build push
   just tf init
@@ -213,7 +213,7 @@ configure-database:
     -auto-approve
   SQL_USER_NAME="$(just tf-db output -raw management_sql_user_name)"
   echo "$SQL_USER_NAME"
-  echo "::set-output name=management_sql_user_name::$SQL_USER_NAME"
+  echo "management_sql_user_name=$SQL_USER_NAME" | tee --append "$GITHUB_OUTPUT"
 
 apply-migrations: ci-install-python-reqs
   #!/bin/bash
