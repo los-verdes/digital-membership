@@ -9,6 +9,10 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 3.0"
     }
+    google-beta = {
+      source  = "hashicorp/google-beta"
+      version = "~> 4.8.0"
+    }
   }
 }
 
@@ -26,4 +30,3 @@ resource "google_app_engine_application" "digital_membership" {
 resource "google_sourcerepo_repository" "digital_membership" {
   name = "github_${replace(var.github_repo, "/", "_")}"
 }
-
