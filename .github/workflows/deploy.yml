@@ -43,13 +43,13 @@ jobs:
       id-token: "write"
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup just
         uses: extractions/setup-just@v1
 
       - name: Utilize .terraform cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: terraform/.terraform
           key: ${{ hashFiles('terraform/.terraform.lock.hcl') }}
@@ -119,13 +119,13 @@ jobs:
       management_sql_user_password: ${{ steps.just-configure-database.outputs.management_sql_user_password }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup just
         uses: extractions/setup-just@v1
 
       - name: Utilize .terraform cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: terraform/.terraform
           key: ${{ hashFiles('terraform/.terraform.lock.hcl') }}
