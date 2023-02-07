@@ -6,8 +6,9 @@ concurrency:
   cancel-in-progress: false
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch: {}
+  # push:
+  #   branches: [main]
 
 # jscpd:ignore-start
 jobs:
@@ -43,13 +44,13 @@ jobs:
       id-token: "write"
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup just
         uses: extractions/setup-just@v1
 
       - name: Utilize .terraform cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: terraform/.terraform
           key: ${{ hashFiles('terraform/.terraform.lock.hcl') }}
@@ -119,13 +120,13 @@ jobs:
       management_sql_user_password: ${{ steps.just-configure-database.outputs.management_sql_user_password }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup just
         uses: extractions/setup-just@v1
 
       - name: Utilize .terraform cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: terraform/.terraform
           key: ${{ hashFiles('terraform/.terraform.lock.hcl') }}
@@ -155,7 +156,7 @@ jobs:
         run: |
           creds="$(cat '${{ env.GOOGLE_APPLICATION_CREDENTIALS }}')"
           echo "::add-mask::$creds"
-          echo "::set-output name=creds::$creds"
+          echo "creds=$creds" | tee --append "$GITHUB_OUTPUT"
 
       - name: Start Google Cloud SQL Proxy
         uses: mattes/gce-cloudsql-proxy-action@v1

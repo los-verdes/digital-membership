@@ -4,13 +4,11 @@ from os.path import join
 
 import flask
 from flask import current_app
-from wallet.models import Barcode, BarcodeFormat, Generic, Pass
-
-from member_card.apple_wallet import with_apple_developer_key
 from member_card.db import db
-from member_card.models.membership_card import get_or_create_membership_card
-from member_card.storage import upload_file_to_gcs
+from member_card.passes.apple_wallet import tmp_apple_developer_key
+from member_card.gcp import upload_file_to_gcs
 from member_card.utils import sign
+from wallet.models import Barcode, BarcodeFormat, Generic, Pass
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +20,8 @@ class MemberCardPass(object):
     icon = "LV_Tee_Crest_onVerde_rgb_filled_icon@2x.png"
     description = "Los Verdes Membership Card"
 
-    background_color = "#00B140"
-    foreground_color = "#000000"
+    background_color = "rgb((0, 177, 64)"
+    foreground_color = "rgb(0, 0, 0)"
 
     @property
     def logo_uri(self):
@@ -271,25 +269,6 @@ class GooglePayPassObject(object):
         return payload
 
 
-def hex2rgb(hex, alpha=None):
-    """Convert a string to all caps."""
-    if not hex.startswith("#"):
-        return hex
-    h = hex.lstrip("#")
-    try:
-        rgb = tuple(int(h[i : i + 2], 16) for i in (0, 2, 4))  # noqa
-    except Exception as err:
-        logger.exception(
-            f"unable to convert {hex=} to rgb: {err}",
-            extra=dict(hex=hex, alpha=alpha, err=err),
-        )
-        return h
-    if alpha is None:
-        return f"rgb({rgb[0]}, {rgb[1]}, {rgb[2]})"
-    else:
-        return f"rgba({rgb[0]}, {rgb[1]}, {rgb[2]}, {alpha})"
-
-
 def create_passfile(membership_card):
 
     pass_info = Generic()
@@ -327,8 +306,8 @@ def create_passfile(membership_card):
     passfile_attrs = dict(
         description=AppleWalletPass.description,
         serialNumber=membership_card.apple_pass_serial_number,
-        backgroundColor=hex2rgb(AppleWalletPass.background_color),
-        foregroundColor=hex2rgb(AppleWalletPass.foreground_color),
+        backgroundColor=AppleWalletPass.background_color,
+        foregroundColor=AppleWalletPass.foreground_color,
         logoText=membership_card.logo_text,
         barcode=qr_code,
         webServiceURL=membership_card.web_service_url,
@@ -361,14 +340,11 @@ def create_passfile(membership_card):
     return passfile
 
 
-def get_certificate_path(filename):
-    return join(current_app.config["BASE_DIR"], "certificates", filename)
-
-
 def create_pkpass(membership_card, key_filepath, key_password, pkpass_out_path=None):
     serial_number = membership_card.id
-    cert_filepath = get_certificate_path("certificate.pem")
-    wwdr_cert_filepath = get_certificate_path("wwdr.pem")
+    cert_dir = join(current_app.config["BASE_DIR"], "certificates")
+    cert_filepath = join(cert_dir, "certificate.pem")
+    wwdr_cert_filepath = join(cert_dir, "wwdr.pem")
     log_extra = dict(
         apple_serial_number=membership_card.apple_pass_serial_number,
         serial_number=membership_card.serial_number_hex,
@@ -389,46 +365,39 @@ def create_pkpass(membership_card, key_filepath, key_password, pkpass_out_path=N
         key=key_filepath,
         wwdr_certificate=wwdr_cert_filepath,
         password=key_password,
-        zip_file=pkpass_out_path,  # os.path.join(secrets_dir, "test.pkpass"),
+        zip_file=pkpass_out_path,
     )
-    if pkpass_out_path:
-        return pkpass_out_path
     return pkpass_string_buffer
 
 
-@with_apple_developer_key()
-def get_apple_pass_for_user(user, membership_card=None, key_filepath=None):
-    app = flask.current_app
-    if membership_card is None:
-        membership_card = get_or_create_membership_card(user=user)
+def get_apple_pass_from_card(membership_card):
     db.session.add(membership_card)
     db.session.commit()
+
     _, pkpass_out_path = tempfile.mkstemp()
-    create_pkpass(
-        membership_card=membership_card,
-        key_filepath=key_filepath,
-        key_password=app.config["APPLE_PASS_PRIVATE_KEY_PASSWORD"],
-        pkpass_out_path=pkpass_out_path,
-    )
+    with tmp_apple_developer_key() as key_filepath:
+        create_pkpass(
+            membership_card=membership_card,
+            key_filepath=key_filepath,
+            key_password=flask.current_app.config["APPLE_PASS_PRIVATE_KEY_PASSWORD"],
+            pkpass_out_path=pkpass_out_path,
+        )
     return pkpass_out_path
 
 
-def generate_and_upload_apple_pass(user, membership_card, bucket):
-    local_apple_pass_path = get_apple_pass_for_user(
-        user=user, membership_card=membership_card
-    )
+def generate_and_upload_apple_pass(membership_card):
+    local_apple_pass_path = get_apple_pass_from_card(membership_card)
     remote_apple_pass_path = f"membership-cards/apple-passes/{membership_card.apple_pass_serial_number}.pkpass"
-    apple_pass_url = f"{bucket.id}/{remote_apple_pass_path}"
     blob = upload_file_to_gcs(
-        bucket=bucket,
         local_file=local_apple_pass_path,
         remote_path=remote_apple_pass_path,
         content_type="application/vnd.apple.pkpass",
     )
+    apple_pass_url = f"{blob.bucket.id}/{remote_apple_pass_path}"
     logger.info(
         f"{local_apple_pass_path=} uploaded for {membership_card.apple_pass_serial_number} ({str(membership_card.serial_number)})",
         extra=dict(
-            bucket=str(bucket),
+            bucket=str(blob.bucket),
             local_apple_pass_path=local_apple_pass_path,
             remote_apple_pass_path=remote_apple_pass_path,
             apple_pass_url=apple_pass_url,

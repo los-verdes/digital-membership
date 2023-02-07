@@ -8,7 +8,20 @@ from flask_security import UserMixin, RoleMixin
 logger = logging.getLogger(__name__)
 
 
-def ensure_user(email, first_name, last_name):
+def edit_user_name(user, new_first_name, new_last_name):
+    logger.info(
+        f"Update name for {user} from {user.fullname} to: {new_first_name} {new_last_name}"
+    )
+    setattr(user, "fullname", " ".join([new_first_name, new_last_name]))
+    setattr(user, "first_name", new_first_name)
+    setattr(user, "last_name", new_last_name)
+    db.session.add(user)
+    db.session.commit()
+    logger.debug(f"post-commit: {user=}")
+    return user
+
+
+def ensure_user(email, first_name, last_name, username=None, password=None):
 
     user = get_or_create(
         session=db.session,
@@ -31,6 +44,14 @@ def ensure_user(email, first_name, last_name):
         logger.warning(
             f"{user.last_name=} does not match {last_name} for some reason..."
         )
+
+    if username is not None:
+        logger.debug(f"Setting new username for {user=}: {username}")
+        setattr(user, "username", username)
+
+    if password is not None:
+        logger.debug(f"Setting new password for {user=}")
+        setattr(user, "password", password)
 
     db.session.add(user)
     db.session.commit()
@@ -68,7 +89,10 @@ class User(db.Model, UserMixin):
     annual_memberships = relationship("AnnualMembership", back_populates="user")
     membership_cards = relationship("MembershipCard", back_populates="user")
     roles = relationship(
-        "Role", secondary="roles_users", backref=backref("users", lazy="dynamic")
+        "Role",
+        secondary="roles_users",
+        backref=backref("users", lazy="dynamic", cascade="save-update"),
+        cascade="save-update",
     )
 
     def to_dict(self):
@@ -96,7 +120,7 @@ class User(db.Model, UserMixin):
         return any(m.is_active for m in self.annual_memberships)
 
     def has_memberships(self):
-        return bool(self.annual_memberships)
+        return len(self.annual_memberships) > 0
 
     @property
     def latest_membership_card(self):

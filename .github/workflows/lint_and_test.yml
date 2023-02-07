@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
@@ -34,7 +34,80 @@ jobs:
           VALIDATE_CSS: false
           VALIDATE_JAVASCRIPT_STANDARD: false
           VALIDATE_PYTHON_ISORT: false
+          VALIDATE_PYTHON_PYLINT: false # TODO: eh maybe later
+          # TODO: toggle back on after this type of error stops happening or something?:
+          # > failed to initialize OPA policy engine
+          # https://github.com/los-verdes/digital-membership/runs/5400855944?check_suite_focus=true
+          VALIDATE_TERRAFORM_TERRASCAN: false
           # TODO: toggle GITHUB_ACTIONS back on after one, or both, of these issues are resolved:
           # https://github.com/github/super-linter/issues/1852
           # https://github.com/rhysd/actionlint/issues/91
           VALIDATE_GITHUB_ACTIONS: false
+
+  run-tests:
+    name: "Run Tests"
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: lv-digital-membership-tests
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5433:5432
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup just
+        uses: extractions/setup-just@v1
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+
+      - name: Utilize pip cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.pythonLocation }}
+          key: ${{ env.pythonLocation }}-pip-${{ hashFiles('requirements-test.txt') }}
+
+      - name: Run Tests
+        run: just ci-test
+        env:
+          GITHUB_PAT: ${{ secrets.GH_PAT }}
+          PGHOST: "127.0.0.1"
+          PGPORT: "5433"
+          PGPASSWORD: "postgres"
+          POSTGRES_USER: "postgres"
+          POSTGRES_DB: lv-digital-membership-tests
+          # PYTEST_RUN_PATH: tests
+
+      - name: Upload unit tests coverage artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: run-tests-coverage.xml
+          path: coverage.xml
+          if-no-files-found: error
+
+  upload-to-codecov:
+    name: Upload to Codecov
+    runs-on: ubuntu-latest
+    needs:
+      - run-tests
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v3

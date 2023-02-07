@@ -6,42 +6,10 @@ from flask import current_app
 from html2image import Html2Image
 from PIL import Image, ImageChops
 
-from member_card.storage import upload_file_to_gcs
+from member_card.gcp import upload_file_to_gcs
 from member_card.utils import get_jinja_template
 
 logger = logging.getLogger(__name__)
-
-
-def trim(im):
-    bg = Image.new(im.mode, im.size, im.getpixel((0, 0)))
-    diff = ImageChops.difference(im, bg)
-    diff = ImageChops.add(diff, diff, 2.0, -100)
-    bbox = diff.getbbox()
-    if bbox:
-        return im.crop(bbox)
-    return im
-
-
-def generate_and_upload_card_image(membership_card, bucket):
-    with TemporaryDirectory() as image_output_path:
-        image_path = generate_card_image(
-            membership_card=membership_card,
-            output_path=image_output_path,
-        )
-
-        card_image_filename = os.path.basename(image_path)
-        remote_card_image_path = f"membership-cards/images/{card_image_filename}"
-        card_image_url = f"{bucket.id}/{remote_card_image_path}"
-
-        blob = upload_file_to_gcs(
-            bucket=bucket,
-            local_file=image_path,
-            remote_path=remote_card_image_path,
-        )
-        logger.info(
-            f"{card_image_filename=} uploaded for {membership_card=}: {card_image_url=} ({blob=})"
-        )
-    return card_image_url
 
 
 def remove_image_background(img):
@@ -59,6 +27,38 @@ def remove_image_background(img):
 
     img.putdata(updated_img_data)
     return img
+
+
+def trim(im):
+    bg = Image.new(im.mode, im.size, im.getpixel((0, 0)))
+    diff = ImageChops.difference(im, bg)
+    diff = ImageChops.add(diff, diff, 2.0, -100)
+    bbox = diff.getbbox()
+    if bbox:
+        return im.crop(bbox)
+    return im
+
+
+def generate_and_upload_card_image(membership_card):
+    with TemporaryDirectory() as image_output_path:
+        image_path = generate_card_image(
+            membership_card=membership_card,
+            output_path=image_output_path,
+        )
+
+        card_image_filename = os.path.basename(image_path)
+        remote_card_image_path = f"membership-cards/images/{card_image_filename}"
+
+        blob = upload_file_to_gcs(
+            local_file=image_path,
+            remote_path=remote_card_image_path,
+        )
+
+        card_image_url = f"{blob.bucket.id}/{remote_card_image_path}"
+        logger.info(
+            f"{card_image_filename=} uploaded for {membership_card=}: {card_image_url=} ({blob=})"
+        )
+    return card_image_url
 
 
 def generate_card_image(membership_card, output_path):

@@ -1,12 +1,11 @@
 import logging
 import re
-from datetime import timezone
 from collections import OrderedDict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
+from dateutil.parser import parse
 from member_card.db import db
 from sqlalchemy.orm import relationship
-
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +37,9 @@ class AnnualMembership(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
-    user = relationship("User", back_populates="annual_memberships")
+    user = relationship(
+        "User", back_populates="annual_memberships", cascade="save-update"
+    )
     membership_cards = relationship(
         "MembershipCard",
         secondary=membership_card_to_membership_assoc_table,
@@ -93,7 +94,7 @@ class AnnualMembership(db.Model):
         return re.sub(
             " +",
             " ",
-            f"AnnualSubscription(\
+            f"<AnnualMembership(\
                 id={self.id}, \
                 order_number={self.order_number}, \
                 name={self.billing_address_first_name} {self.billing_address_last_name}, \
@@ -103,12 +104,8 @@ class AnnualMembership(db.Model):
                 fulfillment_status={self.fulfillment_status}, \
                 is_active={self.is_active}, \
                 is_canceled={self.is_canceled}\
-            )",
+            ) />",
         )
-
-    @property
-    def full_name(self):
-        return f"{self.billing_address_first_name} {self.billing_address_last_name}"
 
     @property
     def is_canceled(self):
@@ -129,6 +126,8 @@ class AnnualMembership(db.Model):
 
         # TODO: figure out whats going down here...
         created_on = self.created_on
+        if isinstance(created_on, str):
+            created_on = parse(created_on)
         if created_on.tzinfo is None:
             created_on = created_on.replace(tzinfo=timezone.utc)
         if created_on <= self.one_year_ago:

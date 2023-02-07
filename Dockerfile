@@ -14,7 +14,7 @@ RUN bash -c 'set -o pipefail && wget -q -O - https://dl.google.com/linux/linux_s
         python3-dev=3.9.2-3 \
         swig=4.0.2-1 \
         fonts-liberation=1:1.07.4-11 \
-        google-chrome-stable=104.0.5112.101-1 \
+        google-chrome-stable=109.0.5414.119-1 \
     && rm -rf /var/lib/apt/lists/*
 
 ENV VIRTUAL_ENV=/opt/venv
@@ -49,4 +49,4 @@ COPY ./config/ ./config
 COPY ./member_card/ ./member_card
 COPY ./*.py ./
 
-CMD ["gunicorn", "--bind=:8080", "--workers=1", "--threads=8", "--timeout=0", "--log-config=config/gunicron_logging.ini", "--log-file=-", "wsgi:create_app()"]
+CMD ["gunicorn", "--bind=:8080", "--workers=1", "--threads=8", "--timeout=0", "--log-config=config/gunicron_logging.ini", "--log-file=-", "wsgi:create_worker_app()"]

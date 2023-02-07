@@ -8,6 +8,7 @@ from io import BytesIO, StringIO
 import flask
 import qrcode
 from member_card.db import db, get_or_create
+from member_card.passes.gpay import generate_pass_jwt
 from member_card.models.annual_membership import (
     membership_card_to_membership_assoc_table,
 )
@@ -43,12 +44,7 @@ def get_or_create_membership_card(user):
     # TODO: do this more efficient like:
     if not membership_card.qr_code_message:
         logger.debug("generating QR code for message")
-        serial_number = str(membership_card.serial_number)
-        qr_code_signature = sign(serial_number)
-        verify_pass_url = (
-            f"{base_url}/verify-pass/{serial_number}?signature={qr_code_signature}"
-        )
-        qr_code_message = f"Content: {verify_pass_url}"
+        qr_code_message = f"Content: {membership_card.verify_pass_url}"
         logger.debug(f"{qr_code_message=}")
         setattr(membership_card, "qr_code_message", qr_code_message)
         db.session.add(membership_card)
@@ -110,20 +106,24 @@ class MembershipCard(db.Model):
         return f"https://pay.google.com/gp/v/save/{self.google_pay_jwt}"
 
     @property
+    def verify_pass_url(self):
+        base_url = flask.current_app.config["BASE_URL"]
+        serial_number = str(self.serial_number)
+        verify_pass_url = f"{base_url}/verify-pass/{serial_number}?signature={self.verify_pass_signature}"
+        return verify_pass_url
+
+    @property
+    def verify_pass_signature(self):
+        return sign(str(self.serial_number))
+
+    @property
     def google_pay_jwt(self):
         if self._google_pay_jwt is not None:
             return self._google_pay_jwt
-        from member_card.gpay import generate_pass_jwt
 
         google_pay_jwt = generate_pass_jwt(self)
         self._google_pay_jwt = google_pay_jwt.decode("UTF-8")
         return self._google_pay_jwt
-
-    @property
-    def icon_uri(self):
-        from flask import current_app
-
-        return f"{current_app.config['STATIC_ASSET_BASE_URL']}/{self.icon}"
 
     @property
     def is_voided(self):
