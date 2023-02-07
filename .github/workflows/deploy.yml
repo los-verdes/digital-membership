@@ -6,8 +6,9 @@ concurrency:
   cancel-in-progress: false
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch: {}
+  # push:
+  #   branches: [main]
 
 # jscpd:ignore-start
 jobs:
