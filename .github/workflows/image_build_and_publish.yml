@@ -1,13 +1,12 @@
 name: Build and Publish Images to GCR
 
 on:
-  push:
-    branches: [main, cd_workflow_updates]
   workflow_call:
     outputs:
       image_name:
         value: ${{ jobs.build_and_publish.outputs.image_name }}
         description: "Name of the image that was built and pushed to Google's Container Registry"
+  workflow_dispatch: {}
 
 jobs:
   build_and_publish:
