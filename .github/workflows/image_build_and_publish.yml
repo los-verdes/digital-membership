@@ -3,26 +3,14 @@ name: Build and Publish Images to GCR
 on:
   push:
     branches: [main, cd_workflow_updates]
-  # workflow_call:
-  #   inputs:
-  #     image_tag:
-  #       description: "The image name suffix to set on our published container image. Defaults to to `sha_<current git ref>`"
-  #       type: string
-  #       required: false
-  #       default: sha_${{ github.sha }}
-  # workflow_dispatch:
-  #   inputs:
-  #     image_tag:
-  #       description: "The image name suffix to set on our published container image."
-  #       type: string
-  #       required: true
-
-concurrency:
-  group: build-and-publish-${{ github.ref }}
-  cancel-in-progress: false
+  workflow_call:
+    outputs:
+      image_name:
+        value: ${{ jobs.build_and_publish.outputs.image_name }}
+        description: "Name of the image that was built and pushed to Google's Container Registry"
 
 jobs:
-  build-and-publish:
+  build_and_publish:
     name: "Build and Publish Images"
     runs-on: ubuntu-latest
     strategy:
@@ -33,6 +21,8 @@ jobs:
     permissions:
       id-token: write
       contents: read
+    outputs:
+      image_name: ${{ fromJSON(steps.publish.outputs.metadata)['image.name'] }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
