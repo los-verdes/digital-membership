@@ -14,7 +14,7 @@ RUN bash -c 'set -o pipefail && wget -q -O - https://dl.google.com/linux/linux_s
         python3-dev=3.9.2-3 \
         swig=4.0.2-1 \
         fonts-liberation=1:1.07.4-11 \
-        google-chrome-stable=109.0.5414.119-1 \
+        google-chrome-stable=110.0.5481.77-1 \
     && rm -rf /var/lib/apt/lists/*
 
 ENV VIRTUAL_ENV=/opt/venv
