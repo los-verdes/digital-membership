@@ -4,13 +4,13 @@ on:
   workflow_call:
     outputs:
       image_name:
-        value: ${{ jobs.build_and_publish.outputs.image_name }}
+        value: ${{ jobs.build_and_publish_images.outputs.image_name }}
         description: "Name of the image that was built and pushed to Google's Container Registry"
   workflow_dispatch: {}
 
 jobs:
-  build_and_publish_image:
-    name: "Build and Publish"
+  build_and_publish_images:
+    name: "Build and Publish Images"
     runs-on: ubuntu-latest
     strategy:
       matrix:
