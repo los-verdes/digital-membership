@@ -23,6 +23,7 @@ jobs:
       - name: Debug echo
         run: |
           echo "${{ needs.build_images.outputs.image_name }}"
+          echo "${{ needs.build_images.outputs.short_sha_tag }}"
 
   # deploy-infra-and-services:
   #   name: Deploy Infrastructure & Services

@@ -6,6 +6,9 @@ on:
       image_name:
         value: ${{ jobs.build_and_publish_images.outputs.image_name }}
         description: "Name of the image that was built and pushed to Google's Container Registry"
+      short_sha_tag:
+        value: ${{ jobs.build_and_publish_images.outputs.short_sha_tag }}
+        description: "short_sha_tag"
   workflow_dispatch: {}
 
 jobs:
@@ -22,6 +25,7 @@ jobs:
       contents: read
     outputs:
       image_name: ${{ fromJSON(steps.publish.outputs.metadata)['image.name'] }}
+      short_sha_tag: ${{ steps.record_summary.outputs.short_sha_tag }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -77,12 +81,14 @@ jobs:
           cache-to: type=gha,scope=$${{ github.workflow }},mode=max
 
       - name: Record Step Summary
+        id: record_summary
         env:
           image_details: "${{ steps.publish.outputs.metadata }}"
           image_id: "${{ steps.publish.outputs.imageid }}"
           image_name: "${{ fromJSON(steps.publish.outputs.metadata)['image.name'] }}"
           metadata: "${{ steps.meta.outputs.json }}"
         run: |
+          echo "short_sha_tag=$(git rev-parse --short HEAD)" | tee -a $GITHUB_OUTPUT
           cat << SUMMARY | tee --append "$GITHUB_STEP_SUMMARY"
           ## Image Build - ${{ matrix.service }}
 
