@@ -7,7 +7,7 @@ concurrency:
 
 on:
   push:
-    branches: [main, cd_workflow_updates]
+    branches: [main]
   workflow_dispatch: {}
 
 jobs:
