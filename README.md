@@ -1,6 +1,7 @@
 # digital-membership
 
-[![Deploy](https://github.com/los-verdes/digital-membership/actions/workflows/deploy.yml/badge.svg)](https://github.com/los-verdes/digital-membership/actions/workflows/deploy.yml)
+[![Main Deployment Workflow](https://github.com/los-verdes/digital-membership/actions/workflows/main.yml/badge.svg)](https://github.com/los-verdes/digital-membership/actions/workflows/main.yml)
+[![Lint and Test](https://github.com/los-verdes/digital-membership/actions/workflows/lint_and_test.yml/badge.svg)](https://github.com/los-verdes/digital-membership/actions/workflows/lint_and_test.yml)
 
 Digital membership card site with Squarespace-sourced membership database.
 
