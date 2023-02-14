@@ -22,7 +22,8 @@ module "github_oidc" {
   sa_mapping = {
     "github-deployer" = {
       sa_name   = google_service_account.github_deployer.name
-      attribute = "attribute.ref/refs/heads/main"
+      attribute = "attribute.ref/refs/heads/cd_workflow_updates"
+      # attribute = "attribute.ref/refs/heads/main"
     }
   }
 }

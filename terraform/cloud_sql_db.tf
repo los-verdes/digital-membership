@@ -75,7 +75,7 @@ resource "google_sql_user" "service_accounts" {
 }
 
 resource "google_sql_user" "users" {
-  for_each = toset(concat(var.gcp_project_owners, var.gcp_project_editors))
+  for_each = toset(var.gcp_project_editors)
   name     = lower(each.value)
   instance = google_sql_database_instance.digital_membership.name
   type     = "CLOUD_IAM_USER"

@@ -6,7 +6,7 @@ resource "google_pubsub_topic_iam_binding" "digital_membership_topic_publishers"
   topic = google_pubsub_topic.digital_membership.name
   role  = "roles/pubsub.publisher"
   members = concat(
-    [for u in concat(var.gcp_project_owners, var.gcp_project_editors) : "user:${u}"],
+    [for u in var.gcp_project_editors : "user:${u}"],
     ["serviceAccount:${google_service_account.digital_membership["website"].email}"],
   )
 }
