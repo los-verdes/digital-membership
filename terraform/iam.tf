@@ -1,13 +1,6 @@
-resource "google_project_iam_member" "project_owners" {
-  for_each = toset(var.gcp_project_owners)
-  project  = google_project.digital_membership.id
-  role     = "roles/owner"
-  member   = "user:${each.value}"
-}
-
 resource "google_project_iam_member" "project_editors" {
   for_each = toset(var.gcp_project_editors)
-  project  = google_project.digital_membership.id
+  project  = var.gcp_project_id
   role     = "roles/editor"
   member   = "user:${each.value}"
 }
@@ -40,6 +33,10 @@ resource "google_service_account_key" "digital_membership" {
   keepers = {
     rotation_time = time_rotating.mykey_rotation.rotation_rfc3339
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "google_cloud_run_service_iam_policy" "digital_membership" {
@@ -60,8 +57,8 @@ data "google_iam_policy" "digital_membership" {
 }
 
 resource "google_secret_manager_secret_iam_policy" "digital_membership" {
-  project     = google_secret_manager_secret.digital_membership.project
-  secret_id   = google_secret_manager_secret.digital_membership.id
+  project     = data.google_secret_manager_secret.digital_membership.project
+  secret_id   = data.google_secret_manager_secret.digital_membership.id
   policy_data = data.google_iam_policy.digital_membership_secret_access.policy_data
 }
 
@@ -100,7 +97,7 @@ data "google_iam_policy" "apple_private_key_secret_access" {
 
 resource "google_project_iam_member" "worker_pubsub_invoker_token_creator" {
   #ts:skip=accurics.gcp.IAM.137 Unable to figure out how this is suppose to work otherwise...
-  project = google_project.digital_membership.id
+  project = var.gcp_project_id
   role    = "roles/iam.serviceAccountTokenCreator"
   member  = "serviceAccount:${google_service_account.digital_membership["worker-pubsub-invoker"].email}"
 }
@@ -120,7 +117,7 @@ resource "google_project_iam_member" "worker_pubsub_invoker_token_creator" {
 # }
 
 resource "google_project_iam_binding" "digital_membership_cloudsql_clients" {
-  project = google_project.digital_membership.id
+  project = var.gcp_project_id
   for_each = toset([
     "roles/cloudsql.instanceUser",
     "roles/cloudsql.client",
@@ -134,7 +131,7 @@ resource "google_project_iam_binding" "digital_membership_cloudsql_clients" {
 }
 
 resource "google_project_iam_binding" "digital_membership_debugger_agents" {
-  project = google_project.digital_membership.id
+  project = var.gcp_project_id
   role    = "roles/clouddebugger.agent"
   members = [
     "serviceAccount:${google_service_account.digital_membership["website"].email}",
@@ -144,7 +141,7 @@ resource "google_project_iam_binding" "digital_membership_debugger_agents" {
 }
 
 resource "google_project_iam_binding" "digital_membership_trace_agents" {
-  project = google_project.digital_membership.id
+  project = var.gcp_project_id
   role    = "roles/cloudtrace.agent"
   members = [
     "serviceAccount:${google_service_account.digital_membership["website"].email}",
@@ -152,30 +149,30 @@ resource "google_project_iam_binding" "digital_membership_trace_agents" {
   ]
 }
 # resource "google_project_iam_member" "digital_membership_log_writer" {
-#   project = google_project.digital_membership.id
+#   project = var.gcp_project_id
 #   role    = "roles/logging.logWriter"
 #   member  = "serviceAccount:${google_service_account.digital_membership["website"].email}"
 # }
 
 # resource "google_project_iam_member" "digital_membership_debugger_agent" {
-#   project = google_project.digital_membership.id
+#   project = var.gcp_project_id
 #   role    = "roles/clouddebugger.agent"
 #   member  = "serviceAccount:${google_service_account.digital_membership["website"].email}"
 # }
 
 # resource "google_project_iam_member" "digital_membership_trace_agent" {
-#   project = google_project.digital_membership.id
+#   project = var.gcp_project_id
 #   role    = "roles/cloudtrace.agent"
 #   member  = "serviceAccount:${google_service_account.digital_membership["website"].email}"
 # }
 resource "google_service_account_iam_binding" "allow_sa_impersonation_tokens" {
   service_account_id = google_service_account.digital_membership["website"].name
   role               = "roles/iam.serviceAccountTokenCreator"
-  members            = [for u in concat(var.gcp_project_owners, var.gcp_project_editors) : "user:${u}"]
+  members            = [for u in var.gcp_project_editors : "user:${u}"]
 }
 
 resource "google_service_account_iam_binding" "allow_sa_impersonation" {
   service_account_id = google_service_account.digital_membership["website"].name
   role               = "roles/iam.serviceAccountUser"
-  members            = [for u in concat(var.gcp_project_owners, var.gcp_project_editors) : "user:${u}"]
+  members            = [for u in var.gcp_project_editors : "user:${u}"]
 }

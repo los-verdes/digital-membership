@@ -1,5 +1,6 @@
 tf_subdir      := "./terraform"
 db_tf_subdir   := "./terraform/database"
+bootstrap_tf_subdir   := "./terraform/bootstrap"
 tfvars_file    := "lv-digital-membership.tfvars"
 
 gcr_repo := "gcr.io/lv-digital-membership"
@@ -25,6 +26,12 @@ export GCS_BUCKET_ID := "cstatic.losverd.es"
 
 set-tf-ver-output:
   echo "terraform_version=$(cat {{ tf_subdir }}/.terraform-version)" | tee --append "$GITHUB_OUTPUT"
+
+tf-bootstrap +CMD:
+  terraform -chdir="{{ justfile_directory() + "/" + bootstrap_tf_subdir }}" \
+    {{ CMD }} \
+    {{ if CMD =~ "(plan|apply)" { "-var-file=../../" + tfvars_file } else { "" }  }}
+
 
 tf-db +CMD:
   terraform -chdir="{{ justfile_directory() + "/" + db_tf_subdir }}" \

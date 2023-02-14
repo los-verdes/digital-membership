@@ -49,7 +49,7 @@ TODO: `<fill this bit in>`
 
 For development against the [card.losverd.es production site](https://card.losverd.es), you will need:
 
-- Access to the associated GCP project. This is done by inserting whatever username is associated with your [gcloud application-default credentials](https://cloud.google.com/sdk/gcloud/reference/auth/application-default/login) in the `gcp_project_editors` (or `gcp_project_owners`) lists defined in [lv-digital-membership.tfvars](lv-digital-membership.tfvars)
+- Access to the associated GCP project. This is done by inserting whatever username is associated with your [gcloud application-default credentials](https://cloud.google.com/sdk/gcloud/reference/auth/application-default/login) in the `gcp_project_editors`lists defined in [terraform/variables.tf](terraform/variables.tf)
 - Afterwards, be sure to set up `gcloud` and configure it for this project:
 
     ```shellsession

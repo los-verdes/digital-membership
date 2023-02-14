@@ -13,15 +13,6 @@ locals {
     ]
   )
 }
-
-output "github_deployer_service_account_email" {
-  value = google_service_account.github_deployer.email
-}
-
-output "github_oidc_provider_name" {
-  value = module.github_oidc.provider_name
-}
-
 output "postgres_connection_name" {
   value = google_sql_database_instance.digital_membership.connection_name
 }
@@ -52,10 +43,6 @@ output "sql_usernames" {
   value = [for u in concat(values(google_sql_user.service_accounts), values(google_sql_user.users)) : u.name]
 }
 
-output "project_number" {
-  value = google_project.digital_membership.number
-}
-
 output "pubsub_topic_id" {
   value = google_pubsub_topic.digital_membership.id
 }
@@ -70,7 +57,7 @@ output "read_only_sql_user_passwords" {
 }
 
 output "secret_name" {
-  value = google_secret_manager_secret_version.digital_membership.name
+  value = data.google_secret_manager_secret_version.digital_membership.name
 }
 
 output "statics_bucket_id" {

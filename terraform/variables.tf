@@ -1,23 +1,11 @@
 variable "app_log_level" {
+  type    = string
   default = "INFO"
 }
 
-variable "apple_pass_certificate" {
-  sensitive = true
-}
-
-variable "apple_pass_private_key_secret_name" {
-  type    = string
-  default = "apple_developer_private_key"
-}
-
-variable "apple_pass_private_key_password" {
-  sensitive = true
-}
-# variable "gcp_billing_account_name" {}
-
 variable "base_domain" {
-  type = string
+  type    = string
+  default = "losverd.es"
 }
 
 variable "cloud_run_subdomain" {
@@ -30,34 +18,21 @@ variable "flask_env" {
   default = "production"
 }
 
-variable "gcp_billing_account_id" {
-  type = string
-}
-
 variable "gcp_project_editors" {
-  type    = list(string)
-  default = []
+  type = list(string)
+  default = [
+    "Jeff.Hogan1@gmail.com",
+  ]
 }
 
 variable "gcp_project_id" {
-  type = string
-}
-
-variable "gcp_project_name" {
-  type = string
-}
-
-variable "gcp_project_owners" {
-  type    = list(string)
-  default = []
+  type    = string
+  default = "lv-digital-membership"
 }
 
 variable "gcp_region" {
-  type = string
-}
-
-variable "github_repo" {
-  type = string
+  type    = string
+  default = "us-central1"
 }
 
 variable "management_sql_user_password" {
@@ -65,54 +40,12 @@ variable "management_sql_user_password" {
   type      = string
 }
 
-variable "membership_squarespace_sku" {
-  type = string
-}
-
-variable "squarespace_api_key" {
-  sensitive = true
-}
-
-variable "squarespace_client_id" {}
-
-
-variable "squarespace_client_secret" {
-  sensitive = true
-}
-
-variable "recaptcha_secret_key" {
-  sensitive = true
-}
-
-variable "sendgrid_api_key" {
-  sensitive = true
-}
-
-variable "social_auth_apple_id_secret" {
-  sensitive = true
-}
-
-variable "social_auth_yahoo_oauth2_key" {
-}
-
-variable "social_auth_yahoo_oauth2_secret" {
-  sensitive = true
-}
-
-variable "oauth_client_id" {
-  sensitive = true
-}
-
-variable "oauth_client_secret" {
-  sensitive = true
-}
-
 variable "website_image" {
   type    = string
-  default = "gcr.io/lv-digital-membership/website:latest"
+  default = "gcr.io/lv-digital-membership/website:bb39bec"
 }
 
 variable "worker_image" {
   type    = string
-  default = "gcr.io/lv-digital-membership/worker:latest"
+  default = "gcr.io/lv-digital-membership/worker:bb39bec"
 }

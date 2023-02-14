@@ -20,7 +20,7 @@ locals {
     }
   }
 
-  secret_version_parts           = split("/", google_secret_manager_secret_version.digital_membership.id)
+  secret_version_parts           = split("/", data.google_secret_manager_secret_version.digital_membership.id)
   secret_version_key             = element(local.secret_version_parts, length(local.secret_version_parts) - 1)
   apple_key_secret_version_parts = split("/", data.google_secret_manager_secret_version.apple_private_key.id)
   apple_key_secret_version_key   = element(local.apple_key_secret_version_parts, length(local.apple_key_secret_version_parts) - 1)
@@ -66,7 +66,7 @@ resource "google_cloud_run_service" "digital_membership" {
           name = "DIGITAL_MEMBERSHIP_SECRETS_JSON"
           value_from {
             secret_key_ref {
-              name = google_secret_manager_secret.digital_membership.secret_id
+              name = data.google_secret_manager_secret.digital_membership.secret_id
               key  = local.secret_version_key
             }
           }
@@ -74,10 +74,14 @@ resource "google_cloud_run_service" "digital_membership" {
 
         env {
           name  = "DIGITAL_MEMBERSHIP_GCP_SECRET_NAME"
-          value = google_secret_manager_secret_version.digital_membership.name
+          value = data.google_secret_manager_secret_version.digital_membership.name
         }
         env {
           name  = "DIGITAL_MEMBERSHIP_GCP_SQL_CONNECTION_NAME"
+          value = google_sql_database_instance.digital_membership.connection_name
+        }
+        env {
+          name  = "DIGITAL_MEMBERSHIP_DB_CONNECTION_NAME"
           value = google_sql_database_instance.digital_membership.connection_name
         }
         env {
