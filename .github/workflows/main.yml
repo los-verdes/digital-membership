@@ -56,7 +56,7 @@ jobs:
         run: just set-tf-ver-output
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1
+        uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: ${{ steps.read_tf_version.outputs.terraform_version }}
           terraform_wrapper: false
@@ -119,7 +119,7 @@ jobs:
         run: just set-tf-ver-output
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1
+        uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: ${{ steps.read_tf_version.outputs.terraform_version }}
           terraform_wrapper: false
