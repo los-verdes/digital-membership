@@ -86,7 +86,7 @@ jobs:
     permissions:
       contents: "read"
       id-token: "write"
-    uses: los-verdes/digital-membership/.github/workflows/cloudbuild.yml@main
+    uses: los-verdes/digital-membership/.github/workflows/just_cloudbuild.yml@main
     with:
       # TODO: add a CloudFlare cache purge somewhere 'round here....
       command: cloudbuild-upload-statics
