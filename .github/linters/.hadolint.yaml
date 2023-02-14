@@ -1,0 +1,3 @@
+# Don't know how to keep this rule enabled while staying sane re: chrome's apt pkg
+# probably need to get it installed through other means?
+ignored: [DL3008]
