@@ -10,11 +10,11 @@ RUN bash -c 'set -o pipefail && wget -q -O - https://dl.google.com/linux/linux_s
     && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
     && apt-get update \
     && apt-get install --no-install-recommends -y \
+        google-chrome-stable \
         build-essential=12.9 \
         python3-dev=3.9.2-3 \
         swig=4.0.2-1 \
         fonts-liberation=1:1.07.4-11 \
-        google-chrome-stable=110.0.5481.77-1 \
     && rm -rf /var/lib/apt/lists/*
 
 ENV VIRTUAL_ENV=/opt/venv
