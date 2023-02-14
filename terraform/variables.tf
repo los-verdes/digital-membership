@@ -1,4 +1,5 @@
 variable "app_log_level" {
+  type    = string
   default = "INFO"
 }
 
@@ -18,14 +19,14 @@ variable "flask_env" {
 }
 
 variable "gcp_project_editors" {
-  type    = list(string)
+  type = list(string)
   default = [
     "Jeff.Hogan1@gmail.com",
   ]
 }
 
 variable "gcp_project_id" {
-  type = string
+  type    = string
   default = "lv-digital-membership"
 }
 
@@ -37,11 +38,6 @@ variable "gcp_region" {
 variable "management_sql_user_password" {
   sensitive = true
   type      = string
-}
-
-variable "membership_squarespace_sku" {
-  type    = string
-  default = "SQ3671268"
 }
 
 variable "website_image" {

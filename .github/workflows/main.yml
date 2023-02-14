@@ -10,6 +10,7 @@ on:
     branches: [main]
   workflow_dispatch: {}
 
+# jscpd:ignore-start
 jobs:
   build_images:
     name: Build Images
