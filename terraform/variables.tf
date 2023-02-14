@@ -42,10 +42,10 @@ variable "management_sql_user_password" {
 
 variable "website_image" {
   type    = string
-  default = "gcr.io/lv-digital-membership/website:bb39bec"
+  default = "gcr.io/lv-digital-membership/website:latest"
 }
 
 variable "worker_image" {
   type    = string
-  default = "gcr.io/lv-digital-membership/worker:bb39bec"
+  default = "gcr.io/lv-digital-membership/worker:latest"
 }
