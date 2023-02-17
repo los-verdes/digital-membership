@@ -104,7 +104,6 @@ class GooglePayApiClient(object):
         json_payload=None,
         vertical_type="loyalty",
     ):
-
         path = f"{vertical_type}{resource_type.title()}"
         if method != "post":
             path = f"{vertical_type}{resource_type.title()}/{resource_id}"

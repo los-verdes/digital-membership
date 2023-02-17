@@ -20,7 +20,7 @@ locals {
     }
   }
 
-  secret_version_parts           = split("/", data.google_secret_manager_secret_version.digital_membership.id)
+  secret_version_parts           = split("/", data.terraform_remote_state.bootstrap.outputs.secret_id)
   secret_version_key             = element(local.secret_version_parts, length(local.secret_version_parts) - 1)
   apple_key_secret_version_parts = split("/", data.google_secret_manager_secret_version.apple_private_key.id)
   apple_key_secret_version_key   = element(local.apple_key_secret_version_parts, length(local.apple_key_secret_version_parts) - 1)

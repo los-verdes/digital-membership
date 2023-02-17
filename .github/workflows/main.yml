@@ -16,16 +16,6 @@ jobs:
     name: Build Images
     uses: ./.github/workflows/image_build_and_publish.yml
 
-  check_build_images_output:
-    name: Temp Debug Job
-    needs: [build_images]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Debug echo
-        run: |
-          echo "${{ needs.build_images.outputs.image_name }}"
-          echo "${{ needs.build_images.outputs.short_sha_tag }}"
-
   deploy-infra-and-services:
     name: Deploy Infrastructure & Services
     runs-on: ubuntu-latest

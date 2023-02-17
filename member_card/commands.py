@@ -17,6 +17,7 @@ from member_card.passes import gpay
 from member_card.gcp import publish_message
 from member_card.sendgrid import update_sendgrid_template
 from member_card import worker
+from member_card.minibc import Minibc
 
 logger = logging.getLogger(__name__)
 
@@ -199,3 +200,27 @@ def add_role_to_user(user_email, role_name):
     logger.info(f"{admin_role=} successfully added for {user=}!")
     db.session.add(user)
     db.session.commit()
+
+
+@app.cli.group()
+def minibc():
+    pass
+
+
+@minibc.command("list-incoming-webhooks")
+def list_incoming_webhooks():
+    minibc = Minibc(api_key=app.config["MINIBC_API_KEY"])
+    webhooks_resp = minibc.get_notification_webhooks()
+    print(f"{webhooks_resp=}")
+    breakpoint()
+
+
+@minibc.command("lookup-sub-by-order-id")
+@click.argument("order_id")
+def lookup_sub_by_order_id(order_id):
+    minibc = Minibc(api_key=app.config["MINIBC_API_KEY"])
+    subscription_order, _ = minibc.search_subscriptions(order_id=order_id)
+    print(f"{subscription_order=}")
+    # breakpoint()
+
+    # resp = minibc.perform_request(method="get",  path="subscriptions/3391663")

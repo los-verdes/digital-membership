@@ -163,7 +163,6 @@ def insert_order_as_membership(order, membership_skus):
     ignored_line_items = [i for i in line_items if i["sku"] not in membership_skus]
     logger.debug(f"{ignored_line_items=}")
     for subscription_line_item in subscription_line_items:
-
         fulfilled_on = None
         if fulfilled_on := order.get("fulfilledOn"):
             fulfilled_on = parse(fulfilled_on).replace(tzinfo=timezone.utc)

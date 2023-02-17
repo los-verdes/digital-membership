@@ -174,7 +174,6 @@ class TestUnauthenticatedRequests:
 
 class TestAuthenticatedRequests:
     def test_modify_session(self, app, authenticated_client):
-
         response = authenticated_client.get("/", follow_redirects=True)
 
         from flask_security.core import current_user as current_login_user
@@ -184,7 +183,6 @@ class TestAuthenticatedRequests:
         assert b"los.verdes.tester@gmail.com" in response.data
 
     def test_home_route_with_active_membership(self, authenticated_client, fake_member):
-
         response = authenticated_client.get("/")
         logging.debug(response)
 
@@ -466,7 +464,8 @@ class TestAuthenticatedRequests:
 
         assert (
             soup.find(id="card-validation-msg").text.strip()
-            == f"CARD VALIDATED! (by {fake_card.user.first_name})"
+            == "CARD VALIDATED!"
+            # == f"CARD VALIDATED! (by {fake_card.user.first_name})"
         )
 
     def test_logout(

@@ -13,3 +13,7 @@ output "project_number" {
 output "secret_name" {
   value = google_secret_manager_secret_version.digital_membership.name
 }
+
+output "secret_id" {
+  value = google_secret_manager_secret_version.digital_membership.id
+}

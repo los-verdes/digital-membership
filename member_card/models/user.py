@@ -22,7 +22,6 @@ def edit_user_name(user, new_first_name, new_last_name):
 
 
 def ensure_user(email, first_name, last_name, username=None, password=None):
-
     user = get_or_create(
         session=db.session,
         model=User,
