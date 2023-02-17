@@ -275,6 +275,7 @@ remote-psql:
   export PGPASSWORD
   export PGDATABASE
   psql
+  # op run --env-file=<(echo "export PGPASSWORD='op://Los Verdes/management_sql_user_password/password'") -- psql --username=tf-management --host=127.0.0.1 --port=5434 lv-digital-membership
 
 remote-pg-dump:
   #!/bin/bash
