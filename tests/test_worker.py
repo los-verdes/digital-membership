@@ -69,9 +69,7 @@ class TestPubsubIngress:
         assert response.status_code == 204
 
     def test_sync_subscriptions_etl(self, client, mocker):
-        mock_minibc_orders_etl = mocker.patch(
-            "member_card.worker.minibc_orders_etl"
-        )
+        mock_minibc_orders_etl = mocker.patch("member_card.worker.minibc_orders_etl")
         test_message = dict(
             type="sync_subscriptions_etl",
         )

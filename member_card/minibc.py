@@ -14,7 +14,6 @@ from member_card.models.user import ensure_user
 # from member_card.models import MinibcWebhook, table_metadata
 
 if TYPE_CHECKING:
-
     from requests import Response
 
 api_baseurl = "https://apps.minibc.com/api/apps/recurring/v1"
