@@ -24,13 +24,6 @@ export DIGITAL_MEMBERSHIP_DB_DATABASE_NAME := "lv-digital-membership"
 export DIGITAL_MEMBERSHIP_BASE_URL := "localcard.losverd.es:5000"
 export GCS_BUCKET_ID := "cstatic.losverd.es"
 
-
-
-onepass_session:
-  op whoami || eval "$(op signin --account my.1password.com)"
-
-# TODO: This is all from the beforetimes and should be tidied up!
-
 set-tf-ver-output:
   echo "terraform_version=$(cat {{ tf_subdir }}/.terraform-version)" | tee --append "$GITHUB_OUTPUT"
 
@@ -85,28 +78,38 @@ ci-install-python-reqs:
   fi
 
 
-docker-flask +CMD: build onepass_session
+docker-flask +CMD: build
   @echo "FLASK_APP: ${FLASK_APP-None}"
   @echo "FLASK_ENV: ${FLASK_ENV-None}"
-  op run --env-file='./.1penv' -- \
-    docker run \
+  docker run \
     --interactive \
     --tty \
     --rm \
-    --env=DIGITAL_MEMBERSHIP_SECRETS_JSON \
+    --env=APPLE_DEVELOPER_CERTIFICATE \
+    --env=APPLE_DEVELOPER_PRIVATE_KEY \
+    --env=APPLE_PASS_PRIVATE_KEY_PASSWORD \
+    --env=GCS_BUCKET_ID \
+    --env=GCLOUD_PROJECT \
+    --env=DIGITAL_MEMBERSHIP_GCP_SQL_CONNECTION_NAME \
+    --env=DIGITAL_MEMBERSHIP_DB_USERNAME \
+    --env=DIGITAL_MEMBERSHIP_DB_DATABASE_NAME \
+    --env=DIGITAL_MEMBERSHIP_DB_ACCESS_TOKEN \
+    --env=DIGITAL_MEMBERSHIP_GCP_SECRET_NAME \
     --env=FLASK_APP \
     --env=FLASK_ENV \
     --env=LOG_LEVEL \
+    --env=SENDGRID_API_KEY \
+    --env=SQUARESPACE_API_KEY \
     --entrypoint='' \
     -v=$HOME/.config/gcloud:/root/.config/gcloud \
     '{{ website_image_name }}' \
     flask {{ CMD }}
 
 
-flask +CMD: onepass_session
+flask +CMD:
   @echo "FLASK_APP: ${FLASK_APP-None}"
   @echo "FLASK_ENV: ${FLASK_ENV-None}"
-  op run --env-file='./.1penv' -- flask {{ CMD }}
+  flask {{ CMD }}
 
 ensure-db-schemas:
   just flask ensure-db-schemas
@@ -114,16 +117,21 @@ ensure-db-schemas:
 serve-wsgi:
   ./wsgi.py
 
-# export DIGITAL_MEMBERSHIP_GCP_SECRET_NAME="projects/567739286055/secrets/digital-membership/versions/latest"
-# ~/bin/cloud_sql_proxy -instances='lv-digital-membership:us-central1:lv-digital-membership=tcp:5432'  -enable_iam_login
-# export DIGITAL_MEMBERSHIP_DB_USERNAME="$(gcloud auth list 2>/dev/null | egrep '^\*' | awk '{print $2;}')"
-
-serve: onepass_session
-  #!/bin/zsh
-  source /Users/jeffwecan/.pyenv/versions/3.9.2/bin/virtualenvwrapper.sh
-  workon digital-membership
-  op run --env-file='./.1penv' -- \
-    just flask run --cert=tmp-certs/cert.pem --key=tmp-certs/key.pem --host=0.0.0.0 --port=8080
+serve:
+  # export DB_SOCKET_DIR={{ justfile_directory() + "./cloudsql"}}
+  # ./run_app.py
+  # sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain tmp-certs/cert.pem
+  # eval "$(op signin my)"
+  # => export APPLE_DEVELOPER_PRIVATE_KEY="$(awk '{printf "%s\\n", $0}' <<<"$(op get document --vault="Los Verdes" 'private.key - Apple Developer Certificate - v0prod - pass.es.losverd.card')")"
+  # => export GOOGLE_CLIENT_ID="$(op get item --vault="Los Verdes" 'Local Dev  (Google OAuth Credentials) - Los Verdes Digital Membership' | jq -r '.details.sections | .[] | select(.title == "credentials").fields | .[] | select(.n == "username").v')"
+  # => export GOOGLE_CLIENT_SECRET="$(op get item --vault="Los Verdes" 'Local Dev  (Google OAuth Credentials) - Los Verdes Digital Membership' | jq -r '.details.sections | .[] | select(.title == "credentials").fields | .[] | select(.n == "credential").v')"
+  # => export APPLE_PASS_PRIVATE_KEY_PASSWORD="$(op get item --vault="Los Verdes" 'private.key password - Apple Developer Certificate - v0prod - pass.es.losverd.card' | jq -r '.details.password')"
+  # => export SENDGRID_API_KEY="$(op get item --vault="Los Verdes" 'SendGrid - API Key' | jq -r '.details.sections | .[] | select(.title == "credentials").fields | .[] | select(.n == "credential").v')"
+  # => export RECAPTCHA_SECRET_KEY="$(op get item --vault="Los Verdes" 'card.losverd.es - reCAPTCHA' | jq -r '.details.sections | .[] | select(.title == "credentials").fields | .[] | select(.n == "credential").v')"
+  # export DIGITAL_MEMBERSHIP_GCP_SECRET_NAME="projects/567739286055/secrets/digital-membership/versions/latest"
+  # ~/bin/cloud_sql_proxy -instances='lv-digital-membership:us-central1:lv-digital-membership=tcp:5432'  -enable_iam_login
+  # export DIGITAL_MEMBERSHIP_DB_USERNAME="$(gcloud auth list 2>/dev/null | egrep '^\*' | awk '{print $2;}')"
+  just flask run --cert=tmp-certs/cert.pem --key=tmp-certs/key.pem --host=0.0.0.0
 
 build-website:
   docker build . --target website --tag '{{ website_image_name }}:{{ image_tag }}'
