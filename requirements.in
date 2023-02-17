@@ -8,7 +8,7 @@ cloud-sql-python-connector[pg8000]>=0.5.1
 email-validator
 flask
 flask-cdn
-flask-login
+flask-login>=0.6.2
 flask-security
 google-auth
 google-cloud-firestore
