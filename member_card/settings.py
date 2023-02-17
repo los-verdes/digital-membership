@@ -80,7 +80,8 @@ class Settings(object):
     CLOUD_RUN_REVISION: str = os.getenv("K_REVISION", "N/A")
     CLOUD_RUN_CONFIGURATION: str = os.getenv("K_SERVICE", "N/A")
     RUNNING_ON_CLOUD_RUN: bool = CLOUD_RUN_SERVICE != "N/A"
-    TRACING_ENABLED: bool = RUNNING_ON_CLOUD_RUN
+    # TRACING_ENABLED: bool = RUNNING_ON_CLOUD_RUN
+    TRACING_ENABLED: bool = False
 
     # https://stackoverflow.com/a/53214929
     CDN_DOMAIN = os.getenv("GCS_BUCKET_ID", "")
