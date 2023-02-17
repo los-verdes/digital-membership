@@ -32,7 +32,7 @@ COPY ./config/ ./config
 COPY ./member_card/ ./member_card
 COPY ./*.py ./
 
-CMD ["gunicorn", "--bind=:8080", "--workers=1", "--threads=8", "--timeout=0", "--log-config=config/gunicron_logging.ini", "--log-file=-", "wsgi:create_app()"]
+CMD ["gunicorn", "--bind=:8080", "--workers=1", "--threads=8", "--timeout=0", "--log-config=config/gunicron_logging.ini", "--log-file=-", "wsgi:create_worker_app()"]
 
 FROM python:3.9-slim AS website
 
@@ -49,4 +49,4 @@ COPY ./config/ ./config
 COPY ./member_card/ ./member_card
 COPY ./*.py ./
 
-CMD ["gunicorn", "--bind=:8080", "--workers=1", "--threads=8", "--timeout=0", "--log-config=config/gunicron_logging.ini", "--log-file=-", "wsgi:create_worker_app()"]
+CMD ["gunicorn", "--bind=:8080", "--workers=1", "--threads=8", "--timeout=0", "--log-config=config/gunicron_logging.ini", "--log-file=-", "wsgi:create_app()"]
