@@ -322,9 +322,9 @@ def verify_pass(serial_number):
         db.session.query(MembershipCard).filter_by(serial_number=serial_number).one()
     )
     logger.debug(f"{verified_card=}")
-    validation_msg = f"CARD VALIDATED! (by {g.first_name})"
+    validation_msg = "CARD VALIDATED!"
     if verified_card.is_voided():
-        validation_msg = f"CARD EXPIRED (but valid)! (by {g.first_name})"
+        validation_msg = "CARD EXPIRED (but valid)!"
     return render_template(
         "apple_pass_validation.html.j2",
         validating_user=g.user,
