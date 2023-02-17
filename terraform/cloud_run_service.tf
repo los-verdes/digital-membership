@@ -8,7 +8,7 @@ locals {
       mount_apple_private_key = true
       memory_mb               = "512Mi"
       min_scale               = "1"
-      max_scale               = "3"
+      max_scale               = "1"
       invokers                = ["allUsers"]
     }
     "worker" = {
