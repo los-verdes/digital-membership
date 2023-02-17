@@ -69,8 +69,8 @@ class TestPubsubIngress:
         assert response.status_code == 204
 
     def test_sync_subscriptions_etl(self, client, mocker):
-        mock_squarespace_orders_etl = mocker.patch(
-            "member_card.worker.squarespace_orders_etl"
+        mock_minibc_orders_etl = mocker.patch(
+            "member_card.worker.minibc_orders_etl"
         )
         test_message = dict(
             type="sync_subscriptions_etl",
@@ -84,7 +84,7 @@ class TestPubsubIngress:
         # Check that we return a 400 / Bad Request in these cases
         assert response.status_code == 204
 
-        mock_squarespace_orders_etl.assert_called_once()
+        mock_minibc_orders_etl.assert_called_once()
 
     def test_sync_squarespace_order(self, app, client, mocker):
         mock_squarespace_class = mocker.patch("member_card.worker.Squarespace")
