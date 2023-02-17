@@ -194,6 +194,8 @@ class Settings(object):
     SQUARESPACE_MEMBERSHIP_SKUS = os.getenv(
         "SQUARESPACE_MEMBERSHIP_SKUS", "SQ3671268,SQ6438806"
     ).split(",")
+
+    MINIBC_API_KEY: str = os.getenv("MINIBC_API_KEY", "")
     MINIBC_MEMBERSHIP_SKUS = [
         p.strip()
         for p in os.getenv("MINIBC_MEMBERSHIP_SKUS", "LOSV-MEM-0001").split(",")

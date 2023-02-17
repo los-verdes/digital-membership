@@ -323,7 +323,7 @@ def verify_pass(serial_number):
     )
     logger.debug(f"{verified_card=}")
     validation_msg = "CARD VALIDATED!"
-    if verified_card.is_voided():
+    if verified_card.is_voided:
         validation_msg = "CARD EXPIRED (but valid)!"
     return render_template(
         "apple_pass_validation.html.j2",
