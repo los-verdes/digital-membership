@@ -4,7 +4,6 @@ locals {
   cloud_run_services = {
     "website" = {
       image                   = var.website_image
-      command = 
       service_account_name    = google_service_account.digital_membership["website"].email
       mount_apple_private_key = true
       memory_mb               = "512"
@@ -62,7 +61,6 @@ resource "google_cloud_run_service" "digital_membership" {
       service_account_name = each.value.service_account_name
       containers {
         image = each.value.image
-        command = each.value.command
 
         env {
           name = "DIGITAL_MEMBERSHIP_SECRETS_JSON"
