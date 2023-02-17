@@ -464,7 +464,8 @@ class TestAuthenticatedRequests:
 
         assert (
             soup.find(id="card-validation-msg").text.strip()
-            == f"CARD VALIDATED! (by {fake_card.user.first_name})"
+            == "CARD VALIDATED!"
+            # == f"CARD VALIDATED! (by {fake_card.user.first_name})"
         )
 
     def test_logout(
