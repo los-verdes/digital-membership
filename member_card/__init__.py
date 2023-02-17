@@ -47,10 +47,9 @@ def create_app(env=None) -> "Flask":
         logger.debug("initialize_tracer")
         monitoring.initialize_tracer()
 
+        logger.debug("instrument_app")
+        FlaskInstrumentor().instrument_app(app)
     app.logger.removeHandler(default_handler)
-
-    logger.debug("instrument_app")
-    FlaskInstrumentor().instrument_app(app)
 
     logger.debug("login_manager.init_app")
     login_manager.init_app(app)
