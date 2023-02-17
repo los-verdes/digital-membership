@@ -57,7 +57,7 @@ jobs:
           pytest_xpassed_emoji: ":bangbang:"
           pytest_xfailed_emoji: ":bangbang:"
           pytest_skipped_emoji: ":shipit:"
-          pytest_verbosity: 2
+          pytest_verbosity: 1
           GITHUB_PAT: ${{ secrets.GH_PAT }}
           PGHOST: "127.0.0.1"
           PGPORT: "5433"
