@@ -6,7 +6,7 @@ locals {
       image                   = var.website_image
       service_account_name    = google_service_account.digital_membership["website"].email
       mount_apple_private_key = true
-      memory_mb               = "512"
+      memory_mb               = "512Mi"
       min_scale               = "0"
       invokers                = ["allUsers"]
     }
@@ -15,7 +15,7 @@ locals {
       service_account_name    = google_service_account.digital_membership["worker"].email
       mount_apple_private_key = true
       min_scale               = "0"
-      memory_mb               = "512"
+      memory_mb               = "1Gi"
       invokers                = ["serviceAccount:${google_service_account.digital_membership["worker-pubsub-invoker"].email}"]
     }
   }
@@ -141,7 +141,7 @@ resource "google_cloud_run_service" "digital_membership" {
         resources {
           limits = {
             cpu    = "1"
-            memory = "${each.value.memory_mb}Mi"
+            memory = "${each.value.memory_mb}"
           }
         }
 
