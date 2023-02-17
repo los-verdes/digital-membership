@@ -290,7 +290,7 @@ def minibc_orders_etl(minibc_client: Minibc, skus, load_all):
     else:
         logger.info("Loading ALL subscriptions now...")
         subscriptions, last_page_num = minibc_client.search_subscriptions(
-            product_sku=skus[0], starting_page=1, max_pages=3
+            product_sku=skus[0], starting_page=1, max_pages=500
         )
     # with open(f"subs_{last_page_num}.json", "r") as f:
     #     subscriptions = json.load(f)
