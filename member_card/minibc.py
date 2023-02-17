@@ -299,7 +299,7 @@ def minibc_orders_etl(minibc_client: Minibc, skus, load_all):
     logging.debug(
         f"Setting last_run_start_page metadata on {membership_table_name=} to {last_page_num=}"
     )
-    table_metadata.set_last_run_start_page(membership_table_name, last_page_num - 1)
+    table_metadata.set_last_run_start_page(membership_table_name, max(1, last_page_num - 2))
 
     return memberships
 
