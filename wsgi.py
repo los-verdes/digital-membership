@@ -7,14 +7,10 @@ from google.cloud.logging_v2.handlers._helpers import get_request_data
 from google_cloud_logger import GoogleCloudFormatter
 from pythonjsonlogger.jsonlogger import JsonFormatter
 
-from member_card import create_app, create_cli_app
+from member_card import create_app, create_worker_app, create_cli_app
 
-try:
-    import googleclouddebugger
-
-    googleclouddebugger.enable(breakpoint_enable_canary=True)
-except ImportError:
-    pass
+# TODO: eh
+assert create_worker_app
 
 
 class GunicornJsonFormatter(JsonFormatter):
