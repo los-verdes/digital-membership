@@ -20,7 +20,7 @@ class MemberCardPass(object):
     icon = "LV_Tee_Crest_onVerde_rgb_filled_icon@2x.png"
     description = "Los Verdes Membership Card"
 
-    background_color = "rgb((0, 177, 64)"
+    background_color = "rgb(0, 177, 64)"
     foreground_color = "rgb(0, 0, 0)"
 
     @property

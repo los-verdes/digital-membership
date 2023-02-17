@@ -158,9 +158,8 @@ show_qr_code_on_card=False
     <a class="save-pass-button save-google-pass-button" href="{{ url_for('passes_google_pay') }}" target="_blank">
       <img class="mdl-js-button" src="{{ url_for('static', filename='save_to_google_pay.svg') }}">
     </a>
-    <a id="apple_pass_btn" class="save-pass-button save-apple-pass-button">
+    <a class="save-pass-button save-apple-pass-button" href="{{ url_for('passes_apple_pay') }}">
       <img class="mdl-js-button" src="{{ url_for('static', filename='Add_to_Apple_Wallet_rgb_US-UK.svg') }}">
-      <div class="mdl-tooltip mdl-tooltip--large" for="apple_pass_btn">Apple passes currently out of service but will be available again soonish! :)</div>
     </a>
     <hr>
     <a class="mdl-button mdl-js-button update-name-dialog-link">
