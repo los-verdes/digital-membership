@@ -7,7 +7,8 @@ locals {
       service_account_name    = google_service_account.digital_membership["website"].email
       mount_apple_private_key = true
       memory_mb               = "512Mi"
-      min_scale               = "0"
+      min_scale               = "1"
+      max_scale               = "3"
       invokers                = ["allUsers"]
     }
     "worker" = {
@@ -15,6 +16,7 @@ locals {
       service_account_name    = google_service_account.digital_membership["worker"].email
       mount_apple_private_key = true
       min_scale               = "0"
+      max_scale               = "1"
       memory_mb               = "1Gi"
       invokers                = ["serviceAccount:${google_service_account.digital_membership["worker-pubsub-invoker"].email}"]
     }
@@ -48,8 +50,8 @@ resource "google_cloud_run_service" "digital_membership" {
 
     metadata {
       annotations = {
-        "autoscaling.knative.dev/minScale"         = "0"
-        "autoscaling.knative.dev/maxScale"         = "1"
+        "autoscaling.knative.dev/minScale"         = each.value.min_scale
+        "autoscaling.knative.dev/maxScale"         = each.value.max_scale
         "run.googleapis.com/cloudsql-instances"    = google_sql_database_instance.digital_membership.connection_name
         "run.googleapis.com/client-name"           = each.key
         "run.googleapis.com/execution-environment" = "gen2"
