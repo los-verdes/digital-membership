@@ -1,0 +1,45 @@
+---
+name: Lint
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: "linting-for-${{ github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: "Lint Configuration"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Super Linter
+        uses: github/super-linter/slim@v4
+        env:
+          DEFAULT_BRANCH: main
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IGNORE_GITIGNORED_FILES: true
+          VALIDATE_ALL_CODEBASE: false
+          # JSCPD - meebee later...
+          # VALIDATE_JSCPD_ALL_CODEBASE: true
+          VALIDATE_PYTHON_MYPY: false
+          VALIDATE_CSS: false
+          VALIDATE_JAVASCRIPT_STANDARD: false
+          VALIDATE_PYTHON_ISORT: false
+          VALIDATE_PYTHON_PYLINT: false # TODO: eh maybe later
+          # TODO: toggle back on after this type of error stops happening or something?:
+          # > failed to initialize OPA policy engine
+          # https://github.com/los-verdes/digital-membership/runs/5400855944?check_suite_focus=true
+          VALIDATE_TERRAFORM_TERRASCAN: false
+          # TODO: toggle GITHUB_ACTIONS back on after one, or both, of these issues are resolved:
+          # https://github.com/github/super-linter/issues/1852
+          # https://github.com/rhysd/actionlint/issues/91
+          VALIDATE_GITHUB_ACTIONS: false
