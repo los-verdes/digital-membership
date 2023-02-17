@@ -33,6 +33,13 @@ def create_cli_app(env=None) -> "Flask":
     return app
 
 
+class MemberCardDatastore(SQLAlchemySessionUserDatastore):
+    def find_user(self, **kwargs):
+        if "id" in kwargs:
+            kwargs["id"] = int(kwargs["id"])
+        return self.user_model.query.filter_by(**kwargs).first()
+
+
 def create_app(env=None) -> "Flask":
     from member_card.app import login_manager, recaptcha, cdn, security
 
@@ -61,7 +68,7 @@ def create_app(env=None) -> "Flask":
     init_social(app, db.session)
     migrate.init_app(app, db)
 
-    user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
+    user_datastore = MemberCardDatastore(db.session, User, Role)
     security.init_app(
         app=app,
         datastore=user_datastore,
