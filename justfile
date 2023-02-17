@@ -27,7 +27,7 @@ export GCS_BUCKET_ID := "cstatic.losverd.es"
 
 
 onepass_session:
-  op whoami || eval "$(op signin --account my.1password.com)"
+  echo op whoami || eval "$(op signin --account my.1password.com)"
 
 # TODO: This is all from the beforetimes and should be tidied up!
 
@@ -106,7 +106,8 @@ docker-flask +CMD: build onepass_session
 flask +CMD: onepass_session
   @echo "FLASK_APP: ${FLASK_APP-None}"
   @echo "FLASK_ENV: ${FLASK_ENV-None}"
-  op run --env-file='./.1penv' -- flask {{ CMD }}
+  # op run --env-file='./.1penv' -- flask {{ CMD }}
+  flask {{ CMD }}
 
 ensure-db-schemas:
   just flask ensure-db-schemas
