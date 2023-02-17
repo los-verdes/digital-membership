@@ -28,3 +28,12 @@ provider "google" {
   project = var.gcp_project_id
   region  = var.gcp_region
 }
+
+data "terraform_remote_state" "bootstrap" {
+  backend = "gcs"
+
+  config = {
+    bucket = "lv-digital-membership-tfstate"
+    prefix = "bootstrap"
+  }
+}
