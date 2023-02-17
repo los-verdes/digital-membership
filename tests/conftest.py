@@ -142,7 +142,6 @@ def fake_other_user(app: "Flask") -> User:
         email="other-los.verdes.tester@gmail.com",
     )
     with app.app_context():
-
         db.session.add(user)
         db.session.commit()
 
@@ -198,7 +197,6 @@ def fake_membership_order(app: "Flask", fake_user: User) -> AnnualMembership:
     membership_order.channel_name = "test-fixture"
     membership_order.fulfillment_status = "PENDING"
     with app.app_context():
-
         db.session.add(membership_order)
         db.session.commit()
 

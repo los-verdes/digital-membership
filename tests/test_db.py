@@ -6,7 +6,6 @@ from member_card import db
 from member_card.models import AnnualMembership
 
 if TYPE_CHECKING:
-
     from flask import Flask
     from flask_security import SQLAlchemySessionUserDatastore
     from member_card.models import User
