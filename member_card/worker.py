@@ -12,8 +12,13 @@ from member_card.models import AnnualMembership, User
 from member_card.sendgrid import generate_email_message, send_email_message
 from member_card.squarespace import (
     Squarespace,
-    squarespace_orders_etl,
+    # squarespace_orders_etl,
     load_single_order,
+)
+from member_card.minibc import (
+    Minibc,
+    minibc_orders_etl,
+    # load_single_subscription,
 )
 
 logger = logging.getLogger(__name__)
@@ -108,11 +113,20 @@ def sync_subscriptions_etl(message, load_all=False):
 
     total_num_memberships_start = db.session.query(AnnualMembership.id).count()
 
-    membership_skus = current_app.config["SQUARESPACE_MEMBERSHIP_SKUS"]
-    squarespace = Squarespace(api_key=current_app.config["SQUARESPACE_API_KEY"])
-    memberships = squarespace_orders_etl(
-        squarespace_client=squarespace,
-        membership_skus=membership_skus,
+    # membership_skus = current_app.config["MINIBC_MEMBERSHIP_SUBSCRIPTION_ID"]
+    # squarespace = Squarespace(api_key=current_app.config["SQUARESPACE_API_KEY"])
+    # memberships = squarespace_orders_etl(
+    #     squarespace_client=squarespace,
+    #     membership_skus=membership_skus,
+    #     load_all=load_all,
+    # )
+
+    skus = current_app.config["MINIBC_MEMBERSHIP_SKUS"]
+    minibc = Minibc(api_key=current_app.config["MINIBC_API_KEY"])
+    # minibc.search_products()
+    memberships = minibc_orders_etl(
+        minibc_client=minibc,
+        skus=skus,
         load_all=load_all,
     )
 

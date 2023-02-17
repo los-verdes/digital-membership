@@ -194,12 +194,17 @@ class Settings(object):
     SQUARESPACE_MEMBERSHIP_SKUS = os.getenv(
         "SQUARESPACE_MEMBERSHIP_SKUS", "SQ3671268,SQ6438806"
     ).split(",")
+    MINIBC_MEMBERSHIP_SKUS = [
+        p.strip()
+        for p in os.getenv("MINIBC_MEMBERSHIP_SKUS", "LOSV-MEM-0001").split(",")
+    ]
 
     SESSION_PROTECTION: str = "strong"
     SECRET_KEY: str = os.environ.get("SECRET_KEY", "not-very-secret-at-all")
     SESSION_COOKIE_NAME: str = "psa_session"
 
-    SQLALCHEMY_DATABASE_URI: str = "postgresql://member-card-user:member-card-password@127.0.0.1:5433/lv-digital-membership"
+    # SQLALCHEMY_DATABASE_URI: str = "postgresql://member-card-user:member-card-password@127.0.0.1:5432/lv-digital-membership"
+    SQLALCHEMY_DATABASE_URI: str = "postgresql://127.0.0.1:5432/lv-digital-membership"
     SQLALCHEMY_TRACK_MODIFICATIONS: bool = False
 
     def export_dict_as_settings(self, dict_to_export: dict[str, str]) -> None:
@@ -260,7 +265,6 @@ class ProductionSettings(Settings):
         )
 
     def __init__(self) -> None:
-
         super().__init__()
         self.SOCIAL_AUTH_PIPELINE = tuple(
             [p for p in self.SOCIAL_AUTH_PIPELINE if not p.endswith("debug")]
@@ -285,7 +289,6 @@ class TestSettings(Settings):
 
 class RemoteSqlProductionSettings(ProductionSettings):
     def __init__(self) -> None:
-
         super().__init__()
 
 

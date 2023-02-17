@@ -29,7 +29,6 @@ class MemberCardPass(object):
 
 
 class AppleWalletPass(MemberCardPass):
-
     passfile_files = {
         "icon.png": "LV_Tee_Crest_onVerde_rgb_filled_icon.png",
         "icon@2x.png": "LV_Tee_Crest_onVerde_rgb_filled_icon@2x.png",
@@ -270,7 +269,6 @@ class GooglePayPassObject(object):
 
 
 def create_passfile(membership_card):
-
     pass_info = Generic()
     pass_info.addPrimaryField("name", membership_card.user.fullname, "Member Name")
     pass_info.addSecondaryField(
