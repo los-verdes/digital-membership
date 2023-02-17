@@ -160,6 +160,8 @@ def sync_subscriptions_etl(message, load_all=False):
 def sync_squarespace_order(message):
     log_extra = dict(pubsub_message=message)
     logger.debug(f"sync_squarespace_order() called with {message=}", extra=log_extra)
+    logger.warning("skipping squarespace order syncin...")
+    return "nah"
     order_id = message["order_id"]
 
     membership_skus = current_app.config["SQUARESPACE_MEMBERSHIP_SKUS"]
