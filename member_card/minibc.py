@@ -102,8 +102,9 @@ class Minibc(object):
         order_id=None,
         product_id=None,
         product_sku=None,
+        email=None,
         starting_page=1,
-        max_pages=200,
+        max_pages=500,
     ):
         subscription_search = {
             "order_id": order_id,
@@ -111,7 +112,7 @@ class Minibc(object):
             "store_product_id": None,
             "product_sku": product_sku,
             "store_customer_id": None,
-            "customer_email": None,
+            "customer_email": email,
             "active": None,
         }
         search_payload = {k: v for k, v in subscription_search.items() if v is not None}
@@ -290,7 +291,7 @@ def minibc_orders_etl(minibc_client: Minibc, skus, load_all):
     else:
         logger.info("Loading ALL subscriptions now...")
         subscriptions, last_page_num = minibc_client.search_subscriptions(
-            product_sku=skus[0], starting_page=1, max_pages=500
+            product_sku=skus[0], starting_page=1, max_pages=1000
         )
     # with open(f"subs_{last_page_num}.json", "r") as f:
     #     subscriptions = json.load(f)

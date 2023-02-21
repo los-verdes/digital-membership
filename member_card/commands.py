@@ -219,8 +219,18 @@ def list_incoming_webhooks():
 @click.argument("order_id")
 def lookup_sub_by_order_id(order_id):
     minibc = Minibc(api_key=app.config["MINIBC_API_KEY"])
-    subscription_order, _ = minibc.search_subscriptions(order_id=order_id)
-    print(f"{subscription_order=}")
+    subscription_order, last_page_num = minibc.search_subscriptions(order_id=order_id)
+    print(f"(on {last_page_num=}):\n{subscription_order=}")
     # breakpoint()
 
     # resp = minibc.perform_request(method="get",  path="subscriptions/3391663")
+
+
+@minibc.command("lookup-sub-by-email")
+@click.argument("email")
+def lookup_sub_by_order_email(email):
+    minibc = Minibc(api_key=app.config["MINIBC_API_KEY"])
+    # subscription_order, last_page_num = minibc.search_subscriptions(customer_email=email)
+    subscription_order, last_page_num = minibc.search_subscriptions()
+    print(f"(on {last_page_num=}):\n{subscription_order=}")
+    breakpoint()
