@@ -317,7 +317,7 @@ def get_client_from_oauth_code(code):
     return squarespace
 
 
-def ensure_orders_webhook_subscription(code, endpoint_url, delete_extant_first=False):
+def ensure_orders_webhook_subscription(code, endpoint_url, delete_extant_first=True):
     squarespace = get_client_from_oauth_code(code)
     if delete_extant_first:
         list_webhooks_resp = squarespace.list_webhook_subscriptions()
@@ -332,35 +332,35 @@ def ensure_orders_webhook_subscription(code, endpoint_url, delete_extant_first=F
 
     list_webhooks_resp = squarespace.list_webhook_subscriptions()
     webhook_subscriptions = list_webhooks_resp["webhookSubscriptions"]
-    logger.debug(f"ensure_orders_webhook_subscription(): {webhook_subscriptions=}")
+    logger.debug(f"NOT ensure_orders_webhook_subscription(): {webhook_subscriptions=}")
 
-    if webhook_subscriptions:
-        for webhook_subscription in webhook_subscriptions:
-            rotate_secret_for_webhook(
-                squarespace=squarespace,
-                webhook_subscription=webhook_subscription,
-                account_id=squarespace.account_id,
-            )
-    else:
-        order_webhook = create_orders_webhook(
-            squarespace=squarespace,
-            account_id=squarespace.account_id,
-            endpoint_url=endpoint_url,
-        )
+    # if webhook_subscriptions:
+    #     for webhook_subscription in webhook_subscriptions:
+    #         rotate_secret_for_webhook(
+    #             squarespace=squarespace,
+    #             webhook_subscription=webhook_subscription,
+    #             account_id=squarespace.account_id,
+    #         )
+    # else:
+    #     order_webhook = create_orders_webhook(
+    #         squarespace=squarespace,
+    #         account_id=squarespace.account_id,
+    #         endpoint_url=endpoint_url,
+    #     )
 
-        logger.debug("Refreshing webhooks list post-webhook-creation...")
-        list_webhooks_resp = squarespace.list_webhook_subscriptions()
-        webhook_subscriptions = list_webhooks_resp["webhookSubscriptions"]
-        webhook_subscriptions_by_id = {w["id"]: w for w in webhook_subscriptions}
-        logger.debug(f"after creating webhook: {webhook_subscriptions_by_id=}")
-        website_id = webhook_subscriptions_by_id[order_webhook.webhook_id]["websiteId"]
-        logger.debug(f"Setting website_id for {order_webhook} to: {website_id=}")
-        setattr(order_webhook, "website_id", website_id)
-        db.session.add(order_webhook)
-        db.session.commit()
-        logger.debug(f"order webhook committed!: {order_webhook=}")
+    #     logger.debug("Refreshing webhooks list post-webhook-creation...")
+    #     list_webhooks_resp = squarespace.list_webhook_subscriptions()
+    #     webhook_subscriptions = list_webhooks_resp["webhookSubscriptions"]
+    #     webhook_subscriptions_by_id = {w["id"]: w for w in webhook_subscriptions}
+    #     logger.debug(f"after creating webhook: {webhook_subscriptions_by_id=}")
+    #     website_id = webhook_subscriptions_by_id[order_webhook.webhook_id]["websiteId"]
+    #     logger.debug(f"Setting website_id for {order_webhook} to: {website_id=}")
+    #     setattr(order_webhook, "website_id", website_id)
+    #     db.session.add(order_webhook)
+    #     db.session.commit()
+    #     logger.debug(f"order webhook committed!: {order_webhook=}")
 
-    send_test_notifications_for_webhooks(squarespace, webhook_subscriptions)
+    # send_test_notifications_for_webhooks(squarespace, webhook_subscriptions)
 
     return webhook_subscriptions
 
