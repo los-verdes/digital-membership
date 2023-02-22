@@ -79,7 +79,7 @@ def query_db(email):
     )
 
     logger.info(f"memberships matching {email}:\n{memberships}")
-    logger.info(f"{User.query.all()=}")
+    # logger.info(f"{User.query.all()=}")
     try:
         user = User.query.filter_by(email=func.lower(email)).one()
         print(f"User matching {email} found!: {user=}")
