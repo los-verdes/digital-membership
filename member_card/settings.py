@@ -52,7 +52,7 @@ class Settings(object):
     )
     GOOGLE_PAY_ORIGINS = [
         "https://card.losverd.es",
-        "https://localcard.losverd.es:5000",
+        "https://localcard.losverd.es:8080",
         # "https://pay.google.com",
     ]
 
