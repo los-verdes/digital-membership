@@ -220,7 +220,7 @@ def list_incoming_webhooks():
 def lookup_sub_by_order_id(order_id):
     minibc = Minibc(api_key=app.config["MINIBC_API_KEY"])
     subscription_order = minibc.search_subscriptions(order_id=order_id)
-    print(f"(on {last_page_num=}):\n{subscription_order=}")
+    print(f"{subscription_order=}")
     # breakpoint()
 
     # resp = minibc.perform_request(method="get",  path="subscriptions/3391663")
