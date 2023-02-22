@@ -4,7 +4,7 @@ from time import sleep
 from typing import TYPE_CHECKING
 
 import requests
-from dateutil.parser import parse
+from dateutil.parser import parse, ParserError
 
 from member_card.db import db, get_or_update
 from member_card.models import table_metadata
@@ -190,11 +190,20 @@ def insert_order_as_membership(order, skus):
             if order[weird_dates_key] == "0":
                 weird_dates[weird_dates_key] = None
             else:
-                weird_dates[weird_dates_key] = parse(order[weird_dates_key]).replace(
-                    tzinfo=timezone.utc
-                )
+                try:
+                    weird_dates[weird_dates_key] = parse(
+                        order[weird_dates_key]
+                    ).replace(tzinfo=timezone.utc)
+                except ParserError as err:
+                    logger.warning(
+                        f"Unable to parse {weird_dates_key} for {customer_email}: {err=}"
+                    )
+                    weird_dates[weird_dates_key] = None
 
-        created_on = weird_dates["next_payment_date"] - timedelta(days=365)
+        created_on = weird_dates["signup_date"]
+        if weird_dates["next_payment_date"] is not None:
+            created_on = weird_dates["next_payment_date"] - timedelta(days=365)
+
         logger.debug(f"{weird_dates['next_payment_date']=} => {created_on=}")
         membership_kwargs = dict(
             order_id=f"minibc_{str(order['id'])}",
