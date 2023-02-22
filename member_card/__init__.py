@@ -78,6 +78,10 @@ def create_app(env=None) -> "Flask":
 
     app.register_blueprint(social_auth)
 
+    from member_card.routes.bigcommerce import bigcommerce_bp
+
+    app.register_blueprint(bigcommerce_bp)
+
     from member_card.routes import passkit
 
     assert passkit
