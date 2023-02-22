@@ -289,7 +289,7 @@ def minibc_orders_etl(minibc_client: Minibc, skus, load_all):
         )
         if subscriptions is None:
             logger.debug(
-                f"{max_pages=} reached ({len(subscriptions)=}, {start_page_num=}). Setting `last_page_num` back to 1"
+                f"{last_page_num=} returned no results!. Setting `last_page_num` back to 1"
             )
             last_page_num = 1
             break
