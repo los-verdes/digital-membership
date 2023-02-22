@@ -2,23 +2,19 @@ import base64
 import json
 import logging
 
+from codetiming import Timer
 from flask import Blueprint, current_app, request
 
-from member_card.image import generate_and_upload_card_image
-from member_card.passes import generate_and_upload_apple_pass
-from member_card.models.membership_card import get_or_create_membership_card
 from member_card.db import db
+from member_card.image import generate_and_upload_card_image
+from member_card.minibc import Minibc, minibc_orders_etl  # load_single_subscription,
 from member_card.models import AnnualMembership, User
+from member_card.models.membership_card import get_or_create_membership_card
+from member_card.passes import generate_and_upload_apple_pass
 from member_card.sendgrid import generate_email_message, send_email_message
 from member_card.squarespace import (
-    Squarespace,
-    # squarespace_orders_etl,
+    Squarespace,  # squarespace_orders_etl,
     load_single_order,
-)
-from member_card.minibc import (
-    Minibc,
-    minibc_orders_etl,
-    # load_single_subscription,
 )
 
 logger = logging.getLogger(__name__)
@@ -26,6 +22,7 @@ logger = logging.getLogger(__name__)
 worker_bp = Blueprint("worker", __name__)
 
 
+@Timer(name="parse_message")
 def parse_message():
     envelope = request.get_json()
     logger.debug(f"parsing message within {envelope=}")
@@ -49,6 +46,7 @@ def parse_message():
     return message
 
 
+@Timer(name="process_email_distribution_request")
 def process_email_distribution_request(message):
     logger.debug(f"Processing email distribution request message: {message}")
     email_distribution_recipient = message["email_distribution_recipient"]
@@ -104,6 +102,7 @@ def process_email_distribution_request(message):
     return send_email_resp
 
 
+@Timer(name="sync_subscriptions_etl")
 def sync_subscriptions_etl(message, load_all=False):
     log_extra = dict(pubsub_message=message)
     logger.debug(
@@ -157,6 +156,7 @@ def sync_subscriptions_etl(message, load_all=False):
     }
 
 
+@Timer(name="sync_squarespace_order")
 def sync_squarespace_order(message):
     log_extra = dict(pubsub_message=message)
     logger.debug(f"sync_squarespace_order() called with {message=}", extra=log_extra)
@@ -193,5 +193,7 @@ def pubsub_ingress():
         return f"Message type {message_type} is unsupported", 400
 
     MESSAGE_TYPE_HANDLERS[message["type"]](message)
-
+    if Timer.timers:
+        for timer_name, timer_duration in Timer.timers.items():
+            logger.info(f"- **{timer_name}**: {timer_duration}")
     return ("", 204)

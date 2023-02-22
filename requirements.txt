@@ -38,6 +38,8 @@ click==8.0.3
     # via flask
 cloud-sql-python-connector[pg8000]==0.5.1
     # via -r requirements.in
+codetiming==1.4.0
+    # via -r requirements.in
 cryptography==36.0.1
     # via
     #   cloud-sql-python-connector
