@@ -201,6 +201,8 @@ class Settings(object):
         p.strip()
         for p in os.getenv("MINIBC_MEMBERSHIP_SKUS", "LOSV-MEM-0001").split(",")
     ]
+    BIGCOMMERCE_CLIENT_ID: str = os.getenv("BIGCOMMERCE_CLIENT_ID", "")
+    BIGCOMMERCE_CLIENT_SECRET: str = os.getenv("BIGCOMMERCE_CLIENT_SECRET", "")
 
     SESSION_PROTECTION: str = "strong"
     SECRET_KEY: str = os.environ.get("SECRET_KEY", "not-very-secret-at-all")
