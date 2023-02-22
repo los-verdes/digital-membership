@@ -303,13 +303,13 @@ def minibc_orders_etl(minibc_client: Minibc, skus, load_all):
             last_page_num = 1
             break
 
-        last_page_num = start_page_num
+        last_page_num = page_num
         memberships += parse_subscriptions(skus, subscriptions)
         logger.debug(f"after {page_num=} sleeping for 1 second...")
         sleep(1)
 
     if not load_all:
-        logging.debug(
+        logger.debug(
             f"Setting start_page_num metadata on {membership_table_name=} to {last_page_num=}"
         )
         table_metadata.set_last_run_start_page(
