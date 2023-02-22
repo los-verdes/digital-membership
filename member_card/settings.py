@@ -208,6 +208,11 @@ class Settings(object):
     SECRET_KEY: str = os.environ.get("SECRET_KEY", "not-very-secret-at-all")
     SESSION_COOKIE_NAME: str = "psa_session"
 
+    # For Bigcommerce app-y reasons
+    # ref: https://github.com/bigcommerce/hello-world-app-python-flask/blob/master/app.py#LL25C13-L26C43
+    SESSION_COOKIE_SAMESITE = "None"
+    SESSION_COOKIE_SECURE = True
+
     # SQLALCHEMY_DATABASE_URI: str = "postgresql://member-card-user:member-card-password@127.0.0.1:5432/lv-digital-membership"
     SQLALCHEMY_DATABASE_URI: str = "postgresql://127.0.0.1:5432/lv-digital-membership"
     SQLALCHEMY_TRACK_MODIFICATIONS: bool = False
