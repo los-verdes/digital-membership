@@ -30,11 +30,11 @@ def error_info(e):
     return content
 
 
-@bigcommerce_bp.errorhandler(500)
-def internal_server_error(e):
-    content = "Internal Server Error: " + str(e) + "<br>"
-    content += error_info(e)
-    return content, 500
+# @bigcommerce_bp.errorhandler(500)
+# def internal_server_error(e):
+#     content = "Internal Server Error: " + str(e) + "<br>"
+#     content += error_info(e)
+#     return content, 500
 
 
 @bigcommerce_bp.errorhandler(400)
@@ -70,6 +70,7 @@ def auth_callback():
     # Fetch a permanent oauth token. This will throw an exception on error,
     # which will get caught by our error handler above.
     client = BigcommerceApi(client_id=client_id(), store_hash=store_hash)
+    raise Exception(client)
     token = client.oauth_fetch_token(
         client_secret(), code, context, scope, redirect_url
     )
