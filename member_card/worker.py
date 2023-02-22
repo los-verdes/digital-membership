@@ -104,7 +104,7 @@ def process_email_distribution_request(message):
     return send_email_resp
 
 
-def sync_subscriptions_etl(message, load_all=True):
+def sync_subscriptions_etl(message, load_all=False):
     log_extra = dict(pubsub_message=message)
     logger.debug(
         f"Processing sync subscriptions ETL message: {message}",
