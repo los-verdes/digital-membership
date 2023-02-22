@@ -176,12 +176,13 @@ def insert_order_as_membership(order, skus):
             fulfilled_on = parse(fulfilled_on).replace(tzinfo=timezone.utc)
 
         customer_email = order["customer"]["email"]
-        logger.debug(f"{order=}")
+        # logger.debug(f"{order=}")
 
         weird_dates_keys = [
             "created_time",
             "last_modified",
             "signup_date",
+            "next_payment_date",
         ]
         weird_dates = {}
         for weird_dates_key in weird_dates_keys:
@@ -193,6 +194,8 @@ def insert_order_as_membership(order, skus):
                     tzinfo=timezone.utc
                 )
 
+        created_on = weird_dates["next_payment_date"] - timedelta(days=365)
+        logger.debug(f"{weird_dates['next_payment_date']=} => {created_on=}")
         membership_kwargs = dict(
             order_id=f"minibc_{str(order['id'])}",
             order_number=f"minibc_{order['order_id'] or order['id']}_{order['customer']['store_customer_id']}",
@@ -201,7 +204,7 @@ def insert_order_as_membership(order, skus):
             billing_address_first_name=order["customer"]["first_name"],
             billing_address_last_name=order["customer"]["last_name"],
             external_order_reference=order["customer"]["store_customer_id"],
-            created_on=weird_dates["signup_date"],
+            created_on=created_on,
             modified_on=weird_dates["last_modified"],
             fulfilled_on=fulfilled_on,
             customer_email=customer_email,
