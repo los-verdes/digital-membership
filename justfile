@@ -258,43 +258,21 @@ sql-proxy:
     -token="$(gcloud auth print-access-token --impersonate-service-account=website@lv-digital-membership.iam.gserviceaccount.com)";
 
 remote-psql:
-  #!/bin/bash
-
-  set -eou pipefail
-
-  PGHOST='127.0.0.1'
-  PGPORT='5432'
-  gcloud_user=`gcloud auth list 2>/dev/null | grep -E '^\*' | awk '{print $2;}'`
-  gcloud_access_token="$(gcloud auth print-access-token)"
-  PGUSER="${PGUSER-"$gcloud_user"}"
-  PGPASSWORD="${PGPASSWORD-"$gcloud_access_token"}"
-  PGDATABASE='lv-digital-membership'
-  export PGHOST
-  export PGPORT
-  export PGUSER
-  export PGPASSWORD
-  export PGDATABASE
-  psql
-  # op run --env-file=<(echo "export PGPASSWORD='op://Los Verdes/management_sql_user_password/password'") -- psql --username=tf-management --host=127.0.0.1 --port=5434 lv-digital-membership
+  psql \
+    --username='website@lv-digital-membership.iam' \
+    --host=127.0.0.1 \
+    --port=5434 \
+    lv-digital-membership
 
 remote-pg-dump:
-  #!/bin/bash
-
-  set -eou pipefail
-
-  PGHOST='127.0.0.1'
-  PGPORT='5432'
-  gcloud_user=`gcloud auth list 2>/dev/null | grep -E '^\*' | awk '{print $2;}'`
-  gcloud_access_token="$(gcloud auth print-access-token)"
-  PGUSER="${PGUSER-"$gcloud_user"}"
-  PGPASSWORD="${PGPASSWORD-"$gcloud_access_token"}"
-  PGDATABASE='lv-digital-membership'
-  export PGHOST
-  export PGPORT
-  export PGUSER
-  export PGPASSWORD
-  export PGDATABASE
-  pg_dump --data-only --column-inserts lv-digital-membership > data.sql
+  pg_dump \
+    --username='website@lv-digital-membership.iam' \
+    --host=127.0.0.1 \
+    --port=5434 \
+    --data-only \
+    --column-inserts \
+    lv-digital-membership \
+  > data.sql.bak
 
 gunicorn:
   gunicorn \
