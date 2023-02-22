@@ -19,8 +19,8 @@ export FLASK_DEBUG := "true"
 export LOG_LEVEL := env_var_or_default("LOG_LEVEL", "debug")
 export DOCKER_BUILDKIT := "1"
 export DIGITAL_MEMBERSHIP_GCP_SQL_CONNECTION_NAME := "lv-digital-membership:us-central1:lv-digital-membership-6b6a7153"
-# export DIGITAL_MEMBERSHIP_DB_USERNAME := env_var_or_default("DIGITAL_MEMBERSHIP_DB_USERNAME", `gcloud auth list 2>/dev/null | grep -E '^\*' | awk '{print $2;}'`)
-export DIGITAL_MEMBERSHIP_DB_USERNAME := "website@lv-digital-membership.iam"
+export DIGITAL_MEMBERSHIP_DB_USERNAME := env_var_or_default("DIGITAL_MEMBERSHIP_DB_USERNAME", `gcloud auth list 2>/dev/null | grep -E '^\*' | awk '{print $2;}'`)
+# export DIGITAL_MEMBERSHIP_DB_USERNAME := "website@lv-digital-membership.iam"
 export DIGITAL_MEMBERSHIP_DB_DATABASE_NAME := "lv-digital-membership"
 export DIGITAL_MEMBERSHIP_BASE_URL := "localcard.losverd.es:8080"
 export GCS_BUCKET_ID := "cstatic.losverd.es"
@@ -89,7 +89,7 @@ ci-install-python-reqs:
 docker-flask +CMD: build onepass_session
   @echo "FLASK_APP: ${FLASK_APP-None}"
   @echo "FLASK_ENV: ${FLASK_ENV-None}"
-  op run --env-file='./.1penv' -- \
+  op run --env-file='./.env' -- \
     docker run \
     --interactive \
     --tty \
@@ -107,7 +107,7 @@ docker-flask +CMD: build onepass_session
 flask +CMD: onepass_session
   @echo "FLASK_APP: ${FLASK_APP-None}"
   @echo "FLASK_ENV: ${FLASK_ENV-None}"
-  # op run --env-file='./.1penv' -- flask {{ CMD }}
+  # op run --env-file='./.env' -- flask {{ CMD }}
   flask {{ CMD }}
 
 ensure-db-schemas:
@@ -124,7 +124,7 @@ serve: onepass_session
   #!/bin/zsh
   source /Users/jeffwecan/.pyenv/versions/3.9.2/bin/virtualenvwrapper.sh
   workon digital-membership
-  op run --env-file='./.1penv' -- \
+  op run --env-file='./.env' -- \
     just flask run --cert=tmp-certs/cert.pem --key=tmp-certs/key.pem --host=0.0.0.0 --port=8080
 
 build-website:
