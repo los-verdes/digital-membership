@@ -17,7 +17,7 @@ from member_card.passes import gpay
 from member_card.gcp import publish_message
 from member_card.sendgrid import update_sendgrid_template
 from member_card import worker
-from member_card.minibc import Minibc
+from member_card.minibc import Minibc, parse_subscriptions
 
 logger = logging.getLogger(__name__)
 
@@ -230,7 +230,22 @@ def lookup_sub_by_order_id(order_id):
 @click.argument("email")
 def lookup_sub_by_order_email(email):
     minibc = Minibc(api_key=app.config["MINIBC_API_KEY"])
-    # subscription_order, last_page_num = minibc.search_subscriptions(customer_email=email)
-    subscription_order, last_page_num = minibc.search_subscriptions()
+    subscription_order, last_page_num = minibc.search_subscriptions(email=email)
+    # subscription_order, last_page_num = minibc.search_subscriptions()
     print(f"(on {last_page_num=}):\n{subscription_order=}")
+    breakpoint()
+
+
+@minibc.command("sync-sub-by-email")
+@click.argument("email")
+def sync_sub_by_order_email(email):
+    minibc = Minibc(api_key=app.config["MINIBC_API_KEY"])
+    subscriptions, last_page_num = minibc.search_subscriptions(email=email)
+    # subscription_order, last_page_num = minibc.search_subscriptions()
+    print(f"(on {last_page_num=}):\n{subscriptions=}")
+    memberships = parse_subscriptions(
+        skus=app.config["MINIBC_MEMBERSHIP_SKUS"],
+        subscriptions=subscriptions,
+    )
+    print(f"After parsing {len(subscriptions)} subscription(s):\n{memberships=}")
     breakpoint()

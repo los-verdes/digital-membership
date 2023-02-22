@@ -290,7 +290,9 @@ class TestSettings(Settings):
     TRACING_ENABLED = True
 
 
-class RemoteSqlProductionSettings(ProductionSettings):
+class RemoteSqlProductionSettings(DevelopementSettings):
+    SQLALCHEMY_DATABASE_URI: str = "postgresql://website%40lv-digital-membership.iam@127.0.0.1:5434/lv-digital-membership"
+
     def __init__(self) -> None:
         super().__init__()
 

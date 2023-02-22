@@ -19,7 +19,8 @@ export FLASK_DEBUG := "true"
 export LOG_LEVEL := env_var_or_default("LOG_LEVEL", "debug")
 export DOCKER_BUILDKIT := "1"
 export DIGITAL_MEMBERSHIP_GCP_SQL_CONNECTION_NAME := "lv-digital-membership:us-central1:lv-digital-membership-6b6a7153"
-export DIGITAL_MEMBERSHIP_DB_USERNAME := env_var_or_default("DIGITAL_MEMBERSHIP_DB_USERNAME", `gcloud auth list 2>/dev/null | grep -E '^\*' | awk '{print $2;}'`)
+# export DIGITAL_MEMBERSHIP_DB_USERNAME := env_var_or_default("DIGITAL_MEMBERSHIP_DB_USERNAME", `gcloud auth list 2>/dev/null | grep -E '^\*' | awk '{print $2;}'`)
+export DIGITAL_MEMBERSHIP_DB_USERNAME := "website@lv-digital-membership.iam"
 export DIGITAL_MEMBERSHIP_DB_DATABASE_NAME := "lv-digital-membership"
 export DIGITAL_MEMBERSHIP_BASE_URL := "localcard.losverd.es:5000"
 export GCS_BUCKET_ID := "cstatic.losverd.es"
@@ -252,10 +253,9 @@ lint:
 
 sql-proxy:
   ~/.local/bin/cloud_sql_proxy \
-    -instances="$DIGITAL_MEMBERSHIP_GCP_SQL_CONNECTION_NAME=tcp:5432" \
-    ;
-  # -enable_iam_login \
-  # -token="$(gcloud auth print-access-token --impersonate-service-account=website@lv-digital-membership.iam.gserviceaccount.com)"
+    -instances="$DIGITAL_MEMBERSHIP_GCP_SQL_CONNECTION_NAME=tcp:5434" \
+    -enable_iam_login \
+    -token="$(gcloud auth print-access-token --impersonate-service-account=website@lv-digital-membership.iam.gserviceaccount.com)";
 
 remote-psql:
   #!/bin/bash
