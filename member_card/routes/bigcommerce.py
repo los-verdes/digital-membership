@@ -70,7 +70,6 @@ def auth_callback():
     # Fetch a permanent oauth token. This will throw an exception on error,
     # which will get caught by our error handler above.
     client = BigcommerceApi(client_id=client_id(), store_hash=store_hash)
-    raise Exception(client)
     token = client.oauth_fetch_token(
         client_secret(), code, context, scope, redirect_url
     )
