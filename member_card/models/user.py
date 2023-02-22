@@ -21,14 +21,21 @@ def edit_user_name(user, new_first_name, new_last_name):
     return user
 
 
-def ensure_user(email, first_name, last_name, username=None, password=None):
+def ensure_user(
+    email,
+    first_name=None,
+    last_name=None,
+    username=None,
+    password=None,
+    bigcommerce_id=None,
+):
     user = get_or_create(
         session=db.session,
         model=User,
         email=email,
     )
 
-    if not user.fullname:
+    if not user.fullname and first_name is not None and last_name is not None:
         member_name = f"{first_name} {last_name}"
         logger.debug(f"No name set yet on {user=}, updating to: {member_name}")
         user.fullname = member_name
@@ -51,6 +58,10 @@ def ensure_user(email, first_name, last_name, username=None, password=None):
     if password is not None:
         logger.debug(f"Setting new password for {user=}")
         setattr(user, "password", password)
+
+    if bigcommerce_id is not None:
+        logger.debug(f"Setting bigcommerce_id for {user=} => {bigcommerce_id=}")
+        setattr(user, "bigcommerce_id", bigcommerce_id)
 
     db.session.add(user)
     db.session.commit()
@@ -87,6 +98,8 @@ class User(db.Model, UserMixin):
     active = db.Column(db.Boolean, default=True)
     annual_memberships = relationship("AnnualMembership", back_populates="user")
     membership_cards = relationship("MembershipCard", back_populates="user")
+    store_users = relationship("StoreUser", backref="user")
+    bigcommerce_id = db.Column(db.Integer, nullable=True)
     roles = relationship(
         "Role",
         secondary="roles_users",
