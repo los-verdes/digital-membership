@@ -76,6 +76,7 @@ jobs:
           creds: ${{ steps.google-app-creds.outputs.creds }}
           # TODO: load instance from TF outputs...
           instance: lv-digital-membership:us-central1:lv-digital-membership-6b6a7153
+          port: "5434"
 
       - name: Run Flask Command
         id: flask-command
