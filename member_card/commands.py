@@ -226,14 +226,34 @@ def lookup_sub_by_order_id(order_id):
     # resp = minibc.perform_request(method="get",  path="subscriptions/3391663")
 
 
-@minibc.command("lookup-sub-by-email")
-@click.argument("email")
-def lookup_sub_by_order_email(email):
+@minibc.command("lookup-subs-by-emails")
+@click.argument("emails")
+def lookup_sub_by_order_email(emails):
     minibc = Minibc(api_key=app.config["MINIBC_API_KEY"])
-    subscription_order = minibc.search_subscriptions(email=email)
-    # subscription_order = minibc.search_subscriptions()
-    print(f"{subscription_order=}")
-    breakpoint()
+    for email in [e.strip() for e in emails.split(",")]:
+        subscriptions = minibc.search_subscriptions(email=email)
+        # subscription_order = minibc.search_subscriptions()
+        print(f"*** New Store Orders for: {email} ***")
+        for subscription in subscriptions:
+            print(f"- ID: {subscription['id']}")
+            print(f"- Status: {subscription['status']}")
+            print(f"- Signup Date: {subscription['signup_date']}")
+            print(f"- Payment Method: {subscription['payment_method']['method']}")
+            print(f"- Next Payment Date: {subscription['next_payment_date']}")
+            print(f"- Cancellation Date: {subscription['cancellation_date']}")
+            print(f"- Last Modified: {subscription['last_modified']}")
+        user = User.query.filter_by(email=func.lower(email)).one()
+        print(f"*** Historical / Tracked Info: {email} ***")
+        if user:
+            print(f"\n\nMatching card.losverd.es Metadata For: {email}")
+            print(f"- User: {user=}")
+            print(f"- Roles: {user.roles}")
+            print()
+            print("All Memberships:")
+            for annual_membership in user.annual_memberships:
+                print(f"- {annual_membership}")
+            print()
+            print()
 
 
 @minibc.command("sync-sub-by-email")
