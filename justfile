@@ -22,7 +22,7 @@ export DIGITAL_MEMBERSHIP_GCP_SQL_CONNECTION_NAME := "lv-digital-membership:us-c
 # export DIGITAL_MEMBERSHIP_DB_USERNAME := env_var_or_default("DIGITAL_MEMBERSHIP_DB_USERNAME", `gcloud auth list 2>/dev/null | grep -E '^\*' | awk '{print $2;}'`)
 export DIGITAL_MEMBERSHIP_DB_USERNAME := "website@lv-digital-membership.iam"
 export DIGITAL_MEMBERSHIP_DB_DATABASE_NAME := "lv-digital-membership"
-export DIGITAL_MEMBERSHIP_BASE_URL := "localcard.losverd.es:5000"
+export DIGITAL_MEMBERSHIP_BASE_URL := "localcard.losverd.es:8080"
 export GCS_BUCKET_ID := "cstatic.losverd.es"
 
 

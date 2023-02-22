@@ -4,6 +4,7 @@ Flask-Migrate
 Flask-SQLAlchemy
 Flask-reCaptcha
 M2Crypto
+bigcommerce
 cloud-sql-python-connector[pg8000]>=0.5.1
 email-validator
 flask
