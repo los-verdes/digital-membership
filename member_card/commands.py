@@ -219,7 +219,7 @@ def list_incoming_webhooks():
 @click.argument("order_id")
 def lookup_sub_by_order_id(order_id):
     minibc = Minibc(api_key=app.config["MINIBC_API_KEY"])
-    subscription_order, last_page_num = minibc.search_subscriptions(order_id=order_id)
+    subscription_order = minibc.search_subscriptions(order_id=order_id)
     print(f"(on {last_page_num=}):\n{subscription_order=}")
     # breakpoint()
 
@@ -230,9 +230,9 @@ def lookup_sub_by_order_id(order_id):
 @click.argument("email")
 def lookup_sub_by_order_email(email):
     minibc = Minibc(api_key=app.config["MINIBC_API_KEY"])
-    subscription_order, last_page_num = minibc.search_subscriptions(email=email)
-    # subscription_order, last_page_num = minibc.search_subscriptions()
-    print(f"(on {last_page_num=}):\n{subscription_order=}")
+    subscription_order = minibc.search_subscriptions(email=email)
+    # subscription_order = minibc.search_subscriptions()
+    print(f"{subscription_order=}")
     breakpoint()
 
 
@@ -240,12 +240,15 @@ def lookup_sub_by_order_email(email):
 @click.argument("email")
 def sync_sub_by_order_email(email):
     minibc = Minibc(api_key=app.config["MINIBC_API_KEY"])
-    subscriptions, last_page_num = minibc.search_subscriptions(email=email)
+    subscriptions = minibc.search_subscriptions(email=email)
     # subscription_order, last_page_num = minibc.search_subscriptions()
-    print(f"(on {last_page_num=}):\n{subscriptions=}")
-    memberships = parse_subscriptions(
-        skus=app.config["MINIBC_MEMBERSHIP_SKUS"],
-        subscriptions=subscriptions,
-    )
-    print(f"After parsing {len(subscriptions)} subscription(s):\n{memberships=}")
-    breakpoint()
+    print(f"{subscriptions=}")
+    if subscriptions is not None:
+        memberships = parse_subscriptions(
+            skus=app.config["MINIBC_MEMBERSHIP_SKUS"],
+            subscriptions=subscriptions,
+        )
+        print(f"After parsing {len(subscriptions)} subscription(s):\n{memberships=}")
+    else:
+        print(f"no subscription found for {email=}")
+    # breakpoint()

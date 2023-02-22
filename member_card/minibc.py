@@ -1,6 +1,5 @@
-import json
 import logging
-from datetime import timezone
+from datetime import timedelta, timezone
 from time import sleep
 from typing import TYPE_CHECKING
 
@@ -103,8 +102,7 @@ class Minibc(object):
         product_id=None,
         product_sku=None,
         email=None,
-        starting_page=1,
-        max_pages=500,
+        page_num=1,
     ):
         subscription_search = {
             "order_id": order_id,
@@ -114,48 +112,32 @@ class Minibc(object):
             "store_customer_id": None,
             "customer_email": email,
             "active": None,
+            "page": page_num,
         }
         search_payload = {k: v for k, v in subscription_search.items() if v is not None}
         subscriptions = []
-        # max_pages = 1
-        ending_page = starting_page + max_pages + 1
-        last_page_num = starting_page
-        logger.debug(
-            f"search_subscriptions() => starting to paginate subscriptions and such: {starting_page=} {ending_page=}"
+        search_payload.update(dict(page=page_num))
+        response = self.perform_request(
+            method="post",
+            path="subscriptions/search",
+            json=search_payload,
         )
-        for page_num in range(starting_page, ending_page):
-            search_payload.update(dict(page=page_num))
-            response = self.perform_request(
-                method="post",
-                path="subscriptions/search",
-                json=search_payload,
-            )
-            last_page_num = page_num
-            logger.debug(f"{page_num=}:: {response=}")
-            subscriptions += response.json()
-            logger.debug(f"{len(subscriptions)=}")
-            # breakpoint()
-            if response.status_code == 404:
-                logger.warning(
-                    "No subscriptions returned from Minibc... this is probably unexpected!"
-                )
-                # breakpoint()
-                break
-            try:
-                response.raise_for_status()
-            except Exception as err:
-                logger.error(f"{err=}")
-                break
-            logger.debug(f"after {last_page_num=} sleeping for 5 seconds...")
-            sleep(5)
-        else:
-            logger.debug(
-                f"{max_pages=} reached ({len(subscriptions)=}, {starting_page=})"
-            )
+        logger.debug(f"{page_num=}:: {response=}")
+        subscriptions += response.json()
+        logger.debug(f"{len(subscriptions)=}")
         # breakpoint()
-        with open(f"subs_{last_page_num}.json", "w") as f:
-            json.dump(subscriptions, f)
-        return subscriptions, last_page_num
+        if response.status_code == 404:
+            logger.warning(
+                "No subscriptions returned from Minibc... this is probably unexpected!"
+            )
+            # breakpoint()
+            return None
+        try:
+            response.raise_for_status()
+        except Exception as err:
+            logger.error(f"{err=}")
+            return None
+        return subscriptions
 
     def search_products(self):
         search_payload = dict()
@@ -280,35 +262,53 @@ def minibc_orders_etl(minibc_client: Minibc, skus, load_all):
 
     membership_table_name = models.AnnualMembership.__tablename__
 
-    if not load_all:
-        last_run_start_page = table_metadata.get_last_run_start_page(
-            membership_table_name
-        )
-        logger.info(f"Starting sync from {last_run_start_page=}")
-        subscriptions, last_page_num = minibc_client.search_subscriptions(
-            product_sku=skus[0], starting_page=last_run_start_page
-        )
+    if load_all:
+        start_page_num = 1
+        max_pages = 1000
     else:
-        logger.info("Loading ALL subscriptions now...")
-        subscriptions, last_page_num = minibc_client.search_subscriptions(
-            product_sku=skus[0], starting_page=1, max_pages=1000
-        )
-    # with open(f"subs_{last_page_num}.json", "r") as f:
-    #     subscriptions = json.load(f)
-    memberships = parse_subscriptions(skus, subscriptions)
+        start_page_num = table_metadata.get_last_run_start_page(membership_table_name)
+        max_pages = 20
 
-    logging.debug(
-        f"Setting last_run_start_page metadata on {membership_table_name=} to {last_page_num=}"
+    memberships = list()
+
+    last_page_num = start_page_num
+    end_page_num = start_page_num + max_pages + 1
+
+    logger.debug(
+        f"search_subscriptions() => starting to paginate subscriptions and such: {start_page_num=} {end_page_num=}"
     )
-    table_metadata.set_last_run_start_page(
-        membership_table_name, max(1, last_page_num - 2)
-    )
+
+    for page_num in range(start_page_num, end_page_num):
+        logger.info(f"Sync at {page_num=}")
+        subscriptions = minibc_client.search_subscriptions(
+            product_sku=skus[0],
+            page_num=page_num,
+        )
+        if subscriptions is None:
+            logger.debug(
+                f"{max_pages=} reached ({len(subscriptions)=}, {start_page_num=}). Setting `last_page_num` back to 1"
+            )
+            last_page_num = 1
+            break
+
+        last_page_num = start_page_num
+        memberships += parse_subscriptions(skus, subscriptions)
+        logger.debug(f"after {page_num=} sleeping for 1 second...")
+        sleep(1)
+
+    if not load_all:
+        logging.debug(
+            f"Setting start_page_num metadata on {membership_table_name=} to {last_page_num=}"
+        )
+        table_metadata.set_last_run_start_page(
+            membership_table_name, max(1, last_page_num - 1)
+        )
 
     return memberships
 
 
 def load_single_subscription(minibc_client: Minibc, skus, order_id):
-    subscription_order, _ = minibc_client.search_subscriptions(order_id=order_id)
+    subscription_order = minibc_client.search_subscriptions(order_id=order_id)
     logger.debug(f"API response for {order_id=}: {subscription_order=}")
     memberships = parse_subscriptions(
         skus=skus,
