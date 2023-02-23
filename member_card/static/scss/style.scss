@@ -6,7 +6,7 @@ $white: #fff;
 $google-blue: #4285f4;
 $button-active-blue: #1669f2;
 
-.mdl-card > .mdl-card__title {
+.mdl-card>.mdl-card__title {
   color: black;
 }
 
@@ -23,13 +23,13 @@ a {
 }
 
 .google-sign-in-button {
-  > img {
+  >img {
     max-width: 210px;
   }
 }
 
 .yahoo-sign-in-button {
-  > img {
+  >img {
     max-width: 210px;
   }
 }
@@ -84,11 +84,13 @@ div.qr-code {
   margin-left: auto;
   margin-right: auto;
   width: 100%;
-  > img {
+
+  >img {
     object-fit: contain;
     max-height: 100px;
   }
-  > small {
+
+  >small {
     color: $bright-verde;
     font-size: 0.3vw;
     font-family: monospace;
@@ -121,7 +123,8 @@ div.lv-drawer-header-logo {
   background-repeat: no-repeat;
   width: 100%;
   overflow: hidden;
-  > h3 {
+
+  >h3 {
     margin-top: 5px;
     margin-bottom: 5px;
   }
@@ -136,14 +139,14 @@ img.lv-horizontal-logo {
 }
 
 .troubleshooting-list {
-  > .mdl-list__item--three-line {
+  >.mdl-list__item--three-line {
     display: block;
     overflow: auto;
     height: fit-content;
   }
 }
 
-.login-card > .mdl-card__title {
+.login-card>.mdl-card__title {
   justify-content: center;
 }
 
@@ -167,15 +170,16 @@ div.membership-card {
   background-color: #00b1416d;
 }
 
-div.membership-card > .membership-card-inner {
-  padding-bottom: 64.06%; /* 3.370:2.125 aspect ratio */
+div.membership-card>.membership-card-inner {
+  padding-bottom: 64.06%;
+  /* 3.370:2.125 aspect ratio */
 }
 
 .members-card-wide.mdl-card {
   background-color: transparent;
 }
 
-.membership-card-inner > .mdl-grid {
+.membership-card-inner>.mdl-grid {
   position: absolute;
   top: 0;
   bottom: 0;
@@ -183,7 +187,7 @@ div.membership-card > .membership-card-inner {
   right: 0;
 }
 
-.members-card-wide > .mdl-card__title {
+.members-card-wide>.mdl-card__title {
   justify-content: center;
 
   h3 {
@@ -212,7 +216,7 @@ div.membership-card > .membership-card-inner {
   color: white;
   font-size: calc(8px + 1vh);
 
-  > small {
+  >small {
     font-size: calc(6px + 0.75vh);
   }
 }
@@ -336,7 +340,7 @@ details {
   margin-top: 5px;
   margin-bottom: 10px;
 
-  > summary {
+  >summary {
     background: #00b1415a;
     padding: 5px;
     border: 2px solid transparent;
@@ -347,30 +351,35 @@ details {
     color: $bright-verde;
     // margin: 24px 0 16px;
     font-size: calc(0.75em + 1vmin);
+
     &:focus {
       border-color: black;
     }
   }
-  > div {
+
+  >div {
     border-top: none;
     padding: 10px;
     border: 2px solid #00b1415a;
     border-top: none;
   }
-  > p {
+
+  >p {
     margin: 0;
     padding-bottom: 10px;
+
     &:last-child {
       padding: 0;
     }
   }
-  > img {
+
+  >img {
     max-width: 100%;
   }
 }
 
 .about-card {
-  > .mdl-card__title {
+  >.mdl-card__title {
     height: 175px;
     background-image: url("lv_hands.png");
     background-position: center;
@@ -388,7 +397,7 @@ details {
   cursor: pointer;
 }
 
-.lil-image-cards > * {
+.lil-image-cards>* {
   display: inline;
 }
 
@@ -400,11 +409,12 @@ details {
   background-repeat: no-repeat;
 }
 
-.lil-card-image > .mdl-card__actions {
+.lil-card-image>.mdl-card__actions {
   height: 52px;
   padding: 16px;
   background: rgba(0, 0, 0, 0.2);
 }
+
 .lil-card-image__caption {
   color: #fff;
   font-size: 14px;
