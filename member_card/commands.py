@@ -2,22 +2,20 @@
 import logging
 
 import click
-from flask_security import SQLAlchemySessionUserDatastore
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.sql import func
-from member_card.models.user import edit_user_name
 
+from member_card import worker
 from member_card.app import app
 from member_card.db import db
+from member_card.gcp import publish_message
 from member_card.image import generate_card_image
+from member_card.minibc import Minibc, parse_subscriptions
 from member_card.models import AnnualMembership, User
 from member_card.models.membership_card import get_or_create_membership_card
-from member_card.models.user import Role
+from member_card.models.user import add_role_to_user_by_email, edit_user_name
 from member_card.passes import gpay
-from member_card.gcp import publish_message
 from member_card.sendgrid import update_sendgrid_template
-from member_card import worker
-from member_card.minibc import Minibc, parse_subscriptions
 
 logger = logging.getLogger(__name__)
 
@@ -184,22 +182,14 @@ def update_user_name(user_email, first_name, last_name):
 @app.cli.command("add-role-to-user")
 @click.argument("user_email")
 @click.argument("role_name")
-def add_role_to_user(user_email, role_name):
+def add_role_to_user_cmd(user_email, role_name):
     logger.debug(f"{user_email=} => {role_name=}")
-    user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
-
-    user = user_datastore.get_user(user_email)
-    admin_role = user_datastore.find_or_create_role(
-        name=role_name,
-        description="Administrators allowed to connect Squarespace extensions, etc.",
+    role = add_role_to_user_by_email(
+        user_email=user_email,
+        role_name=role_name,
     )
-    db.session.add(admin_role)
-    db.session.commit()
-    logger.info(f"Adding {admin_role=} to user: {user=}")
-    user_datastore.add_role_to_user(user=user, role=admin_role)
-    logger.info(f"{admin_role=} successfully added for {user=}!")
-    db.session.add(user)
-    db.session.commit()
+    logger.debug(f"{role=}")
+    return role
 
 
 @app.cli.group()
