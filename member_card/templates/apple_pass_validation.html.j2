@@ -3,6 +3,9 @@
 {% set active_page = "passes_apple_pay" -%}
 {% block content %}
 {% call macros.content_grid() %}
+
+{{ macros.form_error_messages() }}
+
 {{
   macros.membership_card(
     title="Los Verdes Membership Card",

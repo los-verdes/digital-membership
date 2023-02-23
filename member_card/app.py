@@ -2,7 +2,16 @@
 from datetime import datetime
 from functools import wraps
 
-from flask import Flask, g, redirect, render_template, request, send_file, url_for
+from flask import (
+    Flask,
+    g,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    url_for,
+    flash,
+)
 from flask_cdn import CDN
 from flask_recaptcha import ReCaptcha
 from flask_security import Security
@@ -75,8 +84,6 @@ def load_common_context():
         load_strategy(),
         getattr(g, "user", None),
         app.config.get("SOCIAL_AUTH_GOOGLE_PLUS_KEY"),
-        form_error_message=request.args.get("formErrorMessage", ""),
-        form_message=request.args.get("formMessage", ""),
         # membership_last_sync=get_membership_table_last_sync(),
     )
 
@@ -104,8 +111,7 @@ def active_membership_card_required(f):
 @app.errorhandler(MemberCardException)
 def handle_bad_request(e):
     redirect_url = url_for("login")
-    if url_params := e.to_params():
-        redirect_url = f"{redirect_url}?{url_params}"
+    e.flash_em_if_you_got_em()
     return redirect(redirect_url)
 
 
@@ -145,8 +151,8 @@ def edit_user_name_request():
         new_first_name=new_first_name,
         new_last_name=new_last_name,
     )
-    form_message = utils.get_message_str("edit_user_name_success")
-    return redirect(f"{url_for('home')}?formMessage={form_message}")
+    flash(utils.get_message_str("edit_user_name_success"), "info")
+    return redirect(f"{url_for('home')}")
 
 
 @app.route("/email-distribution-request", methods=["POST"])
@@ -157,25 +163,22 @@ def email_distribution_request():
 
     # First prerequisite: verified recaptcha stuff:
     if not recaptcha.verify():
-        email_form_error_message = utils.get_message_str("captcha_not_verified")
+        flash(utils.get_message_str("captcha_not_verified"), "form-error")
         logger.error(
             "Unable to verify recaptcha, redirecting to login", extra=log_extra
         )
-        return redirect(
-            f"{url_for('login')}?formErrorMessage={email_form_error_message}"
-        )
+        return redirect(url_for("login"))
 
     email_distribution_recipient = request.form.get("emailDistributionRecipient")
     if email_distribution_recipient is None:
-        email_form_error_message = utils.get_message_str(
-            "missing_email_distribution_recipient"
+        flash(
+            utils.get_message_str("missing_email_distribution_recipient"), "form-error"
         )
         logger.error(
-            "Unable to verify recaptcha, redirecting to login", extra=log_extra
+            "No email recipient email address provided ({email_distribution_recipient=})! redirecting to login",
+            extra=log_extra,
         )
-        return redirect(
-            f"{url_for('login')}?formErrorMessage={email_form_error_message}"
-        )
+        return redirect(url_for("login"))
 
     log_extra.update(dict(email_distribution_recipient=email_distribution_recipient))
 
@@ -193,13 +196,12 @@ def email_distribution_request():
         log_extra.update(dict(err=err))
         # email is not valid, exception message is human-readable
         email_form_error_message = str(err)
+        flash(email_form_error_message, "form-error")
         logger.error(
             "Unable to validate email, redirecting to login",
             extra=dict(form=request.form),
         )
-        return redirect(
-            f"{url_for('login')}?formErrorMessage={email_form_error_message}"
-        )
+        return redirect(url_for("login"))
 
     topic_id = app.config["GCLOUD_PUBSUB_TOPIC_ID"]
     logger.info(

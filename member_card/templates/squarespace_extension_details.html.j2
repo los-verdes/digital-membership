@@ -12,11 +12,7 @@
     <h4>
       Squarespace Extension Details
     </h4>
-    {% if form_error_message %}
-    <h4 id="form-error-message" class="error-messages mdl-color-text--red">
-      {{ form_error_message }}
-    </h4>
-    {% endif %}
+    {{ macros.form_error_messages() }}
     <br>
     <h5>Webhook List</h5>
     <hr>

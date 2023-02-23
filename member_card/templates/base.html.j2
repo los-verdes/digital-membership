@@ -159,7 +159,29 @@
     </div>
 
     <main class="mdl-layout__content">
-      <div class="page-content">{% block content required %}{% endblock %}</div>
+      <div class="page-content">
+
+        <div class="mdl-grid">
+          <div class="mdl-cell mdl-cell--2-col mdl-cell--hide-tablet mdl-cell--hide-phone"></div>
+          <div class="mdl-cell mdl-cell--8-col mdl-cell--12-col-tablet mdl-cell--12-col-phone">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages if not category.startswith("form-") %}
+            <div class="form-messages {{ category }}-flash mdl-typography--text-center">
+              <h4 id="form-message">
+                {{ message }}
+              </h4>
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+          </div>
+          <div class="mdl-cell mdl-cell--2-col mdl-cell--hide-tablet mdl-cell--hide-phone"></div>
+        </div>
+
+        {% block content required %}
+        {% endblock %}
+      </div>
     </main>
 
     {% block footer %}
@@ -239,6 +261,9 @@
         document.getElementById("editUserNameProgressBar").style.display = "block";
         document.getElementById("editUserNameForm").submit();
       });
+
+      $('.form-messages').delay(10000).fadeOut("slow");
+      $('.form-error-message').delay(10000).fadeOut("slow");
     }
   </script>
 

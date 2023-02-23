@@ -109,6 +109,8 @@ class Settings(object):
         "EMAIL_SUBJECT_TEXT", "Los Verdes Membership Card Details"
     )
 
+    FLASH_MESSAGES: bool = True
+
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "info")
 
     RECAPTCHA_SITE_KEY: str = os.getenv(
