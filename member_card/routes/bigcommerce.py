@@ -5,6 +5,7 @@ from bigcommerce.api import BigcommerceApi
 from flask import Blueprint, Response, current_app, redirect, request, session, url_for
 
 from member_card.db import db
+
 from member_card.models import Store, StoreUser, User
 from member_card.models.user import add_role_to_user, ensure_user
 
