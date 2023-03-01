@@ -326,10 +326,10 @@ def squarespace_oauth_callback():
         )
 
     except Exception as err:
-        logger.error(err)
-        return redirect(
-            f"{url_for('squarespace_extension_details')}?formErrorMessage={str(err)}"
-        )
+        logger.error(f"squarespace_oauth_callback(): exception caught! => {err=}")
+
+        flash(str(err), "error")
+        return redirect(url_for("squarespace_extension_details"))
 
     return redirect(url_for("squarespace_extension_details"))
 
