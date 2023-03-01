@@ -4,6 +4,7 @@ from member_card.db import db, get_or_create
 from sqlalchemy.orm import relationship, backref
 from flask_security import UserMixin, RoleMixin
 
+from flask_security import SQLAlchemySessionUserDatastore
 
 logger = logging.getLogger(__name__)
 
@@ -164,3 +165,28 @@ class User(db.Model, UserMixin):
         if not self.newest_membership:
             return None
         return self.newest_membership.created_on + timedelta(days=365)
+
+
+def add_role_to_user_by_email(user_email, role_name):
+    logger.debug(f"{user_email=} => {role_name=}")
+    user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
+
+    user = user_datastore.get_user(user_email)
+    return add_role_to_user(user=user, role_name=role_name)
+
+
+def add_role_to_user(user, role_name):
+    user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
+    logger.debug(f"{user=} => {role_name=}")
+    role = user_datastore.find_or_create_role(
+        name=role_name,
+        description="Administrators allowed to connect Squarespace extensions, etc.",
+    )
+    db.session.add(role)
+    db.session.commit()
+    logger.info(f"Adding {role=} to user: {user=}")
+    user_datastore.add_role_to_user(user=user, role=role)
+    logger.info(f"{role=} successfully added for {user=}!")
+    db.session.add(user)
+    db.session.commit()
+    return role

@@ -128,15 +128,19 @@
       </header>
       <nav class="lv-navigation mdl-navigation mdl-color--green-50">
         {% set navigation_bar = [
-        ('home', 'home', 'Home'),
-        ('__layout_spacer__', '---', '---'),
-        ('about', 'help_outline', 'Help & About'),
+        ('home', 'home', 'Home', ''),
+        ('admin_dashboard', 'admin_panel_settings', 'Admin Dashboard', 'admin'),
+        ('__layout_spacer__', '---', '---', ''),
+        ('about', 'help_outline', 'Help & About', ''),
         ] -%}
         <!-- ('privacy_policy', 'policy', 'Privacy Policy'), -->
         {% set active_page = active_page|default('home') -%}
 
-        {% for route, icon, caption in navigation_bar %}
-        {% if route == "__layout_spacer__" %}<div class="mdl-layout-spacer"></div>{% else %}
+        {% for route, icon, caption, required_role in navigation_bar %}
+        {% if route == "__layout_spacer__" %}
+        <div class="mdl-layout-spacer"></div>
+
+        {% elif required_role == "" or current_user.has_role(required_role) %}
         <a class="mdl-navigation__link{% if active_page == route %} mdl-navigation__link-active{% endif %}" href="{{ url_for(route) }}">
           <i class="mdl-color-text--green material-icons" role="presentation">
             {{ icon }}
@@ -167,8 +171,8 @@
             {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
             {% for category, message in messages if not category.startswith("form-") %}
-            <div class="form-messages {{ category }}-flash mdl-typography--text-center">
-              <h4 id="form-message">
+            <div class="flash-box form-messages {{ category }}-flash mdl-typography--text-center">
+              <h4 class="form-message">
                 {{ message }}
               </h4>
             </div>
@@ -262,8 +266,7 @@
         document.getElementById("editUserNameForm").submit();
       });
 
-      $('.form-messages').delay(10000).fadeOut("slow");
-      $('.form-error-message').delay(10000).fadeOut("slow");
+      $('.flash-box').delay(10000).fadeOut("slow");
     }
   </script>
 

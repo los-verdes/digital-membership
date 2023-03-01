@@ -12,5 +12,5 @@ class MemberCardException(Exception):
     def flash_em_if_you_got_em(self):
         if self.form_error_message:
             flash(self.form_error_message, "form-error")
-        if self.form_error_message:
+        if self.form_message:
             flash(self.form_message, "error")

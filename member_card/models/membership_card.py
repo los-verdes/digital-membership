@@ -177,3 +177,11 @@ class MembershipCard(db.Model):
     @property
     def authentication_token_hex(self):
         return str(getattr(self.authentication_token, "hex"))
+
+    def __str__(membership_card):
+        return " ".join(
+            [
+                f"{membership_card.id=}",
+                f"{membership_card.serial_number_hex=}",
+            ]
+        )
