@@ -218,6 +218,7 @@ def fake_member(fake_user: User, fake_membership_order: AnnualMembership) -> Use
     fake_membership_order.user_id = fake_user.id
     db.session.add(fake_membership_order)
     db.session.commit()
+    db.session.add(fake_user)
 
     yield fake_user
 
@@ -234,13 +235,15 @@ def fake_card(fake_member: User) -> MembershipCard:
     db.session.add(fake_membership_card)
     db.session.commit()
 
+    fake_membership_card_id = fake_membership_card.id
+
     yield fake_membership_card
 
     fake_membership_card.user_id = None
     db.session.query(AppleDeviceRegistration).filter_by(
-        membership_card_id=fake_membership_card.id
+        membership_card_id=fake_membership_card_id
     ).delete(synchronize_session="fetch")
-    db.session.query(MembershipCard).filter_by(id=fake_membership_card.id).delete(
+    db.session.query(MembershipCard).filter_by(id=fake_membership_card_id).delete(
         synchronize_session="fetch"
     )
     db.session.commit()
