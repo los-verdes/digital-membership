@@ -24,7 +24,7 @@ class SlackUser(db.Model):
     is_restricted = db.Column(db.Boolean, nullable=False, default=False)
     is_ultra_restricted = db.Column(db.Boolean, nullable=False, default=False)
     is_bot = db.Column(db.Boolean, nullable=False, default=False)
-    updated = db.Column(db.DateTime)
+    updated = db.Column(db.String)
     is_app_user = db.Column(db.Boolean, nullable=False, default=False)
     has_2fa = db.Column(db.Boolean, nullable=False, default=False)
 

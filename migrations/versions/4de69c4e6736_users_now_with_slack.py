@@ -1,8 +1,8 @@
 """Users! Now with Slack!
 
-Revision ID: a0db4c2e0759
+Revision ID: 4de69c4e6736
 Revises: b3f07657bc30
-Create Date: 2023-03-01 13:33:06.463664
+Create Date: 2023-03-01 13:50:19.715508
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = "a0db4c2e0759"
+revision = "4de69c4e6736"
 down_revision = "b3f07657bc30"
 branch_labels = None
 depends_on = None
@@ -38,7 +38,7 @@ def upgrade():
         sa.Column("is_restricted", sa.Boolean(), nullable=False),
         sa.Column("is_ultra_restricted", sa.Boolean(), nullable=False),
         sa.Column("is_bot", sa.Boolean(), nullable=False),
-        sa.Column("updated", sa.DateTime(), nullable=True),
+        sa.Column("updated", sa.String(), nullable=True),
         sa.Column("is_app_user", sa.Boolean(), nullable=False),
         sa.Column("has_2fa", sa.Boolean(), nullable=False),
         sa.Column("is_workflow_bot", sa.Boolean(), nullable=False),
