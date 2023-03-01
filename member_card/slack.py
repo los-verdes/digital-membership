@@ -88,6 +88,9 @@ def slack_members_etl(client: WebClient):
         logger.debug(f"slack_members_etl(): {slack_member}")
         slack_user = upsert_slack_member(slack_member)
         slack_users.append(slack_user)
+        db.session.add(slack_user)
+
+        db.session.commit()
 
     logger.info(f"Total number of slack members processed: {len(slack_users)}")
 
