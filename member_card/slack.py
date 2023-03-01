@@ -2,7 +2,7 @@ import json
 import logging
 from datetime import datetime
 from time import sleep
-
+from codetiming import Timer
 from flask import current_app
 from slack_sdk import WebClient
 
@@ -19,6 +19,7 @@ def get_web_client() -> WebClient:
     return client
 
 
+@Timer(name="slack_members_generator", logger=logger.debug)
 def slack_members_generator(client: WebClient, chunk_size=100, polling_interval_secs=1):
     next_cursor = None
     num_requests = 0
@@ -47,6 +48,7 @@ def slack_members_generator(client: WebClient, chunk_size=100, polling_interval_
         sleep(polling_interval_secs)
 
 
+@Timer(name="upsert_slack_member", logger=logger.debug)
 def upsert_slack_member(slack_member):
     profile_dict = slack_member["profile"]
     slack_member["profile"] = json.dumps(profile_dict)
@@ -78,6 +80,7 @@ def upsert_slack_member(slack_member):
     return slack_user
 
 
+@Timer(name="slack_members_etl", logger=logger.debug)
 def slack_members_etl(client: WebClient):
     slack_users = list()
 
