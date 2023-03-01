@@ -32,6 +32,7 @@ python-dateutil
 qrcode[pil]
 requests
 sendgrid
+slack_bolt
 slack_sdk
 social-auth-app-flask
 social-auth-app-flask-sqlalchemy
