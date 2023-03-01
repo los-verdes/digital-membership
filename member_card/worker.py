@@ -12,6 +12,8 @@ from member_card.models import AnnualMembership, User
 from member_card.models.membership_card import get_or_create_membership_card
 from member_card.passes import generate_and_upload_apple_pass
 from member_card.sendgrid import generate_email_message, send_email_message
+
+from member_card import slack
 from member_card.squarespace import (
     Squarespace,  # squarespace_orders_etl,
     load_single_order,
@@ -175,6 +177,17 @@ def sync_squarespace_order(message):
     return memberships
 
 
+@Timer(name="slack_members_etl")
+def run_slack_members_etl(message):
+    log_extra = dict(pubsub_message=message)
+    logger.debug(f"run_slack_members_etl() called with {message=}", extra=log_extra)
+    slack_client = slack.get_web_client()
+    slack_users = slack.slack_members_etl(
+        client=slack_client,
+    )
+    return slack_users
+
+
 @worker_bp.route("/pubsub", methods=["POST"])
 def pubsub_ingress():
     try:
@@ -186,6 +199,7 @@ def pubsub_ingress():
         "email_distribution_request": process_email_distribution_request,
         "sync_subscriptions_etl": sync_subscriptions_etl,
         "sync_squarespace_order": sync_squarespace_order,
+        "run_slack_members_etl": run_slack_members_etl,
     }
 
     message_type = message["type"]

@@ -98,6 +98,7 @@ class User(db.Model, UserMixin):
     active = db.Column(db.Boolean, default=True)
     annual_memberships = relationship("AnnualMembership", back_populates="user")
     membership_cards = relationship("MembershipCard", back_populates="user")
+    slack_user = relationship("SlackUser", back_populates="user", uselist=False)
     store_users = relationship("StoreUser", backref="user")
     bigcommerce_id = db.Column(db.Integer, nullable=True)
     roles = relationship(

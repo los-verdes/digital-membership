@@ -203,6 +203,22 @@ def add_role_to_user(user_email, role_name):
 
 
 @app.cli.group()
+def slack():
+    pass
+
+
+@slack.command("run-members-etl")
+def run_slack_members_etl():
+    from member_card import slack
+
+    slack_client = slack.get_web_client()
+    result = slack.slack_members_etl(
+        client=slack_client,
+    )
+    print(f"{result=}")
+
+
+@app.cli.group()
 def minibc():
     pass
 

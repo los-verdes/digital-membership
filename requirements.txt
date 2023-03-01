@@ -351,6 +351,8 @@ six==1.16.0
     #   social-auth-app-flask-sqlalchemy
     #   social-auth-storage-sqlalchemy
     #   wallet-py3k
+slack-sdk==3.20.0
+    # via -r requirements.in
 social-auth-app-flask==1.0.0
     # via
     #   -r requirements.in

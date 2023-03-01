@@ -54,7 +54,7 @@ class AnnualMembership(db.Model):
     billing_address_last_name = db.Column(db.String(64))
     channel_name = db.Column(db.String(64))
     external_order_reference = db.Column(db.String(32), nullable=True)
-    created_on = db.Column(db.DateTime)
+    created_on = db.Column(db.DateTime, nullable=False)
     modified_on = db.Column(db.DateTime)
     fulfilled_on = db.Column(db.DateTime, nullable=True)
     customer_email = db.Column(db.String(120))

@@ -124,6 +124,8 @@ class Settings(object):
     )
     # SERVER_NAME: str = os.getenv("SERVER_NAME", "card.losverd.es")
 
+    SLACK_BOT_TOKEN: str = os.getenv("SLACK_BOT_TOKEN", "")
+
     SOCIAL_AUTH_DISCONNECT_REDIRECT_URL: str = "/logout"
     SOCIAL_AUTH_GOOGLE_OAUTH2_KEY: str = os.environ.get("GOOGLE_CLIENT_ID", "")
     SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: str = os.environ.get("GOOGLE_CLIENT_SECRET", "")
