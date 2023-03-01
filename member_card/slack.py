@@ -63,7 +63,7 @@ def upsert_slack_member(slack_member):
     slack_user = get_or_update(
         session=db.session,
         model=SlackUser,
-        filters=["id"],
+        filters=["slack_id"],
         kwargs=slack_member,
     )
 
