@@ -21,6 +21,7 @@ class Settings(object):
         squarespace_oauth_state_mismatch="Squarespace oauth connect error: session versus request args mismatch",
         verify_pass_invalid_signature="Unable to verify signature!",
     )
+    SECURITY_MSG_UNAUTHORIZED = (MESSAGES["unauthorized"], "error")
 
     APPLE_DEVELOPER_ORG_NAME: str = "Jeffrey Hogan"  # TODO: if LV is a legit 501c this can maybe become a less personal org...
     APPLE_DEVELOPER_PASS_TYPE_ID: str = "pass.es.losverd.card"

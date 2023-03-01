@@ -507,7 +507,7 @@ class TestAuthenticatedRequests:
             "Membership Orders (Total)": 6,
             "Membership Orders (Active)": 6,
             "Membership Orders (Expired)": 0,
-            "Users (Total)": 2,
+            "Users (Total)": 4,
         }
         for row in stats_table.find("tbody").find_all("tr"):
             label_cell, value_cell = row.find_all("td")
