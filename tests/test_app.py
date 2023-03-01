@@ -21,7 +21,7 @@ def assert_form_error_message(response, expected_msg):
 
     soup = BeautifulSoup(response.data.decode("utf-8"), "html.parser")
 
-    form_error_message_element = soup.find(id="form-error-message")
+    form_error_message_element = soup.find("div", {"class": "flash-box"})
     assert form_error_message_element
     assert form_error_message_element.text.strip() == expected_msg
 
@@ -171,6 +171,21 @@ class TestUnauthenticatedRequests:
         soup = BeautifulSoup(response.data.decode("utf-8"), "html.parser")
         assert soup.title.text.startswith("Help & About")
 
+    def test_admin_dashboard(self, app, client: "FlaskClient"):
+        response = client.get("/admin-dashboard", follow_redirects=True)
+        logging.debug(response)
+
+        assert response.history[0].status_code == 302
+        assert response.history[0].location.startswith("http://localhost/login")
+
+        assert response.status_code == 200
+
+        with app.app_context():
+            assert_form_error_message(
+                response=response,
+                expected_msg=utils.get_message_str("unauthorized_view"),
+            )
+
 
 class TestAuthenticatedRequests:
     def test_modify_session(self, app, authenticated_client):
@@ -240,7 +255,7 @@ class TestAuthenticatedRequests:
         assert response.status_code == 200
 
         soup = BeautifulSoup(response.data.decode("utf-8"), "html.parser")
-        form_message_element = soup.find(id="form-message")
+        form_message_element = soup.find("div", {"class": "flash-box"})
         assert form_message_element
         assert form_message_element.text.strip() == utils.get_message_str(
             "edit_user_name_success"
@@ -297,7 +312,7 @@ class TestAuthenticatedRequests:
         mock_publish_message.assert_not_called()
         assert response.status_code == 200
         soup = BeautifulSoup(response.data.decode("utf-8"), "html.parser")
-        form_error_message_element = soup.find(id="form-error-message")
+        form_error_message_element = soup.find("div", {"class": "flash-box"})
         assert form_error_message_element
         expected_msg = (
             "The email address is not valid. It must have exactly one @-sign."
@@ -468,6 +483,38 @@ class TestAuthenticatedRequests:
             # == f"CARD VALIDATED! (by {fake_card.user.first_name})"
         )
 
+    def test_admin_dashboard_no_role(self, authenticated_client: "FlaskClient"):
+        response = authenticated_client.get("/admin-dashboard", follow_redirects=True)
+        logging.debug(response)
+
+        assert response.status_code == 200
+
+        assert_form_error_message(
+            response=response,
+            expected_msg=utils.get_message_str("unauthorized"),
+        )
+
+    def test_admin_dashboard_with_role(self, admin_client: "FlaskClient"):
+        response = admin_client.get("/admin-dashboard", follow_redirects=True)
+        logging.debug(response)
+
+        assert response.status_code == 200
+
+        soup = BeautifulSoup(response.data.decode("utf-8"), "html.parser")
+        assert soup.title.text.startswith("Admin Dashboard")
+        stats_table = soup.find(id="aggregate_stats_table")
+        expected_stats = {
+            "Membership Orders (Total)": 6,
+            "Membership Orders (Active)": 6,
+            "Membership Orders (Expired)": 0,
+            "Users (Total)": 2,
+        }
+        for row in stats_table.find("tbody").find_all("tr"):
+            label_cell, value_cell = row.find_all("td")
+            assert expected_stats[label_cell.text.strip()] == int(
+                value_cell.text.strip()
+            )
+
     def test_logout(
         self,
         client: "FlaskClient",
@@ -515,7 +562,7 @@ class TestSquarespaceOauth:
 
         assert response.history[0].status_code == 302
         assert response.history[0].location.startswith(
-            "http://localhost/squarespace/extension-details?"
+            "http://localhost/squarespace/extension-details"
         )
         assert_form_error_message(
             response=response,
