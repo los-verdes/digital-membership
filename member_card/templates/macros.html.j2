@@ -335,7 +335,7 @@ This site's privacy policy can be view here: <a href="{{ url_for('privacy_policy
 {% with messages = get_flashed_messages(with_categories=true) %}
 {% if messages %}
 {% for category, message in messages if category.startswith("form-") %}
-<div id="form-error-message" class="error-messages mdl-color-text--red">{{ message }}</div>
+<div class="flash-box mdl-color-text--red">{{ message }}</div>
 {% endfor %}
 {% endif %}
 {% endwith %}
