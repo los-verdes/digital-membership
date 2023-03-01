@@ -127,7 +127,7 @@ def auth_callback():
 
     # Log user in and redirect to app home
     session["storeuserid"] = storeuser.id
-    return redirect(current_app.config["BASE_URL"])
+    return redirect(url_for("admin_dashboard"))
 
 
 # The Load URL. See https://developer.bigcommerce.com/api/load
@@ -166,7 +166,7 @@ def load():
 
     # Log user in and redirect to app interface
     session["storeuserid"] = storeuser.id
-    return redirect(current_app.config["BASE_URL"])
+    return redirect(url_for("admin_dashboard"))
 
 
 # The Uninstall URL. See https://developer.bigcommerce.com/api/load
