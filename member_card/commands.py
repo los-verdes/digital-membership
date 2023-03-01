@@ -210,12 +210,11 @@ def slack():
 @slack.command("run-members-etl")
 def run_slack_members_etl():
     from member_card import slack
+
     slack_client = slack.get_web_client()
     result = slack.slack_members_etl(
         client=slack_client,
     )
-    print(f"{result=}")
-    breakpoint()
     print(f"{result=}")
 
 
