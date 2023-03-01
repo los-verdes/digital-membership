@@ -1,7 +1,7 @@
 import json
 import logging
-from datetime import datetime
 from time import sleep
+
 from codetiming import Timer
 from flask import current_app
 from slack_sdk import WebClient
@@ -22,23 +22,21 @@ def get_web_client() -> WebClient:
 @Timer(name="slack_members_generator", logger=logger.debug)
 def slack_members_generator(client: WebClient, chunk_size=100, polling_interval_secs=1):
     next_cursor = None
-    num_requests = 0
-    while next_cursor != "" and num_requests < 1000:
+    while next_cursor != "":
         logger.debug(f"Sending users_lists request with: {next_cursor=}")
-        num_requests += 1
         response = client.users_list(
             limit=chunk_size,
             cursor=next_cursor,
         )
         response.validate()
-        cache_ts_epoch = datetime.fromtimestamp(response.data["cache_ts"])
-        cache_ts = cache_ts_epoch.strftime("%c")
+
+        # cache_ts_epoch = datetime.fromtimestamp(response.data.get("cache_ts"))
+        # cache_ts = cache_ts_epoch.strftime("%c")
+        # logger.debug(f"{cache_ts=}")
 
         slack_members = response.data["members"]
         next_cursor = response.data["response_metadata"]["next_cursor"]
-        logger.debug(
-            f"Meta-response bits: {cache_ts=} [next_]next_cursor={next_cursor}"
-        )
+        logger.debug(f"Meta-response bits: [next_]next_cursor={next_cursor}")
         logger.debug(f"# slack users load thus far: {len(slack_members)=}")
         for slack_member in slack_members:
             logger.debug(f"yielding {slack_member=}...")
@@ -94,7 +92,7 @@ def slack_members_etl(client: WebClient):
 
     logger.info(f"Total number of slack members processed: {len(slack_users)}")
 
-    return response
+    return slack_users
 
 
 if __name__ == "__main__":
