@@ -6,7 +6,7 @@ from flask import Blueprint, Response, current_app, redirect, request, session, 
 
 from member_card.db import db
 from member_card.models import Store, StoreUser, User
-from member_card.models.user import ensure_user
+from member_card.models.user import ensure_user, add_role_to_user
 
 logger = logging.getLogger(__name__)
 bigcommerce_bp = Blueprint("bigcommerce", __name__)
@@ -103,6 +103,11 @@ def auth_callback():
             username=bc_username,
             bigcommerce_id=bc_user_id,
         )
+
+    add_role_to_user(
+        user=user,
+        role_name="admin",
+    )
 
     login_result = flask_security.login_user(
         user=user,
