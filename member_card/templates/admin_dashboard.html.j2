@@ -1,0 +1,51 @@
+{% extends "base.html.j2" %}
+
+{% block title %}Admin Dashboard - Membership Cards & History{% endblock %}
+
+{% block content %}
+{% call macros.content_grid() %}
+<h3>Membership Statistics</h3>
+<h4>Aggregate Stats</h4>
+<div>
+  <!-- <table class="mdl-data-table mdl-js-data-table mdl-data-table--selectable mdl-shadow--2dp"> -->
+  <table id="aggregate_stats_table" class="mdl-data-table mdl-data-table--selectable mdl-shadow--2dp">
+    <thead>
+      <tr>
+        <th class="mdl-data-table__cell--non-numeric">Statistic</th>
+        <th>#</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for stat_name, stat_value in membership_stats.items() %}
+      <tr>
+        <td class="mdl-data-table__cell--non-numeric">{{ stat_name }}</td>
+        <td>{{ stat_value }} </td>
+      </tr>
+      {% endfor %}
+  </table>
+</div>
+<h4>Fun Bits</h4>
+<ul class="mdl-list">
+  {% for stat_name, stat_user in user_stats.items() if stat_user %}
+  <li class="mdl-list__item mdl-list__item--three-line">
+    <span class="mdl-list__item-primary-content">
+      <img src="{{ stat_user.email | gravatar }}" class=" mdl-list__item-avatar lv-avatar">
+      <span>{{ stat_user.fullname }}</span>
+      <span class="mdl-list__item-text-body">
+        <b>Email</b>: {{ stat_user.email }}
+        </br>
+        <b>Member since</b>: {{ stat_user.member_since | datetime_format }}
+        ||
+        <b>Member until</b>: {{ stat_user.membership_expiry | datetime_format }}
+      </span>
+    </span>
+    <span class="mdl-list__item-secondary-content">
+      <span class="mdl-list__item-secondary-info">{{ stat_name }}</span>
+      <a class="mdl-list__item-secondary-action" href="#"><i class="material-icons">open</i></a>
+    </span>
+  </li>
+  {% endfor %}
+</ul>
+{% endcall %}
+
+{% endblock %}

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import wraps
 
 from flask import (
@@ -24,7 +24,12 @@ from social_flask.utils import load_strategy
 from member_card import utils
 from member_card.db import db
 from member_card.exceptions import MemberCardException
-from member_card.models import AnnualMembership, MembershipCard, SquarespaceWebhook
+from member_card.models import (
+    AnnualMembership,
+    MembershipCard,
+    SquarespaceWebhook,
+    User,
+)
 from member_card.models.membership_card import get_or_create_membership_card
 from member_card.models.user import edit_user_name
 from member_card.passes import get_apple_pass_from_card
@@ -75,6 +80,11 @@ def inject_user():
     }
 
 
+@app.template_filter()
+def datetime_format(value, format="%x"):
+    return value.strftime(format)
+
+
 @app.context_processor
 def load_common_context():
     # from member_card.db import get_membership_table_last_sync
@@ -123,6 +133,52 @@ def home(membership_card):
         membership_card=membership_card,
         membership_orders=g.user.annual_memberships,
         membership_table_keys=list(AnnualMembership().to_dict().keys()),
+    )
+
+
+def generate_membership_stats():
+    memberships = AnnualMembership.query.filter()
+    total_num_memberships = memberships.count()
+
+    active_memberships = AnnualMembership.query.filter(
+        AnnualMembership.created_on >= (datetime.utcnow() - timedelta(days=365))
+    )
+    num_active_memberships = active_memberships.count()
+
+    users = User.query.filter()
+
+    membership_stats = {
+        "Membership Orders (Total)": total_num_memberships,
+        "Membership Orders (Active)": num_active_memberships,
+        "Membership Orders (Expired)": total_num_memberships - num_active_memberships,
+        "Users (Total)": users.count(),
+    }
+    logger.debug(f"{membership_stats=}")
+    return membership_stats
+
+
+def generate_user_stats():
+    user_stats = {
+        "Newest User": db.session.query(AnnualMembership)
+        .order_by(AnnualMembership.created_on.desc())
+        .first()
+        .user,
+        "Oldest User": db.session.query(AnnualMembership)
+        .order_by(AnnualMembership.created_on.asc())
+        .first()
+        .user,
+    }
+    return user_stats
+
+
+@app.route("/admin-dashboard")
+@login_required
+@roles_required("admin")
+def admin_dashboard():
+    return render_template(
+        "admin_dashboard.html.j2",
+        membership_stats=generate_membership_stats(),
+        user_stats=generate_user_stats(),
     )
 
 
