@@ -60,6 +60,10 @@ def create_app(env=None) -> "Flask":
 
     logger.debug("login_manager.init_app")
     login_manager.init_app(app)
+    # Note: this doesn't properly set the login_message attribute where expected for reasons unknown...
+    # TODO: fix it?
+    login_manager.login_message = app.config["MESSAGES"]["unauthorized_view"]
+    login_manager.login_message_category = "error"
 
     from social_flask_sqlalchemy.models import init_social
     from member_card.db import db, migrate

@@ -10,6 +10,8 @@ class Settings(object):
     _secrets: dict = dict()
 
     MESSAGES = dict(
+        unauthorized_view="Please log in to access this page.",
+        unauthorized="Unable to serve requested page; required role membership / permissions not found!",
         edit_user_name_success="User display name updated!",
         captcha_not_verified="Request not verified via ReCaptcha! Please try again or contact support@losverd.es for assistance.",
         missing_email_distribution_recipient="No email address in request form data! Please try again or contact support@losverd.es for assistance.",
