@@ -494,7 +494,9 @@ class TestAuthenticatedRequests:
             expected_msg=utils.get_message_str("unauthorized"),
         )
 
-    def test_admin_dashboard_with_role(self, fake_card: "MembershipCard", admin_client: "FlaskClient"):
+    def test_admin_dashboard_with_role(
+        self, fake_card: "MembershipCard", admin_client: "FlaskClient"
+    ):
         response = admin_client.get("/admin-dashboard", follow_redirects=True)
         logging.debug(response)
 
