@@ -193,6 +193,22 @@ def add_role_to_user_cmd(user_email, role_name):
 
 
 @app.cli.group()
+def slack():
+    pass
+
+
+@slack.command("run-members-etl")
+def run_slack_members_etl():
+    from member_card import slack
+
+    slack_client = slack.get_web_client()
+    result = slack.slack_members_etl(
+        client=slack_client,
+    )
+    print(f"{result=}")
+
+
+@app.cli.group()
 def minibc():
     pass
 
@@ -261,129 +277,4 @@ def sync_sub_by_order_email(email):
         print(f"After parsing {len(subscriptions)} subscription(s):\n{memberships=}")
     else:
         print(f"no subscription found for {email=}")
-    # breakpoint()
-
-
-@app.cli.group()
-def bigcomm():
-    pass
-
-
-@bigcomm.command("ensure-scripts")
-@click.argument("store_hash")
-def bigcommerce_ensure_scripts(store_hash):
-    from member_card import bigcommerce
-
-    requisite_scripts = {
-        "bigcommerce_membership_card.min.js": dict(
-            name="LV Membership Cards",
-            description="Adds customer-specific dynamic content for the Los Verdes membership status widget.",
-        )
-    }
-    missing_script_filenames = set(requisite_scripts.keys())
-    # missing_scripts =
-
-    app_client = bigcommerce.get_bespoke_client_for_store(store_hash=store_hash)
-    get_all_scripts_resp = app_client.get_all_scripts()
-    print(f"{get_all_scripts_resp=}")
-
-    for num, script in enumerate(get_all_scripts_resp.json()["data"]):
-        script_filename = script.get("src", "/").split("/")[-1]
-        print(f"script_num_{num}: {script=}")
-        print(f"script_num_{num}: {missing_script_filenames=}")
-        print(f"script_num_{num}: {script_filename=}")
-
-        missing_script_filenames -= set(script_filename)
-
-        print(f"script_num_{num}: {missing_script_filenames=}")
-
-    for missing_script_filename in missing_script_filenames:
-        missing_script = requisite_scripts[missing_script_filename]
-        try:
-            create_script_resp = app_client.create_a_script(
-                name=missing_script["name"],
-                description=missing_script["description"],
-                src_filename=missing_script_filename,
-            )
-        except Exception as err:
-            logger.error(f"{err=} => {err.response.text}")
-            breakpoint()
-            logger.error(f"{err=}")
-        breakpoint()
-        print(
-            f"{missing_script_filename=}: {create_script_resp} => {create_script_resp.text=}"
-        )
-        breakpoint()
-
-
-@bigcomm.command("ensure-widget-placement")
-@click.argument("store_hash")
-@click.argument("widget_name", default="membership_info")
-@click.argument("region_name", default="membership_info")
-def bigcommerce_ensure_widget_placement(
-    store_hash,
-    # widget_uuid='6a7028ed-5d40-4630-b0c4-465e4ea73a65',
-    widget_name,
-    region_name,
-):
-    from member_card import bigcommerce
-
-    print(f"bigcommerce_ensure_widget_placement(): {store_hash=} {widget_name=}")
-    app_client = bigcommerce.get_bespoke_client_for_store(store_hash=store_hash)
-
-    get_all_widgets_resp = app_client.get_all_widgets()
-    print(f"{get_all_widgets_resp=}")
-    # breakpoint()
-    all_widgets = get_all_widgets_resp.json()["data"]
-    widget_ids_by_name = {w["name"]: w["uuid"] for w in all_widgets}
-    print(f"{widget_ids_by_name=}")
-    widget_uuid = widget_ids_by_name.get(widget_name)
-
-    get_all_placements_resp = app_client.get_all_placements()
-    print(f"{get_all_placements_resp=}")
-
-    all_placements = get_all_placements_resp.json()["data"]
-    extant_placements_by_location = {
-        d["template_file"]: d
-        for d in all_placements
-        if d["widget"]["name"] == widget_name
-    }
-    print(f"{extant_placements_by_location=}")
-
-    requisite_placements = [
-        # "pages/home",
-        # "pages/account/inbox",
-        # "pages/account/orders/all",
-        "pages/custom/category/membership",
-        "pages/custom/product/membership",
-    ]
-    for requisite_placement in requisite_placements:
-        if extant_placement := extant_placements_by_location.get(requisite_placement):
-            placement_uuid = extant_placement["uuid"]
-            delete_placement_resp = app_client.delete_a_placement(
-                placement_uuid=placement_uuid,
-            )
-            print(f"{requisite_placement=} ==> {delete_placement_resp=}")
-            # update_placement_resp = app_client.update_a_placement(
-            #     placement_uuid=placement_uuid,
-            #     template_file=requisite_placement,
-            #     widget_uuid=widget_uuid,
-            #     region=region_name,
-            # )
-            # print(f"{requisite_placement=} ==> {update_placement_resp=}")
-        else:
-            try:
-                if widget_uuid is None:
-                    widget_uuid = "2871acf4-aa47-425c-bccc-25df8b907b4d"
-                create_placement_resp = app_client.create_a_placement(
-                    template_file=requisite_placement,
-                    widget_uuid=widget_uuid,
-                    region=region_name,
-                )
-                print(f"{requisite_placement=} ==> {create_placement_resp=}")
-            except Exception as err:
-                print(f"{err=}")
-                print(f"{err.response.text=}")
-                breakpoint()
-                print(f"{err=}")
     # breakpoint()
