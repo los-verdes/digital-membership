@@ -58,6 +58,9 @@ def upsert_slack_member(slack_member):
     slack_member["slack_id"] = slack_member["id"]
     del slack_member["id"]
 
+    if 'email' not in slack_member:
+        slack_member['email'] = email
+
     slack_user = get_or_update(
         session=db.session,
         model=SlackUser,
