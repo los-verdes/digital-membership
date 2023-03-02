@@ -9,6 +9,7 @@ class SlackUser(db.Model):
     slack_id = db.Column(db.String)
     team_id = db.Column(db.String)
     name = db.Column(db.String)
+    email = db.Column(db.String, nullable=True)
     deleted = db.Column(db.Boolean, nullable=False, default=False)
     color = db.Column(db.String)
     real_name = db.Column(db.String)
