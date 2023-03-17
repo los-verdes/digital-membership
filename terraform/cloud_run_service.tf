@@ -63,9 +63,11 @@ resource "google_cloud_run_service" "digital_membership" {
 
     spec {
       service_account_name = each.value.service_account_name
+
+      timeout_seconds = each.value.timeout_seconds
+
       containers {
-        image           = each.value.image
-        timeout_seconds = each.value.timeout_seconds
+        image = each.value.image
 
         env {
           name = "DIGITAL_MEMBERSHIP_SECRETS_JSON"
