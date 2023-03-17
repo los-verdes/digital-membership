@@ -10,6 +10,7 @@ locals {
       min_scale               = "1"
       max_scale               = "1"
       invokers                = ["allUsers"]
+      timeout_seconds         = 60 * 5 # 5 minutes
     }
     "worker" = {
       image                   = var.worker_image
@@ -19,6 +20,7 @@ locals {
       max_scale               = "1"
       memory_mb               = "1Gi"
       invokers                = ["serviceAccount:${google_service_account.digital_membership["worker-pubsub-invoker"].email}"]
+      timeout_seconds         = 60 * 30 # 30 minutes
     }
   }
 
@@ -62,7 +64,8 @@ resource "google_cloud_run_service" "digital_membership" {
     spec {
       service_account_name = each.value.service_account_name
       containers {
-        image = each.value.image
+        image           = each.value.image
+        timeout_seconds = each.value.timeout_seconds
 
         env {
           name = "DIGITAL_MEMBERSHIP_SECRETS_JSON"
