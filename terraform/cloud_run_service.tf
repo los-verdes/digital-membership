@@ -148,7 +148,7 @@ resource "google_cloud_run_service" "digital_membership" {
         resources {
           limits = {
             cpu    = "1"
-            memory = "${each.value.memory_mb}"
+            memory = each.value.memory_mb
           }
         }
 
