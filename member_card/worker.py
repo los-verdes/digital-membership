@@ -2,7 +2,7 @@ import base64
 import json
 import logging
 
-from codetiming import Timer
+# from codetiming import Timer
 from flask import Blueprint, current_app, request
 
 from member_card.db import db
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 worker_bp = Blueprint("worker", __name__)
 
 
-@Timer(name="parse_message")
+# @Timer(name="parse_message")
 def parse_message():
     envelope = request.get_json()
     logger.debug(f"parsing message within {envelope=}")
@@ -48,7 +48,7 @@ def parse_message():
     return message
 
 
-@Timer(name="process_email_distribution_request")
+# @Timer(name="process_email_distribution_request")
 def process_email_distribution_request(message):
     logger.debug(f"Processing email distribution request message: {message}")
     email_distribution_recipient = message["email_distribution_recipient"]
@@ -104,7 +104,7 @@ def process_email_distribution_request(message):
     return send_email_resp
 
 
-@Timer(name="sync_subscriptions_etl")
+# @Timer(name="sync_subscriptions_etl")
 def sync_subscriptions_etl(message, load_all=False):
     log_extra = dict(pubsub_message=message)
     logger.debug(
@@ -158,7 +158,7 @@ def sync_subscriptions_etl(message, load_all=False):
     }
 
 
-@Timer(name="sync_squarespace_order")
+# @Timer(name="sync_squarespace_order")
 def sync_squarespace_order(message):
     log_extra = dict(pubsub_message=message)
     logger.debug(f"sync_squarespace_order() called with {message=}", extra=log_extra)
@@ -177,7 +177,7 @@ def sync_squarespace_order(message):
     return memberships
 
 
-@Timer(name="slack_members_etl")
+# @Timer(name="slack_members_etl")
 def run_slack_members_etl(message):
     log_extra = dict(pubsub_message=message)
     logger.debug(f"run_slack_members_etl() called with {message=}", extra=log_extra)
@@ -207,7 +207,7 @@ def pubsub_ingress():
         return f"Message type {message_type} is unsupported", 400
 
     MESSAGE_TYPE_HANDLERS[message["type"]](message)
-    if Timer.timers:
-        for timer_name, timer_duration in Timer.timers.items():
-            logger.info(f"- **{timer_name}**: {timer_duration}")
+    # if Timer.timers:
+    #     for timer_name, timer_duration in Timer.timers.items():
+    #     logger.info(f"- **{timer_name}**: {timer_duration}")
     return ("", 204)
