@@ -1,3 +1,4 @@
+import json
 from typing import TYPE_CHECKING
 
 from bigcommerce.api import BigcommerceApi
@@ -27,29 +28,32 @@ class TestAuthenticatedRequests:
     def test_bigcommerce_callback(
         self, app, client: "FlaskClient", mocker: "MockerFixture"
     ):
-        # mock_futures = mocker.patch("member_card.gcp.futures")
-
         mock_bigcomm_api = mocker.create_autospec(BigcommerceApi)
+
         mocker.patch(
             "member_card.routes.bigcommerce.BigcommerceApi"
         ).return_value = mock_bigcomm_api
-        # mock_bigcomm_api_class = mocker.patch("member_card.routes.bigcommerce.BigcommerceApi")
+
+        mock_access_token = "SUPER SECRET ACCESS TOKEN"
+        mock_token_blob = dict(
+            access_token=mock_access_token,
+            user=dict(
+                id=1,
+                username="itsametestio",
+                email="testio@losverd.es",
+            ),
+        )
+        mock_bigcomm_api.oauth_fetch_token.return_value = mock_token_blob
+
         response = client.get(
             "/bigcommerce/callback",
-            data={
+            follow_redirects=True,
+            query_string={
                 "account_uuid": "8bfecf30-b4fe-4b8b-aa27-d31b7070b64a",
                 "code": "h1vh9xwvgneuw3667yufmfckwu1yly7",
                 "context": "stores/hgp7pebwfj",
                 "scope": " ".join(APP_SCOPES),
             },
+            data=json.dumps({}),  # ref: https://stackoverflow.com/a/67992042
         )
         assert response
-        # raise Exception(response)
-
-        # from flask_security.core import current_user as current_login_user
-
-        # with app.app_context():
-        #     assert current_login_user is None
-
-        # mock_bigcomm_api.oauth_fetch_token.assert_called_once()
-        # assert response == 'cats'
