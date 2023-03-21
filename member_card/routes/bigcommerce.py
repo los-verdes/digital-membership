@@ -40,13 +40,19 @@ def jwt_error(e):
 # The Auth Callback URL. See https://developer.bigcommerce.com/api/callback
 @bigcommerce_bp.route("/bigcommerce/callback")
 def auth_callback():
+    redirect_url = url_for(
+        "bigcommerce.auth_callback",
+        _external=True,
+        _scheme="https",
+    )
+    logger.debug(f"bigc auth_callback(): {redirect_url=}")
+
     # Put together params for token request
     code = request.args["code"]
     context = request.args["context"]
     scope = request.args["scope"]
     store_hash = context.split("/")[1]
-    redirect_url = current_app.config["BASE_URL"] + url_for("bigcommerce.auth_callback")
-    logger.debug(f"bigc auth_callback(): {redirect_url=}")
+
     # Fetch a permanent oauth token. This will throw an exception on error,
     # which will get caught by our error handler above.
     client = BigcommerceApi(client_id=client_id(), store_hash=store_hash)
@@ -107,7 +113,13 @@ def auth_callback():
 
     # Log user in and redirect to app home
     session["storeuserid"] = storeuser.id
-    return redirect(url_for("admin_dashboard"))
+    return redirect(
+        url_for(
+            "admin_dashboard",
+            _external=True,
+            _scheme="https",
+        )
+    )
 
 
 # The Load URL. See https://developer.bigcommerce.com/api/load
@@ -146,7 +158,13 @@ def load():
 
     # Log user in and redirect to app interface
     session["storeuserid"] = storeuser.id
-    return redirect(url_for("admin_dashboard"))
+    return redirect(
+        url_for(
+            "admin_dashboard",
+            _external=True,
+            _scheme="https",
+        )
+    )
 
 
 # The Uninstall URL. See https://developer.bigcommerce.com/api/load
