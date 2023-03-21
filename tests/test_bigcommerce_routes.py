@@ -56,4 +56,7 @@ class TestAuthenticatedRequests:
             },
             data=json.dumps({}),  # ref: https://stackoverflow.com/a/67992042
         )
-        assert response
+        assert response.history[0].status_code == 302
+        assert response.history[0].location.startswith(
+            "https://"
+        ), f"Expected `https://` scheme in redirect URL not found in {response.history[0].location=}!"
