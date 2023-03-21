@@ -158,15 +158,25 @@ def generate_membership_stats():
 
 
 def generate_user_stats():
-    user_stats = {
-        "Newest User": db.session.query(AnnualMembership)
+    newest_user = None
+    newest_user_row = (
+        db.session.query(AnnualMembership)
         .order_by(AnnualMembership.created_on.desc())
         .first()
-        .user,
-        "Oldest User": db.session.query(AnnualMembership)
+    )
+    if newest_user_row:
+        newest_user = newest_user_row.user
+    oldest_user = None
+    oldest_user_row = (
+        db.session.query(AnnualMembership)
         .order_by(AnnualMembership.created_on.asc())
         .first()
-        .user,
+    )
+    if oldest_user_row:
+        oldest_user = oldest_user_row.user
+    user_stats = {
+        "Newest User": newest_user,
+        "Oldest User": oldest_user,
     }
     return user_stats
 
