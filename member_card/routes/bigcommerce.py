@@ -6,42 +6,22 @@ from flask import Blueprint, Response, current_app, redirect, request, session, 
 
 from member_card.db import db
 from member_card.models import Store, StoreUser, User
-from member_card.models.user import ensure_user, add_role_to_user
+from member_card.models.user import add_role_to_user, ensure_user
 
 logger = logging.getLogger(__name__)
 bigcommerce_bp = Blueprint("bigcommerce", __name__)
 
 
-def error_info(e):
-    content = ""
-    try:  # it's probably a HttpException, if you're using the bigcommerce client
-        content += str(e.headers) + "<br>" + str(e.content) + "<br>"
-        req = e.response.request
-        content += (
-            "<br>Request:<br>"
-            + req.url
-            + "<br>"
-            + str(req.headers)
-            + "<br>"
-            + str(req.body)
-        )
-    except AttributeError as e:  # not a HttpException
-        content += "<br><br> (This page threw an exception: {})".format(str(e))
-    return content
-
-
 # @bigcommerce_bp.errorhandler(500)
 # def internal_server_error(e):
-#     content = "Internal Server Error: " + str(e) + "<br>"
+#     content = "Internal Server Error: " + {e} + "<br>"
 #     content += error_info(e)
 #     return content, 500
 
 
 @bigcommerce_bp.errorhandler(400)
 def bad_request(e):
-    content = "Bad Request: " + str(e) + "<br>"
-    content += error_info(e)
-    return content, 400
+    return f"Bad Request: {e} <br>", 400
 
 
 def client_id():
