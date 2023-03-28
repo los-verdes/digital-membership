@@ -68,7 +68,8 @@ class AnnualMembership(db.Model):
 
     def to_dict(self):
         return OrderedDict(
-            order_number=self.order_number,
+            order_id="" if not self.order_id else self.order_id.split("_", 1)[0],
+            channel_name=self.channel_name,
             created_on=None if not self.created_on else self.created_on.strftime("%c"),
             email=self.customer_email,
             product_name=self.product_name,

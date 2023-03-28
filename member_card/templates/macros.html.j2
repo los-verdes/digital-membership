@@ -293,7 +293,7 @@ This site's privacy policy can be view here: <a href="{{ url_for('privacy_policy
   <div class="mdl-card__supporting-text">
     <h4 class="vhlm">Membership History</h4>
     {% for membership_order in membership_orders | reverse %}
-    {% call verde_box(title="Order #" ~ membership_order.order_number ~ " - " ~  membership_order.product_name) %}
+    {% call verde_box(title="Order #" ~ membership_order.order_id.split("_", 1)[0] ~ " - " ~  membership_order.product_name) %}
     <ul class="mdl-list">
       {% for key, value in membership_order.to_dict().items() %}
       <li class="mdl-list__item mdl-list__item--two-line">
