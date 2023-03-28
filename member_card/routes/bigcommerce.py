@@ -2,9 +2,20 @@ import logging
 
 import flask_security
 from bigcommerce.api import BigcommerceApi
-from flask import Blueprint, Response, current_app, redirect, request, session, url_for
+from flask import (
+    Blueprint,
+    Response,
+    current_app,
+    redirect,
+    request,
+    session,
+    url_for,
+    render_template,
+)
+from urllib.parse import unquote
 
 from member_card.db import db
+
 from member_card.models import Store, StoreUser, User
 from member_card.models.user import add_role_to_user, ensure_user
 
@@ -224,3 +235,24 @@ def remove_user():
         db.session.commit()
 
     return Response("Deleted", status=204)
+
+
+@bigcommerce_bp.route("/bigcommerce/javascript/<store_hash>.js")
+def render_store_script(store_hash):
+    store = Store.query.filter(Store.store_hash == store_hash).one()
+
+    return render_template(
+        "bigcommerce_membership_card.js.j2",
+        store_domain="jhog-verde.mybigcommerce.com",
+        member_info_url=unquote(
+            url_for(
+                "customer_card_html",
+                store_hash=store.store_hash,
+                jwt_token=r"${jwt_token}",
+                _external=True,
+            )
+        ),
+        app_client_id=current_app.config["BIGCOMMERCE_CLIENT_ID"],
+        widget_id=current_app.config["BIGCOMMERCE_WIDGET_ID"],
+        store=store,
+    )

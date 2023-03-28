@@ -22,7 +22,8 @@ export DIGITAL_MEMBERSHIP_GCP_SQL_CONNECTION_NAME := "lv-digital-membership:us-c
 export DIGITAL_MEMBERSHIP_DB_USERNAME := env_var_or_default("DIGITAL_MEMBERSHIP_DB_USERNAME", `gcloud auth list 2>/dev/null | grep -E '^\*' | awk '{print $2;}'`)
 # export DIGITAL_MEMBERSHIP_DB_USERNAME := "website@lv-digital-membership.iam"
 export DIGITAL_MEMBERSHIP_DB_DATABASE_NAME := "lv-digital-membership"
-export DIGITAL_MEMBERSHIP_BASE_URL := "localcard.losverd.es:8080"
+export DIGITAL_MEMBERSHIP_BASE_URL := "tunnelcard.losverd.es"
+export SERVER_NAME := "tunnelcard.losverd.es"
 export GCS_BUCKET_ID := "cstatic.losverd.es"
 
 
@@ -122,8 +123,8 @@ serve-wsgi:
 
 serve: onepass_session
   #!/bin/zsh
-  source /Users/jeffwecan/.pyenv/versions/3.9.2/bin/virtualenvwrapper.sh
-  workon digital-membership
+  # source /Users/jeffwecan/.pyenv/versions/3.9.2/bin/virtualenvwrapper.sh
+  # workon digital-membership
   op run --env-file='./.env' -- \
     just flask run --cert=tmp-certs/cert.pem --key=tmp-certs/key.pem --host=0.0.0.0 --port=8080
 
@@ -312,3 +313,44 @@ debug-test *FLAGS:
 ci-test: ci-install-test-python-reqs ci-bootstrap-test-db
   just local-test \
     --cov-report=xml
+
+widget-builder CMD *ARGS:
+  op run --env-file='./widget_workshop/.env_dev' -- \
+    widget-builder {{CMD }} \
+    {{ ARGS }}
+
+widget-start:
+  just widget-builder start \
+      widget_workshop/membership_card \
+      --auto-open=false
+
+widget-validate:
+  just widget-builder validate \
+      widget_workshop/membership_card
+
+widget-publish:
+  just widget-builder publish \
+      membership_info
+
+check-bigcomm-regions:
+  #!/bin/zsh
+
+  set -x
+  op run --no-masking --env-file=<(echo "export BIGCOMM_ACCESS_TOKEN='op://Los Verdes/bigcommerce_api_creds_dev/access_token'") -- \
+    bash -c '\
+      curl -v \
+        --header "X-Auth-Token:$BIGCOMM_ACCESS_TOKEN" \
+        "https://api.bigcommerce.com/stores/hgp7pebwfj/v3/content/regions?template_file=pages/category" \
+    '
+
+
+check-bigcomm-channels:
+  #!/bin/zsh
+
+  set -x
+  op run --no-masking --env-file=<(echo "export BIGCOMM_ACCESS_TOKEN='op://Los Verdes/bigcommerce_api_creds_dev/access_token'") -- \
+    bash -c '\
+      curl -v \
+        --header "X-Auth-Token:$BIGCOMM_ACCESS_TOKEN" \
+        "https://api.bigcommerce.com/stores/hgp7pebwfj/v3/channels" \
+    '

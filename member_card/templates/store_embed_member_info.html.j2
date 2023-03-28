@@ -1,0 +1,83 @@
+{% import 'macros.html.j2' as macros %}
+<style>
+  details {
+    box-sizing: border-box;
+    margin-top: 5px;
+    margin-bottom: 10px
+  }
+
+  details>summary {
+    background: #00b1415a;
+    padding: 5px;
+    border: 2px solid transparent;
+    outline: none;
+    font-family: bungee, cursive;
+    -webkit-text-stroke-width: 1px;
+    -webkit-text-stroke-color: #000;
+    color: #00b140;
+    font-size: calc(0.75em + 1vmin)
+  }
+
+  details>summary:focus {
+    border-color: #000
+  }
+
+  details>div {
+    border-top: none;
+    padding: 10px;
+    border: 2px solid #00b1415a;
+    border-top: none
+  }
+
+  details>p {
+    margin: 0;
+    padding-bottom: 10px
+  }
+
+  details>p:last-child {
+    padding: 0
+  }
+
+  details>img {
+    max-width: 100%
+  }
+
+  .save-pass-button {
+    align-items: flex-start;
+    display: inline-block;
+    min-height: 32px;
+    max-height: 64px;
+    padding: 8px;
+    cursor: pointer
+  }
+
+  .appleid-signin-button {
+    width: 210px;
+    height: 40px;
+    cursor: pointer;
+    margin: 0 auto
+  }
+
+</style>
+<h3>Membership Info & Card</h3>
+<nav class="navBar navBar--sub">
+  <ul class="navBar-section account-navigation">
+    <li class="navBar-item">
+      <a class="mdl-button mdl-js-button navBar-action" href="{{ url_for('login_via_bigcommerce', _external=True, store_hash=store_hash, jwt_token=jwt_token) }}">
+        View Online
+      </a>
+      </a>
+    </li>
+  </ul>
+</nav>
+<h4>Downloads</h3>
+  <div class="membership-card-actions mdl-card__actions mdl-card--border mdl-typography--text-center" data-html2canvas-ignore="true">
+    <a class="save-pass-button save-google-pass-button" href="{{ url_for('passes_google_pay', _external=True) }}" target="_blank">
+      <img class="mdl-js-button" src="{{ url_for('static', filename='save_to_google_pay.svg', _external=True) }}">
+    </a>
+    <a class="save-pass-button save-apple-pass-button" href="{{ url_for('passes_apple_pay', _external=True) }}">
+      <img class="mdl-js-button" src="{{ url_for('static', filename='Add_to_Apple_Wallet_rgb_US-UK.svg', _external=True) }}">
+    </a>
+  </div>
+
+  {{ macros.membership_history_and_user_details(membership_orders, current_user)  }}

@@ -127,7 +127,7 @@ class Settings(object):
     SENDGRID_TEMPLATE_ID: str = os.getenv(
         "SENDGRID_TEMPLATE_ID", "d-626729a6eed9402fa4ce849d8227afc4"
     )
-    # SERVER_NAME: str = os.getenv("SERVER_NAME", "card.losverd.es")
+    # SERVER_NAME: str = os.getenv("SERVER_NAME", BASE_URL).lstrip("https://").lstrip("http://")
 
     SLACK_BOT_TOKEN: str = os.getenv("SLACK_BOT_TOKEN", "")
 
@@ -208,8 +208,21 @@ class Settings(object):
         p.strip()
         for p in os.getenv("MINIBC_MEMBERSHIP_SKUS", "LOSV-MEM-0001").split(",")
     ]
+
     BIGCOMMERCE_CLIENT_ID: str = os.getenv("BIGCOMMERCE_CLIENT_ID", "")
     BIGCOMMERCE_CLIENT_SECRET: str = os.getenv("BIGCOMMERCE_CLIENT_SECRET", "")
+    BIGCOMMERCE_ACCESS_TOKEN: str = os.getenv("BIGCOMMERCE_ACCESS_TOKEN", "")
+
+    # ref: https://github.com/bigcommerce/bigcommerce-api-python/blob/master/bigcommerce/customer_login_token.py#L12
+    BIGCOMMERCE_STORE_HASH: str = os.getenv("BIGCOMMERCE_STORE_HASH", "3nco2w7eup")
+    BIGCOMMERCE_MEMBERSHIP_SKUS = [
+        p.strip()
+        for p in os.getenv("BIGCOMMERCE_MEMBERSHIP_SKUS", "LOSV-MEM-0001").split(",")
+    ]
+
+    BIGCOMMERCE_WIDGET_ID: str = os.getenv(
+        "BIGCOMMERCE_WIDGET_ID", "2871acf4-aa47-425c-bccc-25df8b907b4d"
+    )
 
     SESSION_PROTECTION: str = "strong"
     SECRET_KEY: str = os.environ.get("SECRET_KEY", "not-very-secret-at-all")

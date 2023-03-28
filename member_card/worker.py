@@ -2,12 +2,11 @@ import base64
 import json
 import logging
 
-# from codetiming import Timer
 from flask import Blueprint, current_app, request
 
 from member_card.db import db
 from member_card.image import generate_and_upload_card_image
-from member_card.minibc import Minibc, minibc_orders_etl  # load_single_subscription,
+
 from member_card.models import AnnualMembership, User
 from member_card.models.membership_card import get_or_create_membership_card
 from member_card.passes import generate_and_upload_apple_pass
@@ -15,8 +14,13 @@ from member_card.sendgrid import generate_email_message, send_email_message
 
 from member_card import slack
 from member_card.squarespace import (
-    Squarespace,  # squarespace_orders_etl,
+    Squarespace,
     load_single_order,
+)
+from member_card.bigcommerce import (
+    bigcommerce_orders_etl,
+    get_app_client_for_store,
+    load_all_bigcommerce_orders,
 )
 
 logger = logging.getLogger(__name__)
@@ -122,14 +126,30 @@ def sync_subscriptions_etl(message, load_all=False):
     #     load_all=load_all,
     # )
 
-    skus = current_app.config["MINIBC_MEMBERSHIP_SKUS"]
-    minibc = Minibc(api_key=current_app.config["MINIBC_API_KEY"])
+    # skus = current_app.config["MINIBC_MEMBERSHIP_SKUS"]
+    # minibc = Minibc(api_key=current_app.config["MINIBC_API_KEY"])
+    # # minibc.search_products()
+    # memberships = minibc_orders_etl(
+    #     minibc_client=minibc,
+    #     skus=skus,
+    #     load_all=load_all,
+    # )
+
+    membership_skus = current_app.config["BIGCOMMERCE_MEMBERSHIP_SKUS"]
+    store_hash = current_app.config["BIGCOMMERCE_STORE_HASH"]
+    bigcommerce_client = get_app_client_for_store(store_hash=store_hash)
     # minibc.search_products()
-    memberships = minibc_orders_etl(
-        minibc_client=minibc,
-        skus=skus,
-        load_all=load_all,
-    )
+    if load_all:
+        memberships = load_all_bigcommerce_orders(
+            bigcommerce_client=bigcommerce_client,
+            membership_skus=membership_skus,
+        )
+
+    else:
+        memberships = bigcommerce_orders_etl(
+            bigcommerce_client=bigcommerce_client,
+            membership_skus=membership_skus,
+        )
 
     total_num_memberships_end = db.session.query(AnnualMembership.id).count()
     log_extra.update(
