@@ -137,55 +137,7 @@ def home(membership_card):
     )
 
 
-@app.route("/storefront/<store_hash>/members/<jwt_token>/login")
-def login_via_bigcommerce(store_hash, jwt_token):
-    import jwt
-
-    decoded_token = jwt.decode(
-        jwt=jwt_token,
-        key=app.config["BIGCOMMERCE_CLIENT_SECRET"],
-        audience=app.config["BIGCOMMERCE_CLIENT_ID"],
-        application_id=app.config["BIGCOMMERCE_CLIENT_ID"],
-        algorithms=["HS256", "HS384", "HS512", "RS256"],
-        iss="cats",
-        options=dict(
-            verify_signature=True,
-        ),
-    )
-    logger.debug(f"{store_hash=} => {decoded_token=}")
-    bc_user_id = decoded_token["customer"]["id"]
-    bc_email = decoded_token["customer"]["email"]
-    user = User.query.filter_by(email=bc_email).first()
-    if user is None:
-        from member_card.models.user import ensure_user
-
-        user = ensure_user(
-            email=bc_email,
-            username=bc_email,
-            bigcommerce_id=bc_user_id,
-        )
-        # return redirect(
-        #     url_for("no_active_membership_landing_page", **request.args)
-        # )
-        # return f"No membership info found for email address '{bc_email}' (user ID: {bc_user_id})"
-
-    assert user.email == bc_email
-
-    import flask_security
-
-    login_result = flask_security.login_user(
-        user=user,
-        remember=True,
-    )
-    logger.debug(f"{user=}: ==> {login_result=}")
-    logger.debug(f"{user=}: ==> {user.is_authenticated()=}")
-
-    return redirect(url_for("home"))
-
-
-@app.route("/storefront/<store_hash>/members/<jwt_token>/card.html")
-@cross_origin()
-def customer_card_html(store_hash, jwt_token):
+def decode_member_jwt(store_hash, jwt_token):
     import jwt
 
     decoded_token = jwt.decode(
@@ -239,7 +191,20 @@ def customer_card_html(store_hash, jwt_token):
     )
     logger.debug(f"{user=}: ==> {login_result=}")
     logger.debug(f"{user=}: ==> {user.is_authenticated()=}")
+    return user
 
+
+@app.route("/storefront/<store_hash>/members/<jwt_token>/login")
+def login_via_bigcommerce(store_hash, jwt_token):
+    user = decode_member_jwt(store_hash=store_hash, jwt_token=jwt_token)
+    logger.debug(f"login_via_bigcommerce() => {user=}")
+    return redirect(url_for("home"))
+
+
+@app.route("/storefront/<store_hash>/members/<jwt_token>/card.html")
+@cross_origin()
+def customer_card_html(store_hash, jwt_token):
+    user = decode_member_jwt(store_hash=store_hash, jwt_token=jwt_token)
     membership_card = get_or_create_membership_card(user)
     return render_template(
         "store_embed_member_info.html.j2",
@@ -249,13 +214,6 @@ def customer_card_html(store_hash, jwt_token):
         store_hash=store_hash,
         jwt_token=jwt_token,
     )
-    return "howdy"
-    # return render_template(
-    #     "member_card_and_history.html.j2",
-    #     membership_card=membership_card,
-    #     membership_orders=g.user.annual_memberships,
-    #     membership_table_keys=list(AnnualMembership().to_dict().keys()),
-    # )
 
 
 def generate_membership_stats():
