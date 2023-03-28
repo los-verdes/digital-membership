@@ -127,7 +127,7 @@ class Settings(object):
     SENDGRID_TEMPLATE_ID: str = os.getenv(
         "SENDGRID_TEMPLATE_ID", "d-626729a6eed9402fa4ce849d8227afc4"
     )
-    # SERVER_NAME: str = os.getenv("SERVER_NAME", "card.losverd.es")
+    # SERVER_NAME: str = os.getenv("SERVER_NAME", BASE_URL).lstrip("https://").lstrip("http://")
 
     SLACK_BOT_TOKEN: str = os.getenv("SLACK_BOT_TOKEN", "")
 
