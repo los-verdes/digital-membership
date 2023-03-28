@@ -226,7 +226,7 @@ def insert_order_as_membership(order, order_products, membership_skus):
         if subscription_line_item["product_options"]:
             variant_id = subscription_line_item["product_options"][0]["id"]
 
-        customer_email = order["billing_address"]["email"]
+        customer_email = order["billing_address"]["email"].lower()
 
         membership_kwargs = dict(
             order_id=f'{order["id"]}_bc',
