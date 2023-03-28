@@ -12,6 +12,7 @@ from flask import (
     url_for,
     flash,
 )
+from flask_cors import cross_origin
 from flask_cdn import CDN
 from flask_recaptcha import ReCaptcha
 from flask_security import Security
@@ -134,6 +135,127 @@ def home(membership_card):
         membership_orders=g.user.annual_memberships,
         membership_table_keys=list(AnnualMembership().to_dict().keys()),
     )
+
+
+@app.route("/storefront/<store_hash>/members/<jwt_token>/login")
+def login_via_bigcommerce(store_hash, jwt_token):
+    import jwt
+
+    decoded_token = jwt.decode(
+        jwt=jwt_token,
+        key=app.config["BIGCOMMERCE_CLIENT_SECRET"],
+        audience=app.config["BIGCOMMERCE_CLIENT_ID"],
+        application_id=app.config["BIGCOMMERCE_CLIENT_ID"],
+        algorithms=["HS256", "HS384", "HS512", "RS256"],
+        iss="cats",
+        options=dict(
+            verify_signature=True,
+        ),
+    )
+    logger.debug(f"{store_hash=} => {decoded_token=}")
+    bc_user_id = decoded_token["customer"]["id"]
+    bc_email = decoded_token["customer"]["email"]
+    user = User.query.filter_by(email=bc_email).first()
+    if user is None:
+        from member_card.models.user import ensure_user
+
+        user = ensure_user(
+            email=bc_email,
+            username=bc_email,
+            bigcommerce_id=bc_user_id,
+        )
+        # return redirect(
+        #     url_for("no_active_membership_landing_page", **request.args)
+        # )
+        # return f"No membership info found for email address '{bc_email}' (user ID: {bc_user_id})"
+
+    assert user.email == bc_email
+
+    import flask_security
+
+    login_result = flask_security.login_user(
+        user=user,
+        remember=True,
+    )
+    logger.debug(f"{user=}: ==> {login_result=}")
+    logger.debug(f"{user=}: ==> {user.is_authenticated()=}")
+
+    return redirect(url_for("home"))
+
+
+@app.route("/storefront/<store_hash>/members/<jwt_token>/card.html")
+@cross_origin()
+def customer_card_html(store_hash, jwt_token):
+    import jwt
+
+    decoded_token = jwt.decode(
+        jwt=jwt_token,
+        key=app.config["BIGCOMMERCE_CLIENT_SECRET"],
+        audience=app.config["BIGCOMMERCE_CLIENT_ID"],
+        application_id=app.config["BIGCOMMERCE_CLIENT_ID"],
+        algorithms=["HS256", "HS384", "HS512", "RS256"],
+        iss="cats",
+        options=dict(
+            verify_signature=True,
+        ),
+    )
+    # example_decoded_token = {
+    #     "customer": {"id": 1, "email": "sup@jeffhogan.me", "group_id": "0"},
+    #     "iss": "bc/apps",
+    #     "sub": "hgp7pebwfj",
+    #     "iat": 1677604672,
+    #     "exp": 1677605572,
+    #     "version": 1,
+    #     "aud": "9n0y9vrh9uv2p9lb60lbbzb19qugo04",
+    #     "application_id": "9n0y9vrh9uv2p9lb60lbbzb19qugo04",
+    #     "store_hash": "hgp7pebwfj",
+    #     "operation": "current_customer",
+    # }
+    logger.debug(f"{store_hash=} => {decoded_token=}")
+    bc_user_id = decoded_token["customer"]["id"]
+    bc_email = decoded_token["customer"]["email"]
+    # user = User.query.filter_by(bigcommerce_id=bc_user_id).first()
+    user = User.query.filter_by(email=bc_email).first()
+    if user is None:
+        from member_card.models.user import ensure_user
+
+        user = ensure_user(
+            email=bc_email,
+            username=bc_email,
+            bigcommerce_id=bc_user_id,
+        )
+        # return redirect(
+        #     url_for("no_active_membership_landing_page", **request.args)
+        # )
+        # return f"No membership info found for email address '{bc_email}' (user ID: {bc_user_id})"
+
+    assert user.email == bc_email
+
+    import flask_security
+
+    login_result = flask_security.login_user(
+        user=user,
+        remember=True,
+    )
+    logger.debug(f"{user=}: ==> {login_result=}")
+    logger.debug(f"{user=}: ==> {user.is_authenticated()=}")
+
+    membership_card = get_or_create_membership_card(user)
+    return render_template(
+        "store_embed_member_info.html.j2",
+        membership_card=membership_card,
+        membership_orders=user.annual_memberships,
+        membership_table_keys=list(AnnualMembership().to_dict().keys()),
+        store_hash=store_hash,
+        jwt_token=jwt_token,
+    )
+    return "howdy"
+    # return render_template(
+    #     "member_card_and_history.html.j2",
+    #     membership_card=membership_card,
+    #     membership_orders=g.user.annual_memberships,
+    #     membership_table_keys=list(AnnualMembership().to_dict().keys()),
+    # )
 
 
 def generate_membership_stats():

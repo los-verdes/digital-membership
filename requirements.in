@@ -29,6 +29,7 @@ opentelemetry-instrumentation-wsgi
 opentelemetry-propagator-gcp
 psycopg2-binary
 python-dateutil
+python-jose
 qrcode[pil]
 requests
 sendgrid
