@@ -230,7 +230,7 @@ def insert_order_as_membership(order, order_products, membership_skus):
 
         membership_kwargs = dict(
             order_id=f'{order["id"]}_bc',
-            order_number=f'{order["id"]}_order["cart_id"]',
+            order_number=f'{order["id"]}_{order["cart_id"]}',
             channel=order["channel_id"],
             channel_name=f'bigcommerce_{order["order_source"]}',
             billing_address_first_name=order["billing_address"]["first_name"],
