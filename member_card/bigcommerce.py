@@ -1,8 +1,9 @@
 import logging
-from datetime import datetime, timezone
+from copy import deepcopy
+from datetime import datetime, timedelta, timezone
 from typing import List
 from zoneinfo import ZoneInfo
-from copy import deepcopy
+
 import requests
 from bigcommerce.api import BigcommerceApi
 from dateutil.parser import parse
@@ -319,6 +320,7 @@ def bigcommerce_orders_etl(
     etl_start_time = datetime.now(tz=ZoneInfo("UTC"))
     membership_table_name = models.AnnualMembership.__tablename__
     last_run_start_time = table_metadata.get_last_run_start_time(membership_table_name)
+    last_run_start_time = last_run_start_time - timedelta(hours=12)
     modified_after = last_run_start_time.isoformat()
     modified_before = etl_start_time.isoformat()
 
