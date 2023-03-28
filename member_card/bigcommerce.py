@@ -41,11 +41,11 @@ class BiggercommerceApi(object):
 
     base_url = "https://api.bigcommerce.com/stores/{store_hash}"
 
-    def __init__(self, client_id, store_hash, auth_token):
+    def __init__(self, client_id, store_hash, access_token):
         self.client_id = client_id
         self.store_hash = store_hash
         self.base_store_url = self.base_url.format(store_hash=store_hash)
-        self._auth_token = auth_token
+        self._access_token = access_token
 
     def _perform_request(
         self, method: str, route: str, api_version="v2", **kwargs
@@ -53,7 +53,7 @@ class BiggercommerceApi(object):
         headers = {
             "Content-Type": "application/json",
             "Accept": "application/json",
-            "X-Auth-Token": self._auth_token,
+            "X-Auth-Token": self._access_token,
         }
 
         url = f"{self.base_store_url}/{api_version}/{route}"
