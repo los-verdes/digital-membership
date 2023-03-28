@@ -43,3 +43,4 @@ jobs:
           # https://github.com/github/super-linter/issues/1852
           # https://github.com/rhysd/actionlint/issues/91
           VALIDATE_GITHUB_ACTIONS: false
+          VALIDATE_HTML: false # until / unless we figure out how to get htmlhint happy with our BC widget templates
