@@ -2,6 +2,8 @@ import base64
 import json
 import logging
 
+from bigcommerce import connection
+
 from member_card import worker
 
 logging.basicConfig(level=logging.DEBUG)
@@ -68,7 +70,74 @@ class TestPubsubIngress:
         assert response.status_code == 204
 
     def test_sync_subscriptions_etl(self, client, mocker):
-        mock_minibc_orders_etl = mocker.patch("member_card.worker.minibc_orders_etl")
+        mock_store_hash = "mock_store_hash"
+        mock_orders = [
+            {
+                "id": 100,
+                "customer_id": 20,
+                "date_created": "Wed, 10 Jan 2018 21:05:30 +0000",
+                "date_modified": "Wed, 05 Dec 2018 20:16:55 +0000",
+                "date_shipped": "",
+                "status_id": 11,
+                "status": "Awaiting Fulfillment",
+                "billing_address": {
+                    "first_name": "Jane",
+                    "last_name": "Doe",
+                    "company": "",
+                    "street_1": "455 Main Street",
+                    "street_2": "",
+                    "city": "Austin",
+                    "state": "Texas",
+                    "zip": "78751",
+                    "country": "United States",
+                    "country_iso2": "US",
+                    "phone": "",
+                    "email": "janedoe@example.com",
+                    "form_fields": [],
+                },
+                "is_email_opt_in": False,
+                "credit_card_type": None,
+                "order_source": "manual",
+                "channel_id": 1,
+                "external_source": "POS",
+                "products": {
+                    "url": f"https://api.bigcommerce.com/stores/{mock_store_hash}/v2/orders/100/products",
+                    "resource": "/orders/100/products",
+                },
+                "shipping_addresses": {
+                    "url": f"https://api.bigcommerce.com/stores/{mock_store_hash}/v2/orders/100/shippingaddresses",
+                    "resource": "/orders/100/shippingaddresses",
+                },
+                "coupons": {
+                    "url": f"https://api.bigcommerce.com/stores/{mock_store_hash}/v2/orders/100/coupons",
+                    "resource": "/orders/100/coupons",
+                },
+                "external_id": None,
+                "external_merchant_id": {},
+                "tax_provider_id": "BasicTaxProvider",
+                "store_default_currency_code": "",
+                "store_default_to_transactional_exchange_rate": "1.0000000000",
+                "custom_status": "Awaiting Fulfillment",
+                "customer_locale": "en",
+                "external_order_id": "external-order-id",
+            }
+        ]
+        mock_bigcomm_api = mocker.MagicMock()
+        mock_bigcomm_api.connection = mocker.create_autospec(connection.Connection)
+        mock_bigcomm_api.connection.store_hash = mock_store_hash
+
+        # mock_bigcomm_api_orders = mocker.patch.object(mock_bigcomm_api, 'Orders')
+        mock_orders_iterall = mocker.MagicMock()
+        mock_orders_iterall.return_value = mock_orders
+        mock_bigcomm_api.Orders.return_value = mock_orders_iterall
+
+        mock_get_app_client_for_store = mocker.patch(
+            "member_card.worker.get_app_client_for_store"
+        )
+        mock_get_app_client_for_store.return_value = mock_bigcomm_api
+        mock_bigcommerce_orders_etl = mocker.patch(
+            "member_card.worker.bigcommerce_orders_etl"
+        )
         test_message = dict(
             type="sync_subscriptions_etl",
         )
@@ -81,7 +150,7 @@ class TestPubsubIngress:
         # Check that we return a 400 / Bad Request in these cases
         assert response.status_code == 204
 
-        mock_minibc_orders_etl.assert_called_once()
+        mock_bigcommerce_orders_etl.assert_called_once()
 
     # def test_sync_squarespace_order(self, app, client, mocker):
     #     mock_squarespace_class = mocker.patch("member_card.worker.Squarespace")
