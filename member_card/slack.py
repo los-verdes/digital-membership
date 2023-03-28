@@ -39,7 +39,7 @@ def slack_members_generator(client: WebClient, chunk_size=100, polling_interval_
         logger.debug(f"Meta-response bits: [next_]next_cursor={next_cursor}")
         logger.debug(f"# slack users load thus far: {len(slack_members)=}")
         for slack_member in slack_members:
-            logger.debug(f"yielding {slack_member=}...")
+            # logger.debug(f"yielding {slack_member=}...")
             yield slack_member
 
         logger.debug(f"Pausing for {polling_interval_secs=} before proceeding...")
@@ -86,7 +86,7 @@ def slack_members_etl(client: WebClient):
     slack_users = list()
 
     for slack_member in slack_members_generator(client):
-        logger.debug(f"slack_members_etl(): {slack_member}")
+        # logger.debug(f"slack_members_etl(): {slack_member}")
         slack_user = upsert_slack_member(slack_member)
         slack_users.append(slack_user)
         db.session.add(slack_user)
