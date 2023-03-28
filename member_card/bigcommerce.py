@@ -333,7 +333,7 @@ def bigcommerce_orders_etl(
 
     memberships = parse_subscription_orders(bigcommerce_client, membership_skus, orders)
 
-    # table_metadata.set_last_run_start_time(membership_table_name, etl_start_time)
+    table_metadata.set_last_run_start_time(membership_table_name, etl_start_time)
 
     return memberships
 
