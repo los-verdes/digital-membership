@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from pg8000 import dbapi
 
 db = SQLAlchemy()
-migrate = Migrate()
+migrate = Migrate(compare_type=True)
 logger = logging.getLogger(__name__)
 
 
