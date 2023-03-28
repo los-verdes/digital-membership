@@ -64,15 +64,7 @@ class AnnualMembership(db.Model):
     product_id = db.Column(db.String(32))
     product_name = db.Column(db.String(200))
     test_mode = db.Column(db.Boolean, default=False)
-    fulfillment_status = db.Column(
-        db.Enum(
-            "PENDING",
-            "FULFILLED",
-            "CANCELED",
-            name="fulfillment_status_enum",
-            create_type=False,
-        )
-    )
+    fulfillment_status = db.Column(db.String(32))
 
     def to_dict(self):
         return OrderedDict(
