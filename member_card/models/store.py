@@ -22,9 +22,10 @@ class Store(db.Model):
         self.scope = scope
 
     def __repr__(self):
-        return "<Store id=%d store_hash=%s access_token=%s scope=%s>" % (
+        return "<Store id=%d store_hash=%s access_token=%s...%s scope=%s>" % (
             self.id,
             self.store_hash,
-            self.access_token,
+            self.access_token[0:3],
+            self.access_token[-3:],
             self.scope,
         )
