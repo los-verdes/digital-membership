@@ -68,7 +68,43 @@ def test_generate_and_upload_card_image(
     test_bucket_id = "this-os-a-test-bucket"
     mock_blob.bucket.id = test_bucket_id
 
-    card_image_url = image.generate_and_upload_card_image(
+    card_image_filename = f"{fake_card.serial_number.hex}.png"
+    remote_card_image_path = f"membership-cards/images/{card_image_filename}"
+    return_value = image.generate_and_upload_card_image(
+        membership_card=fake_card,
+        card_image_filename=card_image_filename,
+        remote_card_image_path=remote_card_image_path,
+    )
+
+    assert return_value == mock_blob
+
+    mock_upload.assert_called_once()
+    mock_hti.screenshot.assert_called_once()
+    mock_image.save.assert_called_once()
+
+
+def test_ensure_uploaded_card_image(
+    fake_card: "MembershipCard", mocker: "MockerFixture"
+):
+    mock_image = mocker.patch("member_card.image.Image")
+    # since these Image instances have a bunch of chained calls...:
+    chained_image_methods = ["open", "convert", "crop"]
+    for chained_image_method in chained_image_methods:
+        getattr(mock_image, chained_image_method).return_value = mock_image
+
+    mock_html2image = mocker.patch("member_card.image.Html2Image")
+    mock_hti = mock_html2image.return_value
+    mock_get_bucket = mocker.patch("member_card.image.get_bucket")
+    mock_upload = mocker.patch("member_card.image.upload_file_to_gcs")
+    mock_blob = mock_upload.return_value
+    test_bucket_id = "this-os-a-test-bucket"
+    mock_bucket = mock_get_bucket.return_value
+    mock_bucket.blob.return_value = mock_blob
+    mock_bucket.id = test_bucket_id
+    mock_blob.bucket = mock_bucket
+    mock_blob.exists.return_value = False
+
+    card_image_url = image.ensure_uploaded_card_image(
         membership_card=fake_card,
     )
 

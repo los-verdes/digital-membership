@@ -216,7 +216,7 @@ class TestEmailDistribution:
 
     def test_with_matching_user_with_memberships(self, mocker, fake_member):
         mock_upload_image = mocker.patch(
-            "member_card.worker.generate_and_upload_card_image"
+            "member_card.worker.ensure_uploaded_card_image"
         )
         mock_upload_apple_pass = mocker.patch(
             "member_card.worker.generate_and_upload_apple_pass"

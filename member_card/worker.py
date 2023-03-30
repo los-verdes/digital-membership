@@ -5,7 +5,7 @@ import logging
 from flask import Blueprint, current_app, request
 
 from member_card.db import db
-from member_card.image import generate_and_upload_card_image
+from member_card.image import ensure_uploaded_card_image
 
 from member_card.models import AnnualMembership, User
 from member_card.models.membership_card import get_or_create_membership_card
@@ -52,18 +52,13 @@ def parse_message():
     return message
 
 
-# @Timer(name="process_email_distribution_request")
-def process_email_distribution_request(message):
-    logger.debug(f"Processing email distribution request message: {message}")
-    email_distribution_recipient = message["email_distribution_recipient"]
-    log_extra = dict(
-        pubsub_message=message,
-        email_distribution_recipient=email_distribution_recipient,
-    )
+def lookup_user_worker(email_address, log_extra=None):
+    if log_extra is None:
+        log_extra = dict()
     logger.debug("looking up user...", extra=log_extra)
     try:
         # BONUS TODO: make this case-insensitive
-        user = User.query.filter_by(email=email_distribution_recipient).one()
+        user = User.query.filter_by(email=email_address).one()
         log_extra.update(dict(user=user))
     except Exception as err:
         log_extra.update(dict(user_query_err=err))
@@ -72,7 +67,7 @@ def process_email_distribution_request(message):
 
     if user is None:
         logger.warning(
-            f"no matching user found for {email_distribution_recipient=}. Exiting early...",
+            f"no matching user found for {email_address=}. Exiting early...",
             extra=log_extra,
         )
         return
@@ -84,6 +79,27 @@ def process_email_distribution_request(message):
         )
         return
 
+    return user
+
+
+# @Timer(name="process_email_distribution_request")
+def process_email_distribution_request(message):
+    logger.debug(f"Processing email distribution request message: {message}")
+    email_distribution_recipient = message["email_distribution_recipient"]
+    log_extra = dict(
+        pubsub_message=message,
+        email_distribution_recipient=email_distribution_recipient,
+    )
+    user = lookup_user_worker(
+        email_address=email_distribution_recipient,
+        log_extra=log_extra,
+    )
+    if user is None:
+        logger.warning(
+            "process_email_distribution_request() :: no user found, returning early..."
+        )
+        return
+
     logger.info(
         f"Found {user=} for {email_distribution_recipient=}. Generating and sending email now",
         extra=log_extra,
@@ -91,7 +107,7 @@ def process_email_distribution_request(message):
 
     membership_card = get_or_create_membership_card(user)
 
-    card_image_url = generate_and_upload_card_image(membership_card)
+    card_image_url = ensure_uploaded_card_image(membership_card)
 
     apple_pass_url = generate_and_upload_apple_pass(membership_card)
 
@@ -106,6 +122,36 @@ def process_email_distribution_request(message):
     send_email_resp = send_email_message(email_message)
     logger.debug(f"send_email_message() response: {send_email_resp=}")
     return send_email_resp
+
+
+def ensure_uploaded_card_image_worker(message):
+    logger.debug(f"Processing ensure_uploaded_card_image message: {message}")
+    member_email_address = message["member_email_address"]
+    log_extra = dict(
+        pubsub_message=message,
+        member_email_address=member_email_address,
+    )
+    user = lookup_user_worker(
+        email_address=member_email_address,
+        log_extra=log_extra,
+    )
+    if user is None:
+        logger.warning(
+            "ensure_uploaded_card_image_worker() :: no user found, returning early..."
+        )
+        return
+
+    logger.info(
+        f"Found {user=} for {member_email_address=}. Ensuring generated card image has been uploaded now...",
+        extra=log_extra,
+    )
+
+    membership_card = get_or_create_membership_card(user)
+
+    card_image_url = ensure_uploaded_card_image(membership_card)
+
+    logger.debug(f"ensure_uploaded_card_image(): {card_image_url=}")
+    return card_image_url
 
 
 # @Timer(name="sync_subscriptions_etl")
@@ -220,6 +266,7 @@ def pubsub_ingress():
         "sync_subscriptions_etl": sync_subscriptions_etl,
         "sync_squarespace_order": sync_squarespace_order,
         "run_slack_members_etl": run_slack_members_etl,
+        "ensure_uploaded_card_image": ensure_uploaded_card_image_worker,
     }
 
     message_type = message["type"]
