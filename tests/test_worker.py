@@ -241,3 +241,58 @@ class TestEmailDistribution:
         mock_generate_email.assert_called_once()
 
         mock_send_email.assert_called_once_with(mock_generate_email.return_value)
+
+
+class TestEnsureCardImage:
+    def test_no_matching_user(self, mocker):
+        mock_ensure_uploaded_card_image = mocker.patch(
+            "member_card.worker.ensure_uploaded_card_image"
+        )
+        test_message = dict(
+            type="ensure_uploaded_card_image_request",
+            member_email_address="los.verdes.tester+pls-no-matchy@gmail.com",
+        )
+
+        return_value = worker.process_ensure_uploaded_card_image_request(
+            message=test_message,
+        )
+        logging.debug(f"{return_value=}")
+
+        assert return_value is None
+
+        mock_ensure_uploaded_card_image.assert_not_called()
+
+    def test_with_matching_user_no_memberships(self, mocker, fake_user):
+        mock_ensure_uploaded_card_image = mocker.patch(
+            "member_card.worker.ensure_uploaded_card_image"
+        )
+        test_message = dict(
+            type="ensure_uploaded_card_image_request",
+            member_email_address=fake_user.email,
+        )
+
+        return_value = worker.process_ensure_uploaded_card_image_request(
+            message=test_message,
+        )
+        logging.debug(f"{return_value=}")
+
+        assert return_value is None
+
+        mock_ensure_uploaded_card_image.assert_not_called()
+        mock_ensure_uploaded_card_image.assert_not_called()
+
+    def test_with_matching_user_with_memberships(self, mocker, fake_member):
+        mock_ensure_uploaded_card_image = mocker.patch(
+            "member_card.worker.ensure_uploaded_card_image"
+        )
+        test_message = dict(
+            type="ensure_uploaded_card_image_request",
+            member_email_address=fake_member.email,
+        )
+
+        return_value = worker.process_ensure_uploaded_card_image_request(
+            message=test_message,
+        )
+        logging.debug(f"{return_value=}")
+
+        mock_ensure_uploaded_card_image.assert_called_once()
