@@ -4,31 +4,25 @@ import logging
 
 from flask import Blueprint, current_app, request
 
-from member_card.db import db
-from member_card.image import generate_and_upload_card_image
-
-from member_card.models import AnnualMembership, User
-from member_card.models.membership_card import get_or_create_membership_card
-from member_card.passes import generate_and_upload_apple_pass
-from member_card.sendgrid import generate_email_message, send_email_message
-
 from member_card import slack
-from member_card.squarespace import (
-    Squarespace,
-    load_single_order,
-)
 from member_card.bigcommerce import (
     bigcommerce_orders_etl,
     get_app_client_for_store,
     load_all_bigcommerce_orders,
 )
+from member_card.db import db
+from member_card.image import ensure_uploaded_card_image
+from member_card.models import AnnualMembership
+from member_card.models.user import get_user_or_none
+from member_card.models.membership_card import get_or_create_membership_card
+from member_card.passes import generate_and_upload_apple_pass
+from member_card.sendgrid import generate_email_message, send_email_message
 
 logger = logging.getLogger(__name__)
 
 worker_bp = Blueprint("worker", __name__)
 
 
-# @Timer(name="parse_message")
 def parse_message():
     envelope = request.get_json()
     logger.debug(f"parsing message within {envelope=}")
@@ -52,7 +46,6 @@ def parse_message():
     return message
 
 
-# @Timer(name="process_email_distribution_request")
 def process_email_distribution_request(message):
     logger.debug(f"Processing email distribution request message: {message}")
     email_distribution_recipient = message["email_distribution_recipient"]
@@ -60,27 +53,13 @@ def process_email_distribution_request(message):
         pubsub_message=message,
         email_distribution_recipient=email_distribution_recipient,
     )
-    logger.debug("looking up user...", extra=log_extra)
-    try:
-        # BONUS TODO: make this case-insensitive
-        user = User.query.filter_by(email=email_distribution_recipient).one()
-        log_extra.update(dict(user=user))
-    except Exception as err:
-        log_extra.update(dict(user_query_err=err))
-        logger.warning(f"unable to look up user!: {err}", extra=log_extra)
-        user = None
-
+    user = get_user_or_none(
+        email_address=email_distribution_recipient,
+        log_extra=log_extra,
+    )
     if user is None:
         logger.warning(
-            f"no matching user found for {email_distribution_recipient=}. Exiting early...",
-            extra=log_extra,
-        )
-        return
-
-    if not user.has_active_memberships:
-        logger.warning(
-            f"{user=} has not active memberships! Exiting early...",
-            extra=log_extra,
+            "process_email_distribution_request() :: no user found, returning early..."
         )
         return
 
@@ -91,7 +70,7 @@ def process_email_distribution_request(message):
 
     membership_card = get_or_create_membership_card(user)
 
-    card_image_url = generate_and_upload_card_image(membership_card)
+    card_image_url = ensure_uploaded_card_image(membership_card)
 
     apple_pass_url = generate_and_upload_apple_pass(membership_card)
 
@@ -108,7 +87,36 @@ def process_email_distribution_request(message):
     return send_email_resp
 
 
-# @Timer(name="sync_subscriptions_etl")
+def process_ensure_uploaded_card_image_request(message):
+    logger.debug(f"Processing ensure_uploaded_card_image message: {message}")
+    member_email_address = message["member_email_address"]
+    log_extra = dict(
+        pubsub_message=message,
+        member_email_address=member_email_address,
+    )
+    user = get_user_or_none(
+        email_address=member_email_address,
+        log_extra=log_extra,
+    )
+    if user is None:
+        logger.warning(
+            "ensure_uploaded_card_image_worker() :: no user found, returning early..."
+        )
+        return
+
+    logger.info(
+        f"Found {user=} for {member_email_address=}. Ensuring generated card image has been uploaded now...",
+        extra=log_extra,
+    )
+
+    membership_card = get_or_create_membership_card(user)
+
+    card_image_url = ensure_uploaded_card_image(membership_card)
+
+    logger.debug(f"ensure_uploaded_card_image(): {card_image_url=}")
+    return card_image_url
+
+
 def sync_subscriptions_etl(message, load_all=False):
     log_extra = dict(pubsub_message=message)
     logger.debug(
@@ -118,27 +126,10 @@ def sync_subscriptions_etl(message, load_all=False):
 
     total_num_memberships_start = db.session.query(AnnualMembership.id).count()
 
-    # membership_skus = current_app.config["MINIBC_MEMBERSHIP_SUBSCRIPTION_ID"]
-    # squarespace = Squarespace(api_key=current_app.config["SQUARESPACE_API_KEY"])
-    # memberships = squarespace_orders_etl(
-    #     squarespace_client=squarespace,
-    #     membership_skus=membership_skus,
-    #     load_all=load_all,
-    # )
-
-    # skus = current_app.config["MINIBC_MEMBERSHIP_SKUS"]
-    # minibc = Minibc(api_key=current_app.config["MINIBC_API_KEY"])
-    # # minibc.search_products()
-    # memberships = minibc_orders_etl(
-    #     minibc_client=minibc,
-    #     skus=skus,
-    #     load_all=load_all,
-    # )
-
     membership_skus = current_app.config["BIGCOMMERCE_MEMBERSHIP_SKUS"]
     store_hash = current_app.config["BIGCOMMERCE_STORE_HASH"]
     bigcommerce_client = get_app_client_for_store(store_hash=store_hash)
-    # minibc.search_products()
+
     if load_all:
         memberships = load_all_bigcommerce_orders(
             bigcommerce_client=bigcommerce_client,
@@ -178,26 +169,13 @@ def sync_subscriptions_etl(message, load_all=False):
     }
 
 
-# @Timer(name="sync_squarespace_order")
 def sync_squarespace_order(message):
     log_extra = dict(pubsub_message=message)
     logger.debug(f"sync_squarespace_order() called with {message=}", extra=log_extra)
     logger.warning("skipping squarespace order syncin...")
     return "nah"
-    order_id = message["order_id"]
-
-    membership_skus = current_app.config["SQUARESPACE_MEMBERSHIP_SKUS"]
-    squarespace = Squarespace(api_key=current_app.config["SQUARESPACE_API_KEY"])
-    memberships = load_single_order(
-        squarespace_client=squarespace,
-        membership_skus=membership_skus,
-        order_id=order_id,
-    )
-    logger.info(f"Sync for {order_id=} completed!: {memberships=}")
-    return memberships
 
 
-# @Timer(name="slack_members_etl")
 def run_slack_members_etl(message):
     log_extra = dict(pubsub_message=message)
     logger.debug(f"run_slack_members_etl() called with {message=}", extra=log_extra)
@@ -220,6 +198,7 @@ def pubsub_ingress():
         "sync_subscriptions_etl": sync_subscriptions_etl,
         "sync_squarespace_order": sync_squarespace_order,
         "run_slack_members_etl": run_slack_members_etl,
+        "ensure_uploaded_card_image_request": process_ensure_uploaded_card_image_request,
     }
 
     message_type = message["type"]
@@ -227,7 +206,4 @@ def pubsub_ingress():
         return f"Message type {message_type} is unsupported", 400
 
     MESSAGE_TYPE_HANDLERS[message["type"]](message)
-    # if Timer.timers:
-    #     for timer_name, timer_duration in Timer.timers.items():
-    #     logger.info(f"- **{timer_name}**: {timer_duration}")
     return ("", 204)

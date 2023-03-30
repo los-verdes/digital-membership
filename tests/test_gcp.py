@@ -106,7 +106,10 @@ def test_upload_file_to_gcs(app: "Flask", mocker: "MockerFixture"):
     with app.app_context():
         # in app context cause method being called depends on some implicit current_app.config bits...
         gcp.upload_file_to_gcs(
-            local_file=local_file, remote_path=remote_path, content_type="x-some-type"
+            bucket=mock_bucket,
+            local_file=local_file,
+            remote_path=remote_path,
+            content_type="x-some-type",
         )
 
     mock_bucket.blob.assert_called_with(remote_path)

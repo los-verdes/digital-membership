@@ -6,7 +6,7 @@ import flask
 from flask import current_app
 from member_card.db import db
 from member_card.passes.apple_wallet import tmp_apple_developer_key
-from member_card.gcp import upload_file_to_gcs
+from member_card.gcp import upload_file_to_gcs, get_bucket
 from member_card.utils import sign
 from wallet.models import Barcode, BarcodeFormat, Generic, Pass
 
@@ -387,6 +387,7 @@ def generate_and_upload_apple_pass(membership_card):
     local_apple_pass_path = get_apple_pass_from_card(membership_card)
     remote_apple_pass_path = f"membership-cards/apple-passes/{membership_card.apple_pass_serial_number}.pkpass"
     blob = upload_file_to_gcs(
+        bucket=get_bucket(),
         local_file=local_apple_pass_path,
         remote_path=remote_apple_pass_path,
         content_type="application/vnd.apple.pkpass",

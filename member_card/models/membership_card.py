@@ -21,6 +21,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 logger = logging.getLogger("member_card")
+REMOTE_CARD_IMAGE_BASE_PATH = "membership-cards/images"
 
 
 def get_or_create_membership_card(user):
@@ -154,6 +155,14 @@ class MembershipCard(db.Model):
     @property
     def serial_number_hex(self):
         return str(getattr(self.serial_number, "hex"))
+
+    @property
+    def image_filename(self):
+        return f"{self.serial_number.hex}.png"
+
+    @property
+    def remote_image_path(self):
+        return f"{REMOTE_CARD_IMAGE_BASE_PATH}/{self.image_filename}"
 
     @property
     def qr_code_b64_png(self):

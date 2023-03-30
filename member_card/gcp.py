@@ -83,8 +83,8 @@ def get_bucket(client=None):
     return client.get_bucket(current_app.config["GCS_BUCKET_ID"])
 
 
-def upload_file_to_gcs(local_file, remote_path, content_type=None):
-    blob = get_bucket().blob(remote_path)
+def upload_file_to_gcs(bucket, local_file, remote_path, content_type=None):
+    blob = bucket.blob(remote_path)
     if content_type is not None:
         blob.content_type = content_type
     blob.cache_control = "no-cache"
