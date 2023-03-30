@@ -67,6 +67,7 @@ class TestPkPass:
     ):
         mock_get_pass = mocker.patch("member_card.passes.get_apple_pass_from_card")
         mock_upload = mocker.patch("member_card.passes.upload_file_to_gcs")
+        mock_get_bucket = mocker.patch("member_card.passes.get_bucket")
 
         mock_blob = mock_upload.return_value
         test_bucket_id = "this-os-a-test-bucket"
@@ -80,4 +81,5 @@ class TestPkPass:
         assert card_image_url == expected_url
 
         mock_get_pass.assert_called_once()
+        mock_get_bucket.assert_called_once()
         mock_upload.assert_called_once()
