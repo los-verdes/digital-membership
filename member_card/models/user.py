@@ -76,6 +76,34 @@ roles_users = db.Table(
 )
 
 
+def get_user_or_none(email_address, log_extra=None):
+    logger.debug("looking up user...", extra=log_extra)
+    try:
+        # BONUS TODO: make this case-insensitive
+        user = User.query.filter_by(email=email_address).one()
+        log_extra.update(dict(user=user))
+    except Exception as err:
+        log_extra.update(dict(user_query_err=err))
+        logger.warning(f"unable to look up user!: {err}", extra=log_extra)
+        user = None
+
+    if user is None:
+        logger.warning(
+            f"no matching user found for {email_address=}. Exiting early...",
+            extra=log_extra,
+        )
+        return
+
+    if not user.has_active_memberships:
+        logger.warning(
+            f"{user=} has not active memberships! Exiting early...",
+            extra=log_extra,
+        )
+        return
+
+    return user
+
+
 class Role(db.Model, RoleMixin):
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(80), unique=True)

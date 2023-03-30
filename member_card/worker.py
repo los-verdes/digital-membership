@@ -12,7 +12,8 @@ from member_card.bigcommerce import (
 )
 from member_card.db import db
 from member_card.image import ensure_uploaded_card_image
-from member_card.models import AnnualMembership, User
+from member_card.models import AnnualMembership
+from member_card.models.user import get_user_or_none
 from member_card.models.membership_card import get_or_create_membership_card
 from member_card.passes import generate_and_upload_apple_pass
 from member_card.sendgrid import generate_email_message, send_email_message
@@ -45,36 +46,6 @@ def parse_message():
     return message
 
 
-def lookup_user_worker(email_address, log_extra=None):
-    if log_extra is None:
-        log_extra = dict()
-    logger.debug("looking up user...", extra=log_extra)
-    try:
-        # BONUS TODO: make this case-insensitive
-        user = User.query.filter_by(email=email_address).one()
-        log_extra.update(dict(user=user))
-    except Exception as err:
-        log_extra.update(dict(user_query_err=err))
-        logger.warning(f"unable to look up user!: {err}", extra=log_extra)
-        user = None
-
-    if user is None:
-        logger.warning(
-            f"no matching user found for {email_address=}. Exiting early...",
-            extra=log_extra,
-        )
-        return
-
-    if not user.has_active_memberships:
-        logger.warning(
-            f"{user=} has not active memberships! Exiting early...",
-            extra=log_extra,
-        )
-        return
-
-    return user
-
-
 def process_email_distribution_request(message):
     logger.debug(f"Processing email distribution request message: {message}")
     email_distribution_recipient = message["email_distribution_recipient"]
@@ -82,7 +53,7 @@ def process_email_distribution_request(message):
         pubsub_message=message,
         email_distribution_recipient=email_distribution_recipient,
     )
-    user = lookup_user_worker(
+    user = get_user_or_none(
         email_address=email_distribution_recipient,
         log_extra=log_extra,
     )
@@ -116,14 +87,14 @@ def process_email_distribution_request(message):
     return send_email_resp
 
 
-def ensure_uploaded_card_image_worker(message):
+def process_ensure_uploaded_card_image_request(message):
     logger.debug(f"Processing ensure_uploaded_card_image message: {message}")
     member_email_address = message["member_email_address"]
     log_extra = dict(
         pubsub_message=message,
         member_email_address=member_email_address,
     )
-    user = lookup_user_worker(
+    user = get_user_or_none(
         email_address=member_email_address,
         log_extra=log_extra,
     )
@@ -227,7 +198,7 @@ def pubsub_ingress():
         "sync_subscriptions_etl": sync_subscriptions_etl,
         "sync_squarespace_order": sync_squarespace_order,
         "run_slack_members_etl": run_slack_members_etl,
-        "ensure_uploaded_card_image": ensure_uploaded_card_image_worker,
+        "ensure_uploaded_card_image_request": process_ensure_uploaded_card_image_request,
     }
 
     message_type = message["type"]
