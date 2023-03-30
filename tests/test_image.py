@@ -87,6 +87,7 @@ def test_generate_and_upload_card_image(
     fake_card: "MembershipCard", mock_uploaded_blob
 ):
     return_value = image.generate_and_upload_card_image(
+        image_bucket=mock_uploaded_blob.bucket,
         membership_card=fake_card,
     )
 

@@ -48,13 +48,14 @@ def ensure_uploaded_card_image(membership_card):
         )
     else:
         generate_and_upload_card_image(
+            image_bucket=image_bucket,
             membership_card=membership_card,
         )
 
     return f"{image_bucket.id}/{membership_card.remote_image_path}"
 
 
-def generate_and_upload_card_image(membership_card):
+def generate_and_upload_card_image(image_bucket, membership_card):
     with TemporaryDirectory() as image_output_path:
         image_path = generate_card_image(
             membership_card=membership_card,
@@ -63,6 +64,7 @@ def generate_and_upload_card_image(membership_card):
         )
 
         blob = upload_file_to_gcs(
+            bucket=image_bucket,
             local_file=image_path,
             remote_path=membership_card.remote_image_path,
         )
