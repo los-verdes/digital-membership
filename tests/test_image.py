@@ -124,3 +124,20 @@ def test_ensure_uploaded_card_image_no_extant_blob(
     )
     assert card_image_url == expected_url
     mock_upload.assert_called()
+
+
+def test_ensure_uploaded_card_image_extant_blob(
+    fake_card: "MembershipCard", mocker: "MockerFixture", mock_uploaded_blob
+):
+    test_bucket_id = mock_uploaded_blob.bucket.id
+    mock_uploaded_blob.exists.return_value = True
+    mock_upload = mocker.patch("member_card.image.generate_and_upload_card_image")
+    card_image_url = image.ensure_uploaded_card_image(
+        membership_card=fake_card,
+    )
+
+    expected_url = (
+        f"{test_bucket_id}/membership-cards/images/{fake_card.serial_number.hex}.png"
+    )
+    assert card_image_url == expected_url
+    mock_upload.assert_not_called()
