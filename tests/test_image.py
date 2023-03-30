@@ -1,11 +1,14 @@
 from typing import TYPE_CHECKING
 
+import pytest
+
 from member_card import image
 
 if TYPE_CHECKING:
-    from member_card.models import MembershipCard
     from PIL import Image
     from pytest_mock.plugin import MockerFixture
+
+    from member_card.models import MembershipCard
 
 
 def test_remove_image_background(untrimmed_with_bg_img: "Image"):
@@ -52,39 +55,9 @@ def test_trim_with_image_background(untrimmed_with_bg_img: "Image"):
     assert trimmed_img.height == untrimmed_with_bg_img.height
 
 
-def test_generate_and_upload_card_image(
-    fake_card: "MembershipCard", mocker: "MockerFixture"
-):
-    mock_image = mocker.patch("member_card.image.Image")
-    # since these Image instances have a bunch of chained calls...:
-    chained_image_methods = ["open", "convert", "crop"]
-    for chained_image_method in chained_image_methods:
-        getattr(mock_image, chained_image_method).return_value = mock_image
-
-    mock_html2image = mocker.patch("member_card.image.Html2Image")
-    mock_hti = mock_html2image.return_value
-    mock_upload = mocker.patch("member_card.image.upload_file_to_gcs")
-    mock_blob = mock_upload.return_value
-    test_bucket_id = "this-os-a-test-bucket"
-    mock_blob.bucket.id = test_bucket_id
-
-    card_image_filename = f"{fake_card.serial_number.hex}.png"
-    remote_card_image_path = f"membership-cards/images/{card_image_filename}"
-    return_value = image.generate_and_upload_card_image(
-        membership_card=fake_card,
-        card_image_filename=card_image_filename,
-        remote_card_image_path=remote_card_image_path,
-    )
-
-    assert return_value == mock_blob
-
-    mock_upload.assert_called_once()
-    mock_hti.screenshot.assert_called_once()
-    mock_image.save.assert_called_once()
-
-
-def test_ensure_uploaded_card_image(
-    fake_card: "MembershipCard", mocker: "MockerFixture"
+@pytest.fixture()
+def mock_uploaded_blob(
+    mocker: "MockerFixture",
 ):
     mock_image = mocker.patch("member_card.image.Image")
     # since these Image instances have a bunch of chained calls...:
@@ -96,14 +69,38 @@ def test_ensure_uploaded_card_image(
     mock_hti = mock_html2image.return_value
     mock_get_bucket = mocker.patch("member_card.image.get_bucket")
     mock_upload = mocker.patch("member_card.image.upload_file_to_gcs")
-    mock_blob = mock_upload.return_value
+    mock_uploaded_blob = mock_upload.return_value
     test_bucket_id = "this-os-a-test-bucket"
     mock_bucket = mock_get_bucket.return_value
-    mock_bucket.blob.return_value = mock_blob
+    mock_bucket.blob.return_value = mock_uploaded_blob
     mock_bucket.id = test_bucket_id
-    mock_blob.bucket = mock_bucket
-    mock_blob.exists.return_value = False
+    mock_uploaded_blob.bucket = mock_bucket
+    mock_uploaded_blob.exists.return_value = False
+    yield mock_uploaded_blob
 
+    mock_upload.assert_called_once()
+    mock_hti.screenshot.assert_called_once()
+    mock_image.save.assert_called_once()
+
+
+def test_generate_and_upload_card_image(
+    fake_card: "MembershipCard", mock_uploaded_blob
+):
+    card_image_filename = f"{fake_card.serial_number.hex}.png"
+    remote_card_image_path = f"membership-cards/images/{card_image_filename}"
+    return_value = image.generate_and_upload_card_image(
+        membership_card=fake_card,
+        card_image_filename=card_image_filename,
+        remote_card_image_path=remote_card_image_path,
+    )
+
+    assert return_value == mock_uploaded_blob
+
+
+def test_ensure_uploaded_card_image(
+    fake_card: "MembershipCard", mocker: "MockerFixture", mock_uploaded_blob
+):
+    test_bucket_id = mock_uploaded_blob.bucket.id
     card_image_url = image.ensure_uploaded_card_image(
         membership_card=fake_card,
     )
@@ -112,7 +109,3 @@ def test_ensure_uploaded_card_image(
         f"{test_bucket_id}/membership-cards/images/{fake_card.serial_number.hex}.png"
     )
     assert card_image_url == expected_url
-
-    mock_upload.assert_called_once()
-    mock_hti.screenshot.assert_called_once()
-    mock_image.save.assert_called_once()
