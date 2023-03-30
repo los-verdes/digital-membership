@@ -39,50 +39,35 @@ def trim(im):
     return im
 
 
-def get_remote_card_image_url(membership_card):
-    card_image_filename = f"{membership_card.serial_number.hex}.png"
-    remote_card_image_path = f"membership-cards/images/{card_image_filename}"
-    card_image_url = f"{get_bucket().id}/{remote_card_image_path}"
-    return card_image_url
-
-
 def ensure_uploaded_card_image(membership_card):
-    card_image_filename = f"{membership_card.serial_number.hex}.png"
-    remote_card_image_path = f"membership-cards/images/{card_image_filename}"
-
     image_bucket = get_bucket()
-    card_image_url = f"{image_bucket.id}/{remote_card_image_path}"
-    blob = image_bucket.blob(remote_card_image_path)
+    blob = image_bucket.blob(membership_card.remote_image_path)
     if blob.exists():
         logger.info(
-            f"{card_image_filename=} already present / previously uploaded for {membership_card=}: {card_image_url=} ({blob=})"
+            f"{membership_card.remote_image_path} already present / previously uploaded for {membership_card=}: {blob=})"
         )
     else:
         generate_and_upload_card_image(
             membership_card=membership_card,
-            card_image_filename=card_image_filename,
-            remote_card_image_path=remote_card_image_path,
         )
 
-    return card_image_url
+    return f"{image_bucket.id}/{membership_card.remote_image_path}"
 
 
-def generate_and_upload_card_image(
-    membership_card, card_image_filename, remote_card_image_path
-):
+def generate_and_upload_card_image(membership_card):
     with TemporaryDirectory() as image_output_path:
         image_path = generate_card_image(
             membership_card=membership_card,
             output_path=image_output_path,
-            card_image_filename=card_image_filename,
+            card_image_filename=membership_card.image_filename,
         )
 
         blob = upload_file_to_gcs(
             local_file=image_path,
-            remote_path=remote_card_image_path,
+            remote_path=membership_card.remote_image_path,
         )
         logger.info(
-            f"{card_image_filename=} uploaded for {membership_card=}: ({blob=})"
+            f"{membership_card.image_filename=} uploaded for {membership_card=}: ({blob=})"
         )
     return blob
 

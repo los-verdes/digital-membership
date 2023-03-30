@@ -86,12 +86,8 @@ def mock_uploaded_blob(
 def test_generate_and_upload_card_image(
     fake_card: "MembershipCard", mock_uploaded_blob
 ):
-    card_image_filename = f"{fake_card.serial_number.hex}.png"
-    remote_card_image_path = f"membership-cards/images/{card_image_filename}"
     return_value = image.generate_and_upload_card_image(
         membership_card=fake_card,
-        card_image_filename=card_image_filename,
-        remote_card_image_path=remote_card_image_path,
     )
 
     assert return_value == mock_uploaded_blob
