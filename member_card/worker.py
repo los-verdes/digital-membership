@@ -4,31 +4,24 @@ import logging
 
 from flask import Blueprint, current_app, request
 
-from member_card.db import db
-from member_card.image import ensure_uploaded_card_image
-
-from member_card.models import AnnualMembership, User
-from member_card.models.membership_card import get_or_create_membership_card
-from member_card.passes import generate_and_upload_apple_pass
-from member_card.sendgrid import generate_email_message, send_email_message
-
 from member_card import slack
-from member_card.squarespace import (
-    Squarespace,
-    load_single_order,
-)
 from member_card.bigcommerce import (
     bigcommerce_orders_etl,
     get_app_client_for_store,
     load_all_bigcommerce_orders,
 )
+from member_card.db import db
+from member_card.image import ensure_uploaded_card_image
+from member_card.models import AnnualMembership, User
+from member_card.models.membership_card import get_or_create_membership_card
+from member_card.passes import generate_and_upload_apple_pass
+from member_card.sendgrid import generate_email_message, send_email_message
 
 logger = logging.getLogger(__name__)
 
 worker_bp = Blueprint("worker", __name__)
 
 
-# @Timer(name="parse_message")
 def parse_message():
     envelope = request.get_json()
     logger.debug(f"parsing message within {envelope=}")
@@ -82,7 +75,6 @@ def lookup_user_worker(email_address, log_extra=None):
     return user
 
 
-# @Timer(name="process_email_distribution_request")
 def process_email_distribution_request(message):
     logger.debug(f"Processing email distribution request message: {message}")
     email_distribution_recipient = message["email_distribution_recipient"]
@@ -154,7 +146,6 @@ def ensure_uploaded_card_image_worker(message):
     return card_image_url
 
 
-# @Timer(name="sync_subscriptions_etl")
 def sync_subscriptions_etl(message, load_all=False):
     log_extra = dict(pubsub_message=message)
     logger.debug(
@@ -164,27 +155,10 @@ def sync_subscriptions_etl(message, load_all=False):
 
     total_num_memberships_start = db.session.query(AnnualMembership.id).count()
 
-    # membership_skus = current_app.config["MINIBC_MEMBERSHIP_SUBSCRIPTION_ID"]
-    # squarespace = Squarespace(api_key=current_app.config["SQUARESPACE_API_KEY"])
-    # memberships = squarespace_orders_etl(
-    #     squarespace_client=squarespace,
-    #     membership_skus=membership_skus,
-    #     load_all=load_all,
-    # )
-
-    # skus = current_app.config["MINIBC_MEMBERSHIP_SKUS"]
-    # minibc = Minibc(api_key=current_app.config["MINIBC_API_KEY"])
-    # # minibc.search_products()
-    # memberships = minibc_orders_etl(
-    #     minibc_client=minibc,
-    #     skus=skus,
-    #     load_all=load_all,
-    # )
-
     membership_skus = current_app.config["BIGCOMMERCE_MEMBERSHIP_SKUS"]
     store_hash = current_app.config["BIGCOMMERCE_STORE_HASH"]
     bigcommerce_client = get_app_client_for_store(store_hash=store_hash)
-    # minibc.search_products()
+
     if load_all:
         memberships = load_all_bigcommerce_orders(
             bigcommerce_client=bigcommerce_client,
@@ -224,26 +198,13 @@ def sync_subscriptions_etl(message, load_all=False):
     }
 
 
-# @Timer(name="sync_squarespace_order")
 def sync_squarespace_order(message):
     log_extra = dict(pubsub_message=message)
     logger.debug(f"sync_squarespace_order() called with {message=}", extra=log_extra)
     logger.warning("skipping squarespace order syncin...")
     return "nah"
-    order_id = message["order_id"]
-
-    membership_skus = current_app.config["SQUARESPACE_MEMBERSHIP_SKUS"]
-    squarespace = Squarespace(api_key=current_app.config["SQUARESPACE_API_KEY"])
-    memberships = load_single_order(
-        squarespace_client=squarespace,
-        membership_skus=membership_skus,
-        order_id=order_id,
-    )
-    logger.info(f"Sync for {order_id=} completed!: {memberships=}")
-    return memberships
 
 
-# @Timer(name="slack_members_etl")
 def run_slack_members_etl(message):
     log_extra = dict(pubsub_message=message)
     logger.debug(f"run_slack_members_etl() called with {message=}", extra=log_extra)
@@ -274,7 +235,4 @@ def pubsub_ingress():
         return f"Message type {message_type} is unsupported", 400
 
     MESSAGE_TYPE_HANDLERS[message["type"]](message)
-    # if Timer.timers:
-    #     for timer_name, timer_duration in Timer.timers.items():
-    #     logger.info(f"- **{timer_name}**: {timer_duration}")
     return ("", 204)
