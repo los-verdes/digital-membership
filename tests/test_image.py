@@ -1,6 +1,8 @@
+import logging
 from typing import TYPE_CHECKING
 
 import pytest
+from google.cloud.storage.blob import Blob
 
 from member_card import image
 
@@ -59,44 +61,59 @@ def test_trim_with_image_background(untrimmed_with_bg_img: "Image"):
 def mock_uploaded_blob(
     mocker: "MockerFixture",
 ):
+    test_bucket_id = "this-os-a-test-bucket"
+
+    mock_blob = mocker.create_autospec(Blob)
+    mock_blob.exists.return_value = False
+
+    mock_get_bucket = mocker.patch("member_card.image.get_bucket")
+    mock_bucket = mock_get_bucket.return_value
+    mock_bucket.id = test_bucket_id
+    mock_bucket.blob.return_value = mock_blob
+
+    mock_blob.bucket = mock_bucket
+
+    def mock_upload_side_effect(*args, **kwargs):
+        logging.debug(f"mock_upload_side_effect(): {args=} {kwargs=}")
+        mock_blob.exists.return_value = True
+        return mock_blob
+
+    mock_blob.upload_from_filename.side_effect = mock_upload_side_effect
+
+    yield mock_blob
+
+
+@pytest.fixture()
+def mock_image(
+    mocker: "MockerFixture",
+):
     mock_image = mocker.patch("member_card.image.Image")
     # since these Image instances have a bunch of chained calls...:
     chained_image_methods = ["open", "convert", "crop"]
     for chained_image_method in chained_image_methods:
         getattr(mock_image, chained_image_method).return_value = mock_image
-
-    mock_html2image = mocker.patch("member_card.image.Html2Image")
-    mock_hti = mock_html2image.return_value
-    mock_get_bucket = mocker.patch("member_card.image.get_bucket")
-    mock_upload = mocker.patch("member_card.image.upload_file_to_gcs")
-    mock_uploaded_blob = mock_upload.return_value
-    test_bucket_id = "this-os-a-test-bucket"
-    mock_bucket = mock_get_bucket.return_value
-    mock_bucket.blob.return_value = mock_uploaded_blob
-    mock_bucket.id = test_bucket_id
-    mock_uploaded_blob.bucket = mock_bucket
-    mock_uploaded_blob.exists.return_value = False
-    yield mock_uploaded_blob
-
-    mock_upload.assert_called_once()
-    mock_hti.screenshot.assert_called_once()
-    mock_image.save.assert_called_once()
+    return mock_image
 
 
 def test_generate_and_upload_card_image(
-    fake_card: "MembershipCard", mock_uploaded_blob
+    fake_card: "MembershipCard", mocker: "MockerFixture", mock_uploaded_blob, mock_image
 ):
+    mock_html2image = mocker.patch("member_card.image.Html2Image")
+    mock_hti = mock_html2image.return_value
     return_value = image.generate_and_upload_card_image(
         image_bucket=mock_uploaded_blob.bucket,
         membership_card=fake_card,
     )
 
     assert return_value == mock_uploaded_blob
+    mock_hti.screenshot.assert_called_once()
+    mock_image.save.assert_called_once()
 
 
-def test_ensure_uploaded_card_image(
+def test_ensure_uploaded_card_image_no_extant_blob(
     fake_card: "MembershipCard", mocker: "MockerFixture", mock_uploaded_blob
 ):
+    mock_upload = mocker.patch("member_card.image.generate_and_upload_card_image")
     test_bucket_id = mock_uploaded_blob.bucket.id
     card_image_url = image.ensure_uploaded_card_image(
         membership_card=fake_card,
@@ -106,3 +123,4 @@ def test_ensure_uploaded_card_image(
         f"{test_bucket_id}/membership-cards/images/{fake_card.serial_number.hex}.png"
     )
     assert card_image_url == expected_url
+    mock_upload.assert_called()
