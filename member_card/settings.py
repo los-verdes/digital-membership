@@ -293,6 +293,7 @@ class ProductionSettings(Settings):
         self.SQLALCHEMY_ENGINE_OPTIONS = dict(
             creator=engine_creator,
         )
+        logger.debug(f"{self.SQLALCHEMY_ENGINE_OPTIONS=}")
 
     def __init__(self) -> None:
         super().__init__()
@@ -301,7 +302,6 @@ class ProductionSettings(Settings):
         )
         # from: https://realpython.com/flask-google-login/
         self.use_gcp_sql_connector()
-        logger.debug(f"{self.SQLALCHEMY_ENGINE_OPTIONS=}")
 
 
 class DevelopementSettings(Settings):
@@ -318,7 +318,10 @@ class TestSettings(Settings):
 
 
 class RemoteSqlProductionSettings(ProductionSettings):
-    # SQLALCHEMY_DATABASE_URI: str = "postgresql://website%40lv-digital-membership.iam@127.0.0.1:5434/lv-digital-membership"
+    SQLALCHEMY_DATABASE_URI: str = "postgresql://website%40lv-digital-membership.iam@127.0.0.1:5434/lv-digital-membership"
+
+    def use_gcp_sql_connector(self):
+        pass
 
     def __init__(self) -> None:
         super().__init__()
