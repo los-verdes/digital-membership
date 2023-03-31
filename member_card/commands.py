@@ -8,7 +8,7 @@ from sqlalchemy.sql import func
 from member_card import worker
 from member_card.app import app
 from member_card.db import db
-from member_card.gcp import publish_message
+from member_card.gcp import publish_message, get_bucket
 from member_card.image import generate_card_image
 from member_card.minibc import Minibc, parse_subscriptions
 from member_card.models import AnnualMembership, User
@@ -18,6 +18,45 @@ from member_card.passes import gpay
 from member_card.sendgrid import update_sendgrid_template
 
 logger = logging.getLogger(__name__)
+
+
+@app.cli.group()
+def cards():
+    pass
+
+
+@cards.command("detect-missing-card-images")
+def cards_detect_missing_card_images():
+    image_bucket = get_bucket()
+    users = User.query.all()
+    users_missing_card_image = []
+    users_with_card_image = []
+    for num, user in enumerate(users):
+        membership_card = get_or_create_membership_card(
+            user=user,
+        )
+        blob = image_bucket.blob(membership_card.remote_image_path)
+        if blob.exists():
+            users_with_card_image.append(user)
+        else:
+            users_missing_card_image.append(user)
+        if num >= 10:
+            break
+    print(f"#{len(users_missing_card_image)} => {users_missing_card_image}")
+    print(f"#{len(users_with_card_image)}")
+    topic_id = app.config["GCLOUD_PUBSUB_TOPIC_ID"]
+    for user_missing_card_image in users_missing_card_image:
+        logger.info(
+            f"publishing ensure_uploaded_card_image_request message for {user_missing_card_image} to pubsub {topic_id=}"
+        )
+        publish_message(
+            project_id=app.config["GCLOUD_PROJECT"],
+            topic_id=topic_id,
+            message_data=dict(
+                type="ensure_uploaded_card_image_request",
+                member_email_address=user_missing_card_image.email,
+            ),
+        )
 
 
 @app.cli.command("sync-subscriptions")
