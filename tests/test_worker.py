@@ -276,10 +276,9 @@ class TestEnsureCardImage:
         )
         logging.debug(f"{return_value=}")
 
-        assert return_value is None
+        assert return_value is mock_ensure_uploaded_card_image.return_value
 
-        mock_ensure_uploaded_card_image.assert_not_called()
-        mock_ensure_uploaded_card_image.assert_not_called()
+        mock_ensure_uploaded_card_image.assert_called_once()
 
     def test_with_matching_user_with_memberships(self, mocker, fake_member):
         mock_ensure_uploaded_card_image = mocker.patch(

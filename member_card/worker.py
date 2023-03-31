@@ -57,15 +57,15 @@ def process_email_distribution_request(message):
         email_address=email_distribution_recipient,
         log_extra=log_extra,
     )
+    if user is None:
+        logger.warning(
+            "process_email_distribution_request() :: no user found, returning early..."
+        )
+        return
     if not user.has_active_memberships:
         logger.warning(
             f"{user=} has not active memberships! Exiting early...",
             extra=log_extra,
-        )
-        return
-    if user is None:
-        logger.warning(
-            "process_email_distribution_request() :: no user found, returning early..."
         )
         return
 

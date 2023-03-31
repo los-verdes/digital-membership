@@ -40,7 +40,7 @@ def cards_detect_missing_card_images():
             users_with_card_image.append(user)
         else:
             users_missing_card_image.append(user)
-        if num >= 10:
+        if users_missing_card_image:
             break
     print(f"#{len(users_missing_card_image)} => {users_missing_card_image}")
     print(f"#{len(users_with_card_image)}")

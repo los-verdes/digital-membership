@@ -22,8 +22,8 @@ export DIGITAL_MEMBERSHIP_GCP_SQL_CONNECTION_NAME := "lv-digital-membership:us-c
 export DIGITAL_MEMBERSHIP_DB_USERNAME := env_var_or_default("DIGITAL_MEMBERSHIP_DB_USERNAME", `gcloud auth list 2>/dev/null | grep -E '^\*' | awk '{print $2;}'`)
 # export DIGITAL_MEMBERSHIP_DB_USERNAME := "website@lv-digital-membership.iam"
 export DIGITAL_MEMBERSHIP_DB_DATABASE_NAME := "lv-digital-membership"
-export DIGITAL_MEMBERSHIP_BASE_URL := "tunnelcard.losverd.es"
-export SERVER_NAME := "tunnelcard.losverd.es"
+# export DIGITAL_MEMBERSHIP_BASE_URL := "tunnelcard.losverd.es"
+# export SERVER_NAME := "tunnelcard.losverd.es"
 export GCS_BUCKET_ID := "cstatic.losverd.es"
 
 
