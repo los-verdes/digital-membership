@@ -87,20 +87,6 @@ def get_user_or_none(email_address, log_extra=None):
         logger.warning(f"unable to look up user!: {err}", extra=log_extra)
         user = None
 
-    if user is None:
-        logger.warning(
-            f"no matching user found for {email_address=}. Exiting early...",
-            extra=log_extra,
-        )
-        return
-
-    if not user.has_active_memberships:
-        logger.warning(
-            f"{user=} has not active memberships! Exiting early...",
-            extra=log_extra,
-        )
-        return
-
     return user
 
 
