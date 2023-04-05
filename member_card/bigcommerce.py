@@ -8,7 +8,7 @@ import requests
 from bigcommerce.api import BigcommerceApi
 from dateutil.parser import parse
 from flask import current_app
-
+from member_card.utils import sign
 from member_card.db import db, get_or_update
 from member_card.models import table_metadata
 from member_card.models.user import ensure_user
@@ -373,3 +373,8 @@ def load_orders(
     orders = bigcommerce_client.Orders.iterall(**get_orders_query_params)
 
     return orders
+
+
+def generate_webhook_token(api: BigcommerceApi):
+    token_data = f"{api.connection.store_hash}.{api.connection.client_id}"
+    return sign(token_data)
