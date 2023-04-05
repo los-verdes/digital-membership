@@ -209,6 +209,9 @@ class Settings(object):
         for p in os.getenv("MINIBC_MEMBERSHIP_SKUS", "LOSV-MEM-0001").split(",")
     ]
 
+    BIGCOMMERCE_STORE_DOMAIN: str = os.getenv(
+        "BIGCOMMERCE_STORE_DOMAIN", "store.losverdesatx.org"
+    )
     BIGCOMMERCE_CLIENT_ID: str = os.getenv("BIGCOMMERCE_CLIENT_ID", "")
     BIGCOMMERCE_CLIENT_SECRET: str = os.getenv("BIGCOMMERCE_CLIENT_SECRET", "")
     BIGCOMMERCE_ACCESS_TOKEN: str = os.getenv("BIGCOMMERCE_ACCESS_TOKEN", "")
@@ -306,6 +309,10 @@ class ProductionSettings(Settings):
 
 class DevelopmentSettings(Settings):
     SQLALCHEMY_ECHO: bool = False
+    BIGCOMMERCE_STORE_HASH: str = os.getenv("BIGCOMMERCE_STORE_HASH", "kouyh8feen")
+    BIGCOMMERCE_STORE_DOMAIN: str = os.getenv(
+        "BIGCOMMERCE_STORE_DOMAIN", "los-verdes-sandbox.mybigcommerce.com"
+    )
 
 
 class TestSettings(Settings):

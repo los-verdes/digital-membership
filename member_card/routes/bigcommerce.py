@@ -339,20 +339,17 @@ def remove_user():
 
 @bigcommerce_bp.route("/bigcommerce/javascript/<store_hash>.js")
 def render_store_script(store_hash):
-    store = Store.query.filter(Store.store_hash == store_hash).one()
-
     return render_template(
         "bigcommerce_membership_card.js.j2",
-        store_domain="jhog-verde.mybigcommerce.com",
+        store_domain=current_app.config["BIGCOMMERCE_STORE_DOMAIN"],
         member_info_url=unquote(
             url_for(
                 "customer_card_html",
-                store_hash=store.store_hash,
+                store_hash=current_app.config["BIGCOMMERCE_STORE_HASH"],
                 jwt_token=r"${jwt_token}",
                 _external=True,
             )
         ),
         app_client_id=current_app.config["BIGCOMMERCE_CLIENT_ID"],
         widget_id=current_app.config["BIGCOMMERCE_WIDGET_ID"],
-        store=store,
     )
