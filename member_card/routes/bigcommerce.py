@@ -1,4 +1,5 @@
 import logging
+from urllib.parse import unquote
 
 import flask_security
 from bigcommerce.api import BigcommerceApi
@@ -7,20 +8,24 @@ from flask import (
     Response,
     current_app,
     redirect,
+    render_template,
     request,
     session,
     url_for,
-    render_template,
 )
-from urllib.parse import unquote
 
 from member_card.db import db
-
+from member_card.gcp import publish_message
 from member_card.models import Store, StoreUser, User
 from member_card.models.user import add_role_to_user, ensure_user
+from member_card.utils import verify, sign
 
 logger = logging.getLogger(__name__)
 bigcommerce_bp = Blueprint("bigcommerce", __name__)
+
+
+class InvalidBigCommerceWebhookSignature(Exception):
+    pass
 
 
 # @bigcommerce_bp.errorhandler(500)
@@ -46,6 +51,101 @@ def client_secret():
 def jwt_error(e):
     print(f"JWT verification failed: {e}")
     return "Payload verification failed!", 401
+
+
+@bigcommerce_bp.route("/bigcommerce/order-webhook", methods=["POST"])
+def order_webhook():
+    webhook_payload = request.get_json()
+    if webhook_payload is None:
+        # can't very well verify the signature with no signature...
+        raise InvalidBigCommerceWebhookSignature(
+            "unable to verify notification signature!"
+        )
+    incoming_signature = (
+        request.headers.get("authorization").lower().replace("bearer", "").strip()
+    )
+    logger.debug(
+        f"bigcommerce_order_webhook(): INCOMING WEBHOOK YO {webhook_payload=}",
+    )
+
+    data = webhook_payload["data"]
+    data_type = webhook_payload["data"]["type"]
+    hash = webhook_payload["hash"]
+    producer = webhook_payload["producer"]
+    scope = webhook_payload["scope"]
+    store_id = webhook_payload["store_id"]
+    store_hash = producer.split("/", 1)[1]
+
+    log_extra = dict(
+        data=data,
+        data_type=data_type,
+        hash=hash,
+        producer=producer,
+        scope=scope,
+        store_id=store_id,
+        store_hash=store_hash,
+    )
+    logger.debug(
+        f"bigcommerce_order_webhook(): {request.data=}",
+        extra=log_extra,
+    )
+
+    configured_store_hash = current_app.config["BIGCOMMERCE_STORE_HASH"]
+    configured_client_id = current_app.config["BIGCOMMERCE_CLIENT_ID"]
+    if store_hash != configured_store_hash:
+        error_msg = f"Refusing to process webhook payload for {store_hash=} (not in {configured_store_hash=})"
+        logger.warning(error_msg, extra=log_extra)
+        return error_msg, 403
+
+    logger.debug(
+        f"Verifying webhook payload signature ({incoming_signature=})", extra=log_extra
+    )
+
+    expected_token_data = f"{configured_store_hash}.{configured_client_id}"
+    expected_signature = sign(expected_token_data).lower()
+    # is_verified = verify(incoming_signature, expected_token_data)
+    # print(f"{is_verified=}")
+    # breakpoint()
+    if not incoming_signature == expected_signature:
+        logger.warning(
+            f"Unable to verify {incoming_signature} for {hash=}.",
+            extra=log_extra,
+        )
+        raise InvalidBigCommerceWebhookSignature(
+            "unable to verify notification signature!"
+        )
+
+    if data_type == "order":
+        message_data = dict(
+            type="sync_bigcommerce_order",
+            data=data,
+            data_type=data_type,
+            hash=hash,
+            producer=producer,
+            scope=scope,
+            store_id=store_id,
+            store_hash=store_hash,
+        )
+
+        topic_id = current_app.config["GCLOUD_PUBSUB_TOPIC_ID"]
+        log_extra = dict(
+            message_data=message_data,
+            topic_id=topic_id,
+        )
+
+        logger.info(
+            f"publishing sync_order message to pubsub {topic_id=} with data: {message_data=}",
+            extra=log_extra,
+        )
+        publish_message(
+            project_id=current_app.config["GCLOUD_PROJECT"],
+            topic_id=topic_id,
+            message_data=message_data,
+        )
+    else:
+        # raise NotImplementedError(f"No handler available for {data_type=}")
+        logger.warning(f"No handler available for {data_type=}")
+    return "Got it, thanks! :)"
 
 
 # The Auth Callback URL. See https://developer.bigcommerce.com/api/callback
