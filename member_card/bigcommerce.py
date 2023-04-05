@@ -314,6 +314,20 @@ def load_all_bigcommerce_orders(
     return memberships
 
 
+def load_single_order(
+    bigcommerce_client: BigcommerceApi, membership_skus: List[str], order_id: str
+):
+    subscription_order = bigcommerce_client.Orders.get(order_id)
+    logger.debug(f"API response for {order_id=}: {subscription_order=}")
+    memberships = parse_subscription_orders(
+        bigcommerce_client=bigcommerce_client,
+        membership_skus=membership_skus,
+        subscription_orders=[subscription_order],
+    )
+    logger.debug(f"After parsing subscription orders: {memberships=}")
+    return memberships
+
+
 def bigcommerce_orders_etl(
     bigcommerce_client: BigcommerceApi, membership_skus: List[str]
 ):

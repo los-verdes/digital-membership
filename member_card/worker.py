@@ -176,6 +176,26 @@ def sync_squarespace_order(message):
     return "nah"
 
 
+def sync_bigcommerce_order(message):
+    log_extra = dict(pubsub_message=message)
+    configured_store_hash = current_app.config["BIGCOMMERCE_STORE_HASH"]
+    store_hash = message["store_hash"]
+    if store_hash != configured_store_hash:
+        error_msg = f"Ignoring 'sync_bigcommerce_order' message for {store_hash=} (not in {configured_store_hash=})"
+        logger.warning(error_msg, extra=log_extra)
+        return error_msg, 200
+
+    logger.debug(f"sync_bigcommerce_order() called with {message=}", extra=log_extra)
+    membership_skus = current_app.config["BIGCOMMERCE_MEMBERSHIP_SKUS"]
+    bigcommerce_client = bigcommerce.get_app_client_for_store()
+    bigcommerce.load_single_order(
+        bigcommerce_client=bigcommerce_client,
+        membership_skus=membership_skus,
+        order_id=message["data"]["id"],
+    )
+    return "nah"
+
+
 def run_slack_members_etl(message):
     log_extra = dict(pubsub_message=message)
     logger.debug(f"run_slack_members_etl() called with {message=}", extra=log_extra)
@@ -197,6 +217,7 @@ def pubsub_ingress():
         "email_distribution_request": process_email_distribution_request,
         "sync_subscriptions_etl": sync_subscriptions_etl,
         "sync_squarespace_order": sync_squarespace_order,
+        "sync_bigcommerce_order": sync_bigcommerce_order,
         "run_slack_members_etl": run_slack_members_etl,
         "ensure_uploaded_card_image_request": process_ensure_uploaded_card_image_request,
     }

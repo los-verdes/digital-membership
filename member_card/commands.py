@@ -326,11 +326,23 @@ def bigcomm():
     pass
 
 
-@bigcomm.command("ensure-scripts")
-@click.argument("store_hash")
-def bigcommerce_ensure_scripts(store_hash):
-    from member_card import bigcommerce
+@bigcomm.command("load-single-order")
+@click.argument("order_id")
+def bigcommerce_load_single_order(order_id):
+    logger.debug(f"bigcommerce_load_single_order() called with {order_id=}")
+    membership_skus = app.config["BIGCOMMERCE_MEMBERSHIP_SKUS"]
+    bigcommerce_client = bigcommerce.get_app_client_for_store()
+    memberships = bigcommerce.load_single_order(
+        bigcommerce_client=bigcommerce_client,
+        membership_skus=membership_skus,
+        order_id=order_id,
+    )
+    print(f"{memberships=}")
+    return memberships
 
+
+@bigcomm.command("ensure-scripts")
+def bigcommerce_ensure_scripts():
     requisite_scripts = {
         "bigcommerce_membership_card.min.js": dict(
             name="LV Membership Cards",
