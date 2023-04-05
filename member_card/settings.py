@@ -304,7 +304,7 @@ class ProductionSettings(Settings):
         self.use_gcp_sql_connector()
 
 
-class DevelopementSettings(Settings):
+class DevelopmentSettings(Settings):
     SQLALCHEMY_ECHO: bool = False
 
 
@@ -333,6 +333,7 @@ def get_settings_obj_for_env(env: str = None, default_settings_class=Settings):
 
     settings_objs_by_env = {
         "compose": DockerComposeSettings,
+        "development": DevelopmentSettings,
         "production": ProductionSettings,
         "remote-sql": RemoteSqlProductionSettings,
         "tests": TestSettings,
