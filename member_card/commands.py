@@ -338,7 +338,7 @@ def bigcommerce_ensure_scripts(store_hash):
     missing_script_filenames = set(requisite_scripts.keys())
     # missing_scripts =
 
-    app_client = bigcommerce.get_bespoke_client_for_store(store_hash=store_hash)
+    app_client = bigcommerce.get_bespoke_client_for_store()
     get_all_scripts_resp = app_client.get_all_scripts()
     print(f"{get_all_scripts_resp=}")
 
@@ -372,19 +372,15 @@ def bigcommerce_ensure_scripts(store_hash):
 
 
 @bigcomm.command("ensure-widget-placement")
-@click.argument("store_hash")
 @click.argument("widget_name", default="membership_info")
 @click.argument("region_name", default="membership_info")
 def bigcommerce_ensure_widget_placement(
-    store_hash,
     # widget_uuid='6a7028ed-5d40-4630-b0c4-465e4ea73a65',
     widget_name,
     region_name,
 ):
-    from member_card import bigcommerce
-
-    print(f"bigcommerce_ensure_widget_placement(): {store_hash=} {widget_name=}")
-    app_client = bigcommerce.get_bespoke_client_for_store(store_hash=store_hash)
+    print(f"bigcommerce_ensure_widget_placement(): {widget_name=}")
+    app_client = bigcommerce.get_bespoke_client_for_store()
 
     get_all_widgets_resp = app_client.get_all_widgets()
     print(f"{get_all_widgets_resp=}")

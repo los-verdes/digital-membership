@@ -23,8 +23,7 @@ def test_get_bespoke_client_for_store(
     app: "Flask", fake_card: "MembershipCard", mocker: "MockerFixture"
 ):
     mock_bigcomm_api = mocker.patch("member_card.bigcommerce.BiggercommerceApi")
-    mock_store_hash = "mock_store_hash"
-    app_client = bigcommerce.get_bespoke_client_for_store(store_hash=mock_store_hash)
+    app_client = bigcommerce.get_bespoke_client_for_store()
     assert app_client == mock_bigcomm_api.return_value
 
 

@@ -16,8 +16,9 @@ from member_card.models.user import ensure_user
 logger = logging.getLogger(__name__)
 
 
-def get_app_client_for_store(store_hash) -> BigcommerceApi:
+def get_app_client_for_store() -> BigcommerceApi:
     # store = Store.query.filter(Store.store_hash == store_hash).one()
+    store_hash = current_app.config["BIGCOMMERCE_STORE_HASH"]
     app_client = BigcommerceApi(
         client_id=current_app.config["BIGCOMMERCE_CLIENT_ID"],
         store_hash=store_hash,
@@ -27,7 +28,8 @@ def get_app_client_for_store(store_hash) -> BigcommerceApi:
     return app_client
 
 
-def get_bespoke_client_for_store(store_hash):
+def get_bespoke_client_for_store():
+    store_hash = current_app.config["BIGCOMMERCE_STORE_HASH"]
     app_client = BiggercommerceApi(
         client_id=current_app.config["BIGCOMMERCE_CLIENT_ID"],
         store_hash=store_hash,
