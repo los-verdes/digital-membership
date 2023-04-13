@@ -225,7 +225,7 @@ def insert_order_as_membership(order, order_products, membership_skus):
 
         # customer_email = order["customerEmail"]
         variant_id = None
-        if subscription_line_item["product_options"]:
+        if subscription_line_item.get("product_options"):
             variant_id = subscription_line_item["product_options"][0]["id"]
 
         customer_email = order["billing_address"]["email"].lower()

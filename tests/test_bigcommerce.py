@@ -38,6 +38,61 @@ def bigcomm_app_client() -> "Flask":
     yield app_client
 
 
+@pytest.fixture()
+def mock_order():
+    mock_store_hash = "mock_store_hash"
+    return {
+        "id": 100,
+        "customer_id": 20,
+        "cart_id": 30,
+        "date_created": "Wed, 10 Jan 2018 21:05:30 +0000",
+        "date_modified": "Wed, 05 Dec 2018 20:16:55 +0000",
+        "date_shipped": "",
+        "status_id": 11,
+        "status": "Awaiting Fulfillment",
+        "billing_address": {
+            "first_name": "Jane",
+            "last_name": "Doe",
+            "company": "",
+            "street_1": "455 Main Street",
+            "street_2": "",
+            "city": "Austin",
+            "state": "Texas",
+            "zip": "78751",
+            "country": "United States",
+            "country_iso2": "US",
+            "phone": "",
+            "email": "janedoe@example.com",
+            "form_fields": [],
+        },
+        "is_email_opt_in": False,
+        "credit_card_type": None,
+        "order_source": "manual",
+        "channel_id": 1,
+        "external_source": "POS",
+        "products": {
+            "url": f"https://api.bigcommerce.com/stores/{mock_store_hash}/v2/orders/100/products",
+            "resource": "/orders/100/products",
+        },
+        "shipping_addresses": {
+            "url": f"https://api.bigcommerce.com/stores/{mock_store_hash}/v2/orders/100/shippingaddresses",
+            "resource": "/orders/100/shippingaddresses",
+        },
+        "coupons": {
+            "url": f"https://api.bigcommerce.com/stores/{mock_store_hash}/v2/orders/100/coupons",
+            "resource": "/orders/100/coupons",
+        },
+        "external_id": None,
+        "external_merchant_id": {},
+        "tax_provider_id": "BasicTaxProvider",
+        "store_default_currency_code": "",
+        "store_default_to_transactional_exchange_rate": "1.0000000000",
+        "custom_status": "Awaiting Fulfillment",
+        "customer_locale": "en",
+        "external_order_id": "external-order-id",
+    }
+
+
 class TestBiggercommerceApi:
     def test_get_all_scripts(
         self, requests_mock: "RequestsMockFixture", bigcomm_app_client
@@ -128,3 +183,67 @@ class TestBiggercommerceApi:
             min_date_created="yesterday", max_date_created="tomorrow"
         )
         assert return_value
+
+
+def test_insert_order_as_membership(app: "Flask", mock_order):
+    with app.app_context():
+        returned_membership_orders = bigcommerce.insert_order_as_membership(
+            order=mock_order,
+            order_products=[
+                dict(
+                    id=1,
+                    product_id=123,
+                    name="LOS VERDES TEST MEMBERSHIP!",
+                    sku=app.config["BIGCOMMERCE_MEMBERSHIP_SKUS"][0],
+                ),
+            ],
+            membership_skus=app.config["BIGCOMMERCE_MEMBERSHIP_SKUS"],
+        )
+    assert len(returned_membership_orders) == 1
+    assert (
+        returned_membership_orders[0].customer_email
+        == mock_order["billing_address"]["email"]
+    )
+
+
+def test_insert_shipped_order_as_membership(app: "Flask", mock_order):
+    mock_order["date_shipped"] = "2023-01-02T11:22:33Z"
+    with app.app_context():
+        returned_membership_orders = bigcommerce.insert_order_as_membership(
+            order=mock_order,
+            order_products=[
+                dict(
+                    id=1,
+                    product_id=123,
+                    name="LOS VERDES TEST MEMBERSHIP!",
+                    sku=app.config["BIGCOMMERCE_MEMBERSHIP_SKUS"][0],
+                    product_options=[dict(id=1)],
+                ),
+            ],
+            membership_skus=app.config["BIGCOMMERCE_MEMBERSHIP_SKUS"],
+        )
+    assert len(returned_membership_orders) == 1
+    assert returned_membership_orders[0].fulfilled_on is not None
+
+
+def test_parse_subscription_orders(app: "Flask", mock_order, mocker):
+    mock_bigcomm_api_class = mocker.patch("member_card.bigcommerce.BiggercommerceApi")
+    mock_bigcomm_api = mock_bigcomm_api_class()
+    mock_bigcomm_api.OrderProducts.all.return_value = [
+        dict(
+            id=1,
+            product_id=123,
+            name="LOS VERDES TEST MEMBERSHIP!",
+            sku=app.config["BIGCOMMERCE_MEMBERSHIP_SKUS"][0],
+            product_options=[dict(id=1)],
+        ),
+    ]
+    mock_order["date_shipped"] = "2023-01-02T11:22:33Z"
+    with app.app_context():
+        returned_membership_orders = bigcommerce.parse_subscription_orders(
+            bigcommerce_client=mock_bigcomm_api,
+            membership_skus=app.config["BIGCOMMERCE_MEMBERSHIP_SKUS"],
+            subscription_orders=[mock_order],
+        )
+        assert len(returned_membership_orders) == 1
+        assert returned_membership_orders[0].fulfilled_on is not None
