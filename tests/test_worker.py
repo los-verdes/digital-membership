@@ -131,13 +131,12 @@ class TestPubsubIngress:
         mock_orders_iterall.return_value = mock_orders
         mock_bigcomm_api.Orders.return_value = mock_orders_iterall
 
-        mock_get_app_client_for_store = mocker.patch(
-            "member_card.worker.get_app_client_for_store"
-        )
+        mock_bigcomm = mocker.patch("member_card.worker.bigcommerce")
+        mock_get_app_client_for_store = mock_bigcomm.get_app_client_for_store
+
         mock_get_app_client_for_store.return_value = mock_bigcomm_api
-        mock_bigcommerce_orders_etl = mocker.patch(
-            "member_card.worker.bigcommerce_orders_etl"
-        )
+        mock_bigcommerce = mocker.patch("member_card.worker.bigcommerce")
+        mock_bigcommerce_orders_etl = mock_bigcommerce.bigcommerce_orders_etl
         test_message = dict(
             type="sync_subscriptions_etl",
         )

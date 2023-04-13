@@ -18,7 +18,7 @@ from member_card.db import db
 from member_card.gcp import publish_message
 from member_card.models import Store, StoreUser, User
 from member_card.models.user import add_role_to_user, ensure_user
-from member_card.utils import verify, sign
+from member_card.utils import sign
 
 logger = logging.getLogger(__name__)
 bigcommerce_bp = Blueprint("bigcommerce", __name__)
