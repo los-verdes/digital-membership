@@ -256,19 +256,18 @@ def insert_order_as_membership(order, order_products, membership_skus):
             filters=["order_id"],
             kwargs=membership_kwargs,
         )
-        membership_orders.append(membership)
+        db.session.add(membership)
 
         membership_user = ensure_user(
             email=membership.customer_email,
             first_name=membership.billing_address_first_name,
             last_name=membership.billing_address_last_name,
         )
-        membership_user_id = membership_user.id
-        if not membership.user_id:
-            logger.debug(
-                f"No user_id set for {membership=}! Setting to: {membership_user_id=}"
-            )
-            setattr(membership, "user_id", membership_user_id)
+        db.session.add(membership_user)
+        setattr(membership, "user_id", membership_user.id)
+
+        membership_orders.append(membership)
+
     return membership_orders
 
 
@@ -294,8 +293,7 @@ def parse_subscription_orders(bigcommerce_client, membership_skus, subscription_
             order_products=bigcommerce_client.OrderProducts.all(order["id"]),
             membership_skus=membership_skus,
         )
-        for membership_order in membership_orders:
-            db.session.add(membership_order)
+
         db.session.commit()
         memberships += membership_orders
     return memberships

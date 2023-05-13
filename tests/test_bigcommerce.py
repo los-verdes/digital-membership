@@ -247,3 +247,18 @@ def test_parse_subscription_orders(app: "Flask", mock_order, mocker):
         )
         assert len(returned_membership_orders) == 1
         assert returned_membership_orders[0].fulfilled_on is not None
+
+
+def test_load_all_bigcommerce_orders(app: "Flask", mocker):
+    mock_bigcomm_api_class = mocker.patch("member_card.bigcommerce.BiggercommerceApi")
+    mock_bigcomm_api = mock_bigcomm_api_class()
+    mock_load_orders = mocker.patch("member_card.bigcommerce.load_orders")
+    mock_parse_subscription_orders = mocker.patch("member_card.bigcommerce.parse_subscription_orders")
+    return_value = bigcommerce.load_all_bigcommerce_orders(
+        bigcommerce_client=mock_bigcomm_api,
+        membership_skus=app.config["BIGCOMMERCE_MEMBERSHIP_SKUS"],
+    )
+    mock_load_orders.assert_called_once_with(
+        bigcommerce_client=mock_bigcomm_api,
+        membership_skus=app.config["BIGCOMMERCE_MEMBERSHIP_SKUS"],
+    )
