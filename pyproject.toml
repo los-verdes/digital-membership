@@ -60,7 +60,15 @@ pytest-cov = "^4.0.0"
 pytest-github-report = "^0.0.1"
 pytest-mock = "^3.10.0"
 requests-mock = "^1.10.0"
+ruff = "^0.0.267"
+
+
+[tool.poetry.group.dev.dependencies]
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+# Same as Black.
+line-length = 180
