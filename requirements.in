@@ -1,5 +1,5 @@
 bigcommerce
-cloud-sql-python-connector[pg8000]>=0.5.1
+cloud-sql-python-connector[pg8000]
 codetiming
 email-validator
 flask

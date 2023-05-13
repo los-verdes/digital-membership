@@ -32,8 +32,7 @@ def ensure_login_required(client: "FlaskClient", path, method="GET"):
     # Check that we've been redirected to the login page:
     assert response.status_code == 302
     next_param = quote_plus(path)
-    assert response.location == f"http://localhost/login?next={next_param}"
-
+    assert f"/login?next={next_param}" in response.location
 
 def test_db_commit_on_teardown(app, client, mocker):
     from member_card.db import db
