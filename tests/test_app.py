@@ -34,6 +34,7 @@ def ensure_login_required(client: "FlaskClient", path, method="GET"):
     next_param = quote_plus(path)
     assert f"/login?next={next_param}" in response.location
 
+
 def test_db_commit_on_teardown(app, client, mocker):
     from member_card.db import db
 
