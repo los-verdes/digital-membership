@@ -1,6 +1,6 @@
 import pytest
 from typing import TYPE_CHECKING
-
+from member_card.models import AnnualMembership
 from member_card import bigcommerce
 
 if TYPE_CHECKING:
@@ -199,11 +199,13 @@ def test_insert_order_as_membership(app: "Flask", mock_order):
             ],
             membership_skus=app.config["BIGCOMMERCE_MEMBERSHIP_SKUS"],
         )
-    assert len(returned_membership_orders) == 1
-    assert (
-        returned_membership_orders[0].customer_email
-        == mock_order["billing_address"]["email"]
-    )
+
+        assert len(returned_membership_orders) == 1
+
+        order_instance = AnnualMembership.query.filter_by(
+            order_id=f'{mock_order["id"]}_bc'
+        ).one()
+        assert order_instance.customer_email == mock_order["billing_address"]["email"]
 
 
 def test_insert_shipped_order_as_membership(app: "Flask", mock_order):
@@ -222,8 +224,13 @@ def test_insert_shipped_order_as_membership(app: "Flask", mock_order):
             ],
             membership_skus=app.config["BIGCOMMERCE_MEMBERSHIP_SKUS"],
         )
-    assert len(returned_membership_orders) == 1
-    assert returned_membership_orders[0].fulfilled_on is not None
+
+        assert len(returned_membership_orders) == 1
+
+        order_instance = AnnualMembership.query.filter_by(
+            order_id=f'{mock_order["id"]}_bc'
+        ).one()
+        assert order_instance.fulfilled_on is not None
 
 
 def test_parse_subscription_orders(app: "Flask", mock_order, mocker):
@@ -253,8 +260,8 @@ def test_load_all_bigcommerce_orders(app: "Flask", mocker):
     mock_bigcomm_api_class = mocker.patch("member_card.bigcommerce.BiggercommerceApi")
     mock_bigcomm_api = mock_bigcomm_api_class()
     mock_load_orders = mocker.patch("member_card.bigcommerce.load_orders")
-    mock_parse_subscription_orders = mocker.patch("member_card.bigcommerce.parse_subscription_orders")
-    return_value = bigcommerce.load_all_bigcommerce_orders(
+    mocker.patch("member_card.bigcommerce.parse_subscription_orders")
+    bigcommerce.load_all_bigcommerce_orders(
         bigcommerce_client=mock_bigcomm_api,
         membership_skus=app.config["BIGCOMMERCE_MEMBERSHIP_SKUS"],
     )
