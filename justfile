@@ -125,7 +125,8 @@ serve: onepass_session
   #!/bin/zsh
   # source /Users/jeffwecan/.pyenv/versions/3.9.2/bin/virtualenvwrapper.sh
   # workon digital-membership
-  op run --env-file='./.env' -- \
+  export DIGITAL_MEMBERSHIP_SECRETS_JSON="op://Los Verdes/digital-membership_local_dev_secrets/value"
+  op run -- \
     just flask run --cert=tmp-certs/flask-cert.pem --key=tmp-certs/flask-key.pem --host=0.0.0.0 --port=8080
 
 build-website:
