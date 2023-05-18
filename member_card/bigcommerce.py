@@ -214,7 +214,7 @@ def insert_order_as_membership(order, order_products, membership_skus):
     subscription_line_items = [i for i in line_items if i["sku"] in membership_skus]
     ignored_line_items = [i for i in line_items if i["sku"] not in membership_skus]
     logger.debug(f"{ignored_line_items=}")
-    # customer_id = order['customer_id']
+    customer_id = order["customer_id"]
     for subscription_line_item in subscription_line_items:
         fulfillment_status = order["status"]
         # breakpoint()
@@ -262,6 +262,7 @@ def insert_order_as_membership(order, order_products, membership_skus):
             email=membership.customer_email,
             first_name=membership.billing_address_first_name,
             last_name=membership.billing_address_last_name,
+            bigcommerce_id=customer_id,
         )
         db.session.add(membership_user)
         setattr(membership, "user_id", membership_user.id)
