@@ -269,3 +269,23 @@ def test_load_all_bigcommerce_orders(app: "Flask", mocker):
         bigcommerce_client=mock_bigcomm_api,
         membership_skus=app.config["BIGCOMMERCE_MEMBERSHIP_SKUS"],
     )
+
+
+def test_load_single_order(app: "Flask", mock_order, mocker):
+    mock_bigcomm_api_class = mocker.patch("member_card.bigcommerce.BigcommerceApi")
+    mock_bigcomm_api = mock_bigcomm_api_class()
+    mock_parser_orders = mocker.patch(
+        "member_card.bigcommerce.parse_subscription_orders"
+    )
+    mock_bigcomm_api.Orders.get.return_value = mock_order
+    bigcommerce.load_single_order(
+        bigcommerce_client=mock_bigcomm_api,
+        membership_skus=app.config["BIGCOMMERCE_MEMBERSHIP_SKUS"],
+        order_id=mock_order["id"],
+    )
+    mock_bigcomm_api.Orders.get.assert_called_once_with(mock_order["id"])
+    mock_parser_orders.assert_called_once_with(
+        bigcommerce_client=mock_bigcomm_api,
+        membership_skus=app.config["BIGCOMMERCE_MEMBERSHIP_SKUS"],
+        subscription_orders=[mock_order],
+    )
