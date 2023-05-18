@@ -509,3 +509,11 @@ def ensure_order_webhook(
             k: f"...{v[-2:]}" for k, v in webhooks_create_resp["headers"].items()
         }
         print(f"add_webhooks(): {webhooks_create_resp=}")
+
+
+@bigcomm.command("sync-customers")
+def bigcomm_sync_customers():
+    etl_results = worker.sync_customers_etl(
+        message=dict(type="cli-sync-customers"),
+    )
+    logger.info(f"bigcomm_sync_customers() => {etl_results=}")

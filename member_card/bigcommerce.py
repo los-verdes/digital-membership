@@ -10,7 +10,7 @@ from dateutil.parser import parse
 from flask import current_app
 from member_card.utils import sign
 from member_card.db import db, get_or_update
-from member_card.models import table_metadata
+from member_card.models import table_metadata, User
 from member_card.models.user import ensure_user
 
 logger = logging.getLogger(__name__)
@@ -391,3 +391,18 @@ def load_orders(
 def generate_webhook_token(api: BigcommerceApi):
     token_data = f"{api.connection.store_hash}.{api.connection.client_id}"
     return sign(token_data)
+
+
+def customer_etl(bigcommerce_client: BigcommerceApi):
+    customers = bigcommerce_client.Customers.iterall()
+    for num, customer in enumerate(customers):
+        customer_email = customer["email"].lower()
+        print(f"{num}: {customer['email']=}")
+        extant_user = User.query.filter_by(bigcommerce_id=customer["id"]).first()
+        if extant_user is not None:
+            if customer_email != extant_user.email:
+                logger.debug(f"Update {extant_user=} email to {customer_email=}")
+                setattr(extant_user, "email", customer_email)
+                db.session.add(extant_user)
+
+    db.session.commit()

@@ -206,6 +206,24 @@ def run_slack_members_etl(message):
     return slack_users
 
 
+def sync_customers_etl(message):
+    log_extra = dict(pubsub_message=message)
+    logger.debug(
+        f"sync_customers_etl(): Processing message: {message}",
+        extra=log_extra,
+    )
+
+    bigcommerce_client = bigcommerce.get_app_client_for_store()
+
+    etl_result = bigcommerce.customer_etl(
+        bigcommerce_client=bigcommerce_client,
+    )
+    logger.debug(
+        f"sync_customers_etl(): {etl_result=}",
+        extra=log_extra,
+    )
+
+
 @worker_bp.route("/pubsub", methods=["POST"])
 def pubsub_ingress():
     try:
@@ -216,6 +234,7 @@ def pubsub_ingress():
     MESSAGE_TYPE_HANDLERS = {
         "email_distribution_request": process_email_distribution_request,
         "sync_subscriptions_etl": sync_subscriptions_etl,
+        "sync_customers_etl": sync_customers_etl,
         "sync_squarespace_order": sync_squarespace_order,
         "sync_bigcommerce_order": sync_bigcommerce_order,
         "run_slack_members_etl": run_slack_members_etl,
