@@ -395,13 +395,23 @@ def generate_webhook_token(api: BigcommerceApi):
 def customer_etl(bigcommerce_client: BigcommerceApi):
     customers = bigcommerce_client.Customers.iterall()
     for num, customer in enumerate(customers):
+        bigcommerce_id = customer["id"]
         customer_email = customer["email"].lower()
         print(f"{num}: {customer['email']=}")
-        extant_user = User.query.filter_by(bigcommerce_id=customer["id"]).first()
-        if extant_user is not None:
-            if customer_email != extant_user.email:
-                logger.debug(f"Update {extant_user=} email to {customer_email=}")
-                setattr(extant_user, "email", customer_email)
-                db.session.add(extant_user)
+        if extant_user_by_email := User.query.filter_by(email=customer_email).first():
+            if extant_user_by_email.bigcommerce_id != bigcommerce_id:
+                logger.debug(
+                    f"Update {extant_user_by_email=} bigcommerce_id to {bigcommerce_id=}"
+                )
+                setattr(extant_user_by_email, "bigcommerce_id", bigcommerce_id)
+                db.session.add(extant_user_by_email)
+
+        if extant_user_by_id := User.query.filter_by(
+            bigcommerce_id=bigcommerce_id
+        ).first():
+            if customer_email != extant_user_by_id.email:
+                logger.debug(f"Update {extant_user_by_id=} email to {customer_email=}")
+                setattr(extant_user_by_id, "email", customer_email)
+                db.session.add(extant_user_by_id)
 
     db.session.commit()
