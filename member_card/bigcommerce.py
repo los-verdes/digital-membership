@@ -358,7 +358,6 @@ def load_orders(
     membership_skus: List[str],
     min_date_created=None,
     max_date_created=None,
-    sort: str = "date_created:asc",
 ):
     # ) -> List[AnnualMembership]:
     # remove "None"s

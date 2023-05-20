@@ -102,6 +102,7 @@ def create_fake_user(app: "Flask", email):
     # user.id = user_id
     user.password = "mypassword"
     user.active = True
+    user.bigcommerce_id = 1
     return user
 
 
