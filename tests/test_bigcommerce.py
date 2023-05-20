@@ -331,16 +331,45 @@ def test_generate_webhook_token(app: "Flask", mocker):
     assert returned_token
 
 
-def test_customer_etl(app: "Flask", mocker):
-    mock_bigcomm_api_class = mocker.patch("member_card.bigcommerce.BigcommerceApi")
-    mock_bigcomm_api = mock_bigcomm_api_class()
-    mock_customers_iterall = mock_bigcomm_api.Customers.iterall
-    mock_customers_iterall.return_value = [
-        dict(id=1, email="los.verdes.tester.updated@gmail.com")
-    ]
+class TestBigcommerceCustomerEtl:
+    def test_no_matching_user(self, app: "Flask", mocker):
+        mock_bigcomm_api_class = mocker.patch("member_card.bigcommerce.BigcommerceApi")
+        mock_bigcomm_api = mock_bigcomm_api_class()
+        mock_customers_iterall = mock_bigcomm_api.Customers.iterall
+        mock_customers_iterall.return_value = [
+            dict(id=1000, email="los.verdes.tester.updated@gmail.com")
+        ]
 
-    with app.app_context():
-        bigcommerce.customer_etl(
-            bigcommerce_client=mock_bigcomm_api,
-        )
-    mock_customers_iterall.assert_called_once()
+        with app.app_context():
+            bigcommerce.customer_etl(
+                bigcommerce_client=mock_bigcomm_api,
+            )
+        mock_customers_iterall.assert_called_once()
+
+    def test_extant_user_by_email(self, app: "Flask", mocker, fake_user):
+        mock_bigcomm_api_class = mocker.patch("member_card.bigcommerce.BigcommerceApi")
+        mock_bigcomm_api = mock_bigcomm_api_class()
+        mock_customers_iterall = mock_bigcomm_api.Customers.iterall
+        mock_customers_iterall.return_value = [
+            dict(id=2, email="los.verdes.tester@gmail.com")
+        ]
+
+        with app.app_context():
+            bigcommerce.customer_etl(
+                bigcommerce_client=mock_bigcomm_api,
+            )
+        mock_customers_iterall.assert_called_once()
+
+    def test_extant_user_by_id(self, app: "Flask", mocker, fake_user):
+        mock_bigcomm_api_class = mocker.patch("member_card.bigcommerce.BigcommerceApi")
+        mock_bigcomm_api = mock_bigcomm_api_class()
+        mock_customers_iterall = mock_bigcomm_api.Customers.iterall
+        mock_customers_iterall.return_value = [
+            dict(id=1, email="los.verdes.tester.updated@gmail.com")
+        ]
+
+        with app.app_context():
+            bigcommerce.customer_etl(
+                bigcommerce_client=mock_bigcomm_api,
+            )
+        mock_customers_iterall.assert_called_once()

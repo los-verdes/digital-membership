@@ -294,3 +294,35 @@ class TestEnsureCardImage:
         logging.debug(f"{return_value=}")
 
         mock_ensure_uploaded_card_image.assert_called_once()
+
+
+def test_worker_sync_customers_etl(mocker):
+    mock_bigcommerce = mocker.patch("member_card.worker.bigcommerce")
+    test_message = dict(
+        type="sync_customers_etl",
+    )
+
+    return_value = worker.sync_customers_etl(
+        message=test_message,
+    )
+    logging.debug(f"{return_value=}")
+
+    assert return_value is None
+
+    mock_bigcommerce.customer_etl.assert_called_once()
+
+
+def test_worker_run_slack_members_etl(mocker):
+    mock_slack = mocker.patch("member_card.worker.slack")
+    test_message = dict(
+        type="run_slack_members_etl",
+    )
+
+    return_value = worker.run_slack_members_etl(
+        message=test_message,
+    )
+    logging.debug(f"{return_value=}")
+
+    assert return_value
+
+    mock_slack.slack_members_etl.assert_called_once()
