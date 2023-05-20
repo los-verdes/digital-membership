@@ -267,6 +267,8 @@ class TestCommands:
             updated_fake_user = User.query.filter_by(id=fake_user.id).one()
             assert updated_fake_user.has_role(fake_admin_role)
 
+
+class TesBigcommCommands:
     def test_bigcommerce_load_single_order(
         self, app: "Flask", runner: "FlaskCliRunner", mocker: "MockerFixture"
     ):
@@ -282,4 +284,41 @@ class TestCommands:
             membership_skus=membership_skus,
             order_id=fake_order_id,
         )
+        assert result.exit_code == 0
+
+    def test_bigcommerce_list_webhooks(
+        self, app: "Flask", runner: "FlaskCliRunner", mocker: "MockerFixture"
+    ):
+        mock_bigcommerce = mocker.patch("member_card.commands.bigcommerce")
+        mock_bigcomm_client = mock_bigcommerce.get_app_client_for_store.return_value
+
+        result = runner.invoke(
+            args=["bigcomm", "list-webhooks"],
+        )
+        mock_bigcomm_client.Webhooks.all.assert_called_once()
+        assert result.exit_code == 0
+
+    def test_ensure_order_webhook_no_extant_hooks(
+        self, app: "Flask", runner: "FlaskCliRunner", mocker: "MockerFixture"
+    ):
+        mock_bigcommerce = mocker.patch("member_card.commands.bigcommerce")
+        mock_bigcomm_client = mock_bigcommerce.get_app_client_for_store.return_value
+
+        result = runner.invoke(
+            args=["bigcomm", "ensure-order-webhook"],
+        )
+
+        mock_bigcommerce.generate_webhook_token.assert_called_once()
+        mock_bigcomm_client.Webhooks.create.assert_called_once()
+        assert result.exit_code == 0
+
+    def test_bigcommerce_sync_customers(
+        self, app: "Flask", runner: "FlaskCliRunner", mocker: "MockerFixture"
+    ):
+        mock_worker = mocker.patch("member_card.commands.worker")
+        result = runner.invoke(
+            args=["bigcomm", "sync-customers"],
+        )
+
+        mock_worker.sync_customers_etl.assert_called_once()
         assert result.exit_code == 0
