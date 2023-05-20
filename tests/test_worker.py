@@ -5,6 +5,10 @@ import logging
 from bigcommerce import connection
 
 from member_card import worker
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from flask import Flask
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -294,6 +298,31 @@ class TestEnsureCardImage:
         logging.debug(f"{return_value=}")
 
         mock_ensure_uploaded_card_image.assert_called_once()
+
+
+def test_sync_bigcommerce_order(app: "Flask", mocker):
+    mock_bigcommerce = mocker.patch("member_card.worker.bigcommerce")
+    test_message = dict(
+        type="sync_bigcommerce_order",
+        store_hash=app.config["BIGCOMMERCE_STORE_HASH"],
+        data=dict(id="test_sync_bigcommerce_order_id"),
+    )
+
+    membership_skus = app.config["BIGCOMMERCE_MEMBERSHIP_SKUS"]
+
+    with app.app_context():
+        return_value = worker.sync_bigcommerce_order(
+            message=test_message,
+        )
+    logging.debug(f"{return_value=}")
+
+    assert return_value == "nah"
+
+    mock_bigcommerce.load_single_order.assert_called_once_with(
+        bigcommerce_client=mock_bigcommerce.get_app_client_for_store.return_value,
+        membership_skus=membership_skus,
+        order_id=test_message["data"]["id"],
+    )
 
 
 def test_worker_sync_customers_etl(mocker):

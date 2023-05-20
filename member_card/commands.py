@@ -513,7 +513,7 @@ def ensure_order_webhook(
 
 @bigcomm.command("sync-customers")
 def bigcomm_sync_customers():
-    etl_results = worker.sync_customers_etl(
+    etl_results = worker.run_slack_members_etl(
         message=dict(type="cli-sync-customers"),
     )
     logger.info(f"bigcomm_sync_customers() => {etl_results=}")
