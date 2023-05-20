@@ -12,7 +12,7 @@ from member_card import create_worker_app
 from member_card.db import db
 from member_card.models.annual_membership import AnnualMembership
 from member_card.models.membership_card import MembershipCard
-from member_card.models import AppleDeviceRegistration
+from member_card.models import AppleDeviceRegistration, SlackUser, StoreUser
 from member_card.models.user import Role, User
 from mock import Mock, patch
 from PIL import Image
@@ -34,6 +34,14 @@ def app() -> "Flask":
         flask_migrate.upgrade()
 
     yield app
+
+    with app.app_context():
+        MembershipCard.query.delete()
+        AnnualMembership.query.delete()
+        SlackUser.query.delete()
+        StoreUser.query.delete()
+        User.query.delete()
+        db.session.commit()
 
 
 @pytest.fixture()
