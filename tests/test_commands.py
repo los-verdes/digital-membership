@@ -266,3 +266,20 @@ class TestCommands:
         with app.app_context():
             updated_fake_user = User.query.filter_by(id=fake_user.id).one()
             assert updated_fake_user.has_role(fake_admin_role)
+
+    def test_bigcommerce_load_single_order(
+        self, app: "Flask", runner: "FlaskCliRunner", mocker: "MockerFixture"
+    ):
+        membership_skus = app.config["BIGCOMMERCE_MEMBERSHIP_SKUS"]
+        mock_bigcommerce = mocker.patch("member_card.commands.bigcommerce")
+        fake_order_id = "12345"
+        result = runner.invoke(
+            args=["bigcomm", "load-single-order", fake_order_id],
+        )
+
+        mock_bigcommerce.load_single_order.assert_called_once_with(
+            bigcommerce_client=mock_bigcommerce.get_app_client_for_store.return_value,
+            membership_skus=membership_skus,
+            order_id=fake_order_id,
+        )
+        assert result.exit_code == 0
