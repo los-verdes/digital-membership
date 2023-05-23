@@ -40,7 +40,17 @@ def app() -> "Flask":
         AnnualMembership.query.delete()
         SlackUser.query.delete()
         StoreUser.query.delete()
+
+        user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
+        for user in User.query.all():
+            for role in user.roles:
+                user_datastore.remove_role_from_user(user, role)
+                role.users.remove(user)
+                # db.session.add(user)
+                # db.session.add(role)
+                # db.session.commit()
         User.query.delete()
+        # Role.query.delete()
         db.session.commit()
 
 

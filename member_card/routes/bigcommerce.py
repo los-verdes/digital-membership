@@ -106,7 +106,7 @@ def order_webhook():
     # is_verified = verify(incoming_signature, expected_token_data)
     # print(f"{is_verified=}")
     # breakpoint()
-    if not incoming_signature == expected_signature:
+    if incoming_signature != expected_signature:
         logger.warning(
             f"Unable to verify {incoming_signature} for {hash=}.",
             extra=log_extra,
