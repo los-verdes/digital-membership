@@ -1,6 +1,8 @@
 from typing import TYPE_CHECKING
 from member_card.models import User, AnnualMembership
 from member_card.db import db
+
+from flask import url_for
 from member_card.commands import bigcomm
 
 if TYPE_CHECKING:
@@ -320,6 +322,39 @@ class TestBigcommCommands:
 
         assert result.exit_code == 0
 
+    def test_ensure_order_webhook_extant_hooks(
+        self, app: "Flask", runner: "FlaskCliRunner", mocker: "MockerFixture"
+    ):
+        with app.app_context():
+            destination_url = url_for(
+                "bigcommerce.order_webhook", _external=True, _scheme="https"
+            )
+
+        mock_bigcommerce = mocker.patch("member_card.commands.bigcommerce")
+
+        mock_bigcomm_client = mock_bigcommerce.get_app_client_for_store.return_value
+        mock_gen_token = mock_bigcommerce.generate_webhook_token
+
+        mock_list_hooks_resp = mock_bigcomm_client.Webhooks.all.return_value
+        mock_list_hooks_resp.json.return_value = [
+            {
+                "id": "test-webhook",
+                "scope": "store/order/*",
+                "destination": destination_url,
+            }
+        ]
+
+        result = runner.invoke(
+            cli=bigcomm,
+            args=["ensure-order-webhook"],
+        )
+        assert result.exception is None
+
+        mock_gen_token.assert_called_once()
+        mock_bigcomm_client.Webhooks.create.assert_called_once()
+
+        assert result.exit_code == 0
+
     def test_bigcommerce_sync_customers(
         self, app: "Flask", runner: "FlaskCliRunner", mocker: "MockerFixture"
     ):
@@ -330,4 +365,34 @@ class TestBigcommCommands:
         )
 
         mock_worker.sync_customers_etl.assert_called_once()
+        assert result.exit_code == 0
+
+    def test_ensure_scripts(
+        self, app: "Flask", runner: "FlaskCliRunner", mocker: "MockerFixture"
+    ):
+        mock_bigcommerce = mocker.patch("member_card.commands.bigcommerce")
+
+        mock_bigcomm_client = mock_bigcommerce.get_bespoke_client_for_store.return_value
+        result = runner.invoke(
+            cli=bigcomm,
+            args=["ensure-scripts"],
+        )
+
+        mock_bigcomm_client.get_all_scripts.assert_called_once()
+        mock_bigcomm_client.create_a_script.assert_called_once()
+        assert result.exit_code == 0
+
+    def test_ensure_widget_placement(
+        self, app: "Flask", runner: "FlaskCliRunner", mocker: "MockerFixture"
+    ):
+        mock_bigcommerce = mocker.patch("member_card.commands.bigcommerce")
+
+        mock_bigcomm_client = mock_bigcommerce.get_bespoke_client_for_store.return_value
+        result = runner.invoke(
+            cli=bigcomm,
+            args=["ensure-widget-placement"],
+        )
+
+        mock_bigcomm_client.get_all_widgets.assert_called_once()
+        mock_bigcomm_client.create_a_placement.assert_called()
         assert result.exit_code == 0

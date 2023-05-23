@@ -376,13 +376,10 @@ def bigcommerce_ensure_scripts():
             )
         except Exception as err:
             logger.error(f"{err=} => {err.response.text}")
-            breakpoint()
             logger.error(f"{err=}")
-        breakpoint()
         print(
             f"{missing_script_filename=}: {create_script_resp} => {create_script_resp.text=}"
         )
-        breakpoint()
 
 
 @bigcomm.command("ensure-widget-placement")
