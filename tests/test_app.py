@@ -5,6 +5,7 @@ from urllib.parse import quote_plus
 from bs4 import BeautifulSoup
 from flask.testing import FlaskClient
 from member_card import utils
+from urllib.parse import urlparse
 from member_card.app import commit_on_success, recaptcha
 from member_card.models.user import User
 from member_card.squarespace import InvalidSquarespaceWebhookSignature
@@ -455,8 +456,10 @@ class TestAuthenticatedRequests:
     def test_verify_pass_all_good(
         self, authenticated_client: "FlaskClient", fake_card: "MembershipCard"
     ):
+        parsed_verify_url = urlparse(fake_card.verify_pass_url)
+        verify_url = f"{parsed_verify_url.path}?{parsed_verify_url.query}"
         response = authenticated_client.get(
-            fake_card.verify_pass_url,
+            verify_url,
             follow_redirects=True,
         )
         logging.debug(response)
