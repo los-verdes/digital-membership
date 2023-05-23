@@ -32,7 +32,7 @@ def app() -> "Flask":
 
     with app.app_context():
         flask_migrate.upgrade()
-    app.config["SERVER_NAME"] = "127.0.0.1:5000"
+    app.config["SERVER_NAME"] = "localhost"
     yield app
 
     with app.app_context():

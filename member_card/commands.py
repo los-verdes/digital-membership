@@ -467,7 +467,6 @@ def ensure_order_webhook(
     scope="store/order/*", destination_view="bigcommerce.order_webhook"
 ):
     api = bigcommerce.get_app_client_for_store()
-
     destination_url = url_for(destination_view, _external=True, _scheme="https")
     webhook_token = bigcommerce.generate_webhook_token(api=api)
     webhook_params = dict(
