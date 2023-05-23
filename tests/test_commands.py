@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 from member_card.models import User, AnnualMembership
 from member_card.db import db
+from member_card.commands import bigcomm
 
 if TYPE_CHECKING:
     from flask import Flask
@@ -268,7 +269,7 @@ class TestCommands:
             assert updated_fake_user.has_role(fake_admin_role)
 
 
-class TesBigcommCommands:
+class TestBigcommCommands:
     def test_bigcommerce_load_single_order(
         self, app: "Flask", runner: "FlaskCliRunner", mocker: "MockerFixture"
     ):
@@ -276,7 +277,8 @@ class TesBigcommCommands:
         mock_bigcommerce = mocker.patch("member_card.commands.bigcommerce")
         fake_order_id = "12345"
         result = runner.invoke(
-            args=["bigcomm", "load-single-order", fake_order_id],
+            cli=bigcomm,
+            args=["load-single-order", fake_order_id],
         )
 
         mock_bigcommerce.load_single_order.assert_called_once_with(
@@ -293,7 +295,8 @@ class TesBigcommCommands:
         mock_bigcomm_client = mock_bigcommerce.get_app_client_for_store.return_value
 
         result = runner.invoke(
-            args=["bigcomm", "list-webhooks"],
+            cli=bigcomm,
+            args=["list-webhooks"],
         )
         mock_bigcomm_client.Webhooks.all.assert_called_once()
         assert result.exit_code == 0
@@ -302,14 +305,19 @@ class TesBigcommCommands:
         self, app: "Flask", runner: "FlaskCliRunner", mocker: "MockerFixture"
     ):
         mock_bigcommerce = mocker.patch("member_card.commands.bigcommerce")
+
         mock_bigcomm_client = mock_bigcommerce.get_app_client_for_store.return_value
+        mock_gen_token = mock_bigcommerce.generate_webhook_token
 
         result = runner.invoke(
-            args=["bigcomm", "ensure-order-webhook"],
+            cli=bigcomm,
+            args=["ensure-order-webhook"],
         )
+        assert result.exception is None
 
-        mock_bigcommerce.generate_webhook_token.assert_called_once()
+        mock_gen_token.assert_called_once()
         mock_bigcomm_client.Webhooks.create.assert_called_once()
+
         assert result.exit_code == 0
 
     def test_bigcommerce_sync_customers(
@@ -317,7 +325,8 @@ class TesBigcommCommands:
     ):
         mock_worker = mocker.patch("member_card.commands.worker")
         result = runner.invoke(
-            args=["bigcomm", "sync-customers"],
+            cli=bigcomm,
+            args=["sync-customers"],
         )
 
         mock_worker.sync_customers_etl.assert_called_once()
