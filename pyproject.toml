@@ -9,7 +9,7 @@ packages = [{ include = "member_card" }]
 # packages = [{ include = "member_card" }] TODO: update to match the default value (i.e., name.replace('-', '_')
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "~3.9"
 bigcommerce = "^0.23.2"
 cloud-sql-python-connector = { extras = ["pg8000"], version = "^1.2.2" }
 codetiming = "^1.4.0"
