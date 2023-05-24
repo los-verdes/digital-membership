@@ -350,6 +350,7 @@ class TestBigcommerceCustomerEtl:
         mock_bigcomm_api_class = mocker.patch("member_card.bigcommerce.BigcommerceApi")
         mock_bigcomm_api = mock_bigcomm_api_class()
         mock_customers_iterall = mock_bigcomm_api.Customers.iterall
+        fake_user.bigcommerce_id = 0
         mock_customers_iterall.return_value = [
             dict(id=2, email="los.verdes.tester@gmail.com")
         ]
