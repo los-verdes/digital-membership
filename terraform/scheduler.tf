@@ -7,6 +7,13 @@ locals {
         type = "run_slack_members_etl",
       }
     }
+    sync_customers_etl = {
+      description = "Sync E-commerce customer / user data into local digital membership database"
+      schedule    = "30 * * * *"
+      data = {
+        type = "sync_customers_etl",
+      }
+    }
   }
 }
 
