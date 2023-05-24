@@ -416,7 +416,8 @@ def map_customer_to_user_by_store_id(bigcommerce_id, customer_email):
             msg=f"[{bigcommerce_id=}] => >1 matching users:: {extant_user_by_id=} vs. {extant_user_by_email=}",
             extra=log_extra,
         )
-        for membership in extant_user_by_email.annual_memberships:
+        extant_memberships = list(extant_user_by_email.annual_memberships)
+        for membership in extant_memberships:
             logger.debug(
                 msg=f"[{bigcommerce_id=}] => setting {membership=} user attribute to: {extant_user_by_id=}",
                 extra=log_extra,
@@ -424,6 +425,7 @@ def map_customer_to_user_by_store_id(bigcommerce_id, customer_email):
             # membership.user = extant_user_by_id
 
             setattr(membership, "user_id", extant_user_by_id.id)
+            extant_user_by_email.annual_memberships.remove(membership)
             extant_user_by_id.annual_memberships.append(membership)
             db.session.add(membership)
 
