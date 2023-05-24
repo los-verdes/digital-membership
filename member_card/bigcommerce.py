@@ -406,7 +406,7 @@ def map_customer_to_user_by_store_id(bigcommerce_id, customer_email):
     )
     logger.debug(
         msg=f"[{bigcommerce_id=}] => customer-to-user lookup results: {extant_user_by_id=} & {extant_user_by_email=}",
-        log_extra=log_extra,
+        extra=log_extra,
     )
 
     # If we have more than one user matching the customer details, we need to merge them, and their associated
@@ -414,12 +414,12 @@ def map_customer_to_user_by_store_id(bigcommerce_id, customer_email):
     if extant_user_by_id and extant_user_by_email:
         logger.debug(
             msg=f"[{bigcommerce_id=}] => >1 matching users:: {extant_user_by_id=} vs. {extant_user_by_email=}",
-            log_extra=log_extra,
+            extra=log_extra,
         )
         for membership in extant_user_by_email.annual_memberships:
             logger.debug(
                 msg=f"[{bigcommerce_id=}] => setting {membership=} user attribute to: {extant_user_by_id=}",
-                log_extra=log_extra,
+                extra=log_extra,
             )
             # membership.user = extant_user_by_id
 
@@ -433,12 +433,12 @@ def map_customer_to_user_by_store_id(bigcommerce_id, customer_email):
         db.session.commit()
         logger.debug(
             msg=f"[{bigcommerce_id=}] => {extant_user_by_email=}:: email de-duplicated and active set to False",
-            log_extra=log_extra,
+            extra=log_extra,
         )
 
         logger.debug(
             msg=f"[{bigcommerce_id=}] => updating {extant_user_by_id=} email to {customer_email=}",
-            log_extra=log_extra,
+            extra=log_extra,
         )
         setattr(extant_user_by_id, "email", customer_email)
 
@@ -448,7 +448,7 @@ def map_customer_to_user_by_store_id(bigcommerce_id, customer_email):
         if not extant_user_by_email.bigcommerce_id:
             logger.debug(
                 msg=f"[{bigcommerce_id=}] => updating {extant_user_by_email=} bigcommerce_id to {bigcommerce_id=}",
-                log_extra=log_extra,
+                extra=log_extra,
             )
             setattr(extant_user_by_email, "bigcommerce_id", bigcommerce_id)
             return extant_user_by_email
@@ -457,14 +457,14 @@ def map_customer_to_user_by_store_id(bigcommerce_id, customer_email):
         if customer_email != extant_user_by_id.email:
             logger.debug(
                 msg=f"[{bigcommerce_id=}] => updating {extant_user_by_id=} email to {customer_email=}",
-                log_extra=log_extra,
+                extra=log_extra,
             )
             setattr(extant_user_by_id, "email", customer_email)
             return extant_user_by_id
 
     logger.debug(
         msg=f"[{bigcommerce_id=}] => customer-to-user parsing results: no modifications made to {extant_user_by_id=} !& {extant_user_by_email=}",
-        log_extra=log_extra,
+        extra=log_extra,
     )
     return None
 
@@ -484,7 +484,7 @@ def customer_etl(bigcommerce_client: BigcommerceApi):
         )
         logger.debug(
             msg=f"[{num}]: {bigcommerce_id=} => next customer up: {bigcommerce_id=} & {customer_email=}",
-            log_extra=log_extra,
+            extra=log_extra,
         )
         user = map_customer_to_user_by_store_id(
             bigcommerce_id=bigcommerce_id,
@@ -494,7 +494,7 @@ def customer_etl(bigcommerce_client: BigcommerceApi):
         if user is not None:
             logger.debug(
                 msg=f"[{num}]: {bigcommerce_id=} => adding {user=} to database session and committing changes",
-                log_extra=log_extra,
+                extra=log_extra,
             )
             db.session.add(user)
             db.session.commit()
