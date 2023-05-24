@@ -106,10 +106,14 @@ docker-flask +CMD: build onepass_session
 
 
 flask +CMD: onepass_session
-  @echo "FLASK_APP: ${FLASK_APP-None}"
-  @echo "FLASK_ENV: ${FLASK_ENV-None}"
+  #!/bin/zsh
+  echo "FLASK_APP: ${FLASK_APP-None}"
+  echo "FLASK_ENV: ${FLASK_ENV-None}"
   # op run --env-file='./.env' -- flask {{ CMD }}
-  flask {{ CMD }}
+  export OP_ACCOUNT="my.1password.com"
+  # export DIGITAL_MEMBERSHIP_SECRETS_JSON="op://Los Verdes/digital-membership_local_dev_secrets/value"
+  export DIGITAL_MEMBERSHIP_SECRETS_JSON="op://Los Verdes/digital-membership_gcp-secrets-manager/value"
+  op run -- flask {{ CMD }}
 
 ensure-db-schemas:
   just flask ensure-db-schemas
@@ -125,9 +129,7 @@ serve: onepass_session
   #!/bin/zsh
   # source /Users/jeffwecan/.pyenv/versions/3.9.2/bin/virtualenvwrapper.sh
   # workon digital-membership
-  export DIGITAL_MEMBERSHIP_SECRETS_JSON="op://Los Verdes/digital-membership_local_dev_secrets/value"
-  op run -- \
-    just flask run --cert=tmp-certs/flask-cert.pem --key=tmp-certs/flask-key.pem --host=0.0.0.0 --port=8080
+  just flask run --cert=tmp-certs/flask-cert.pem --key=tmp-certs/flask-key.pem --host=0.0.0.0 --port=8080
 
 build-website:
   docker build . --target website --tag '{{ website_image_name }}:{{ image_tag }}'
@@ -255,9 +257,12 @@ lint:
 
 sql-proxy:
   ~/.local/bin/cloud_sql_proxy \
-    -instances="$DIGITAL_MEMBERSHIP_GCP_SQL_CONNECTION_NAME=tcp:5434" \
-    -enable_iam_login \
-    -token="$(gcloud auth print-access-token --impersonate-service-account=website@lv-digital-membership.iam.gserviceaccount.com)";
+    "$DIGITAL_MEMBERSHIP_GCP_SQL_CONNECTION_NAME" \
+    --port=5434 \
+    --auto-iam-authn \
+    --token="$(gcloud auth print-access-token)"  \
+    --login-token="$(gcloud auth print-access-token --impersonate-service-account=website@lv-digital-membership.iam.gserviceaccount.com)";
+  # --enable_iam_login \
 
 remote-psql:
   psql \
