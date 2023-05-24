@@ -411,7 +411,9 @@ def map_customer_to_user_by_store_id(bigcommerce_id, customer_email):
 
     # If we have more than one user matching the customer details, we need to merge them, and their associated
     # memberships, into a single user entry.
-    if extant_user_by_id and extant_user_by_email:
+    if (extant_user_by_id and extant_user_by_email) and (
+        extant_user_by_id != extant_user_by_email
+    ):
         logger.debug(
             msg=f"[{bigcommerce_id=}] => >1 matching users:: {extant_user_by_id=} vs. {extant_user_by_email=}",
             extra=log_extra,
@@ -446,23 +448,21 @@ def map_customer_to_user_by_store_id(bigcommerce_id, customer_email):
 
         return extant_user_by_id
 
-    if extant_user_by_email:
-        if not extant_user_by_email.bigcommerce_id:
-            logger.debug(
-                msg=f"[{bigcommerce_id=}] => updating {extant_user_by_email=} bigcommerce_id to {bigcommerce_id=}",
-                extra=log_extra,
-            )
-            setattr(extant_user_by_email, "bigcommerce_id", bigcommerce_id)
-            return extant_user_by_email
+    if extant_user_by_email and not extant_user_by_email.bigcommerce_id:
+        logger.debug(
+            msg=f"[{bigcommerce_id=}] => updating {extant_user_by_email=} bigcommerce_id to {bigcommerce_id=}",
+            extra=log_extra,
+        )
+        setattr(extant_user_by_email, "bigcommerce_id", bigcommerce_id)
+        return extant_user_by_email
 
-    if extant_user_by_id:
-        if customer_email != extant_user_by_id.email:
-            logger.debug(
-                msg=f"[{bigcommerce_id=}] => updating {extant_user_by_id=} email to {customer_email=}",
-                extra=log_extra,
-            )
-            setattr(extant_user_by_id, "email", customer_email)
-            return extant_user_by_id
+    if extant_user_by_id and customer_email != extant_user_by_id.email:
+        logger.debug(
+            msg=f"[{bigcommerce_id=}] => updating {extant_user_by_id=} email to {customer_email=}",
+            extra=log_extra,
+        )
+        setattr(extant_user_by_id, "email", customer_email)
+        return extant_user_by_id
 
     logger.debug(
         msg=f"[{bigcommerce_id=}] => customer-to-user parsing results: no modifications made to {extant_user_by_id=} !& {extant_user_by_email=}",
