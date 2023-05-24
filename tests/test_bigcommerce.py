@@ -335,6 +335,7 @@ def test_generate_webhook_token(app: "Flask", mocker):
         returned_token = bigcommerce.generate_webhook_token(api=mock_bigcomm_api)
     assert returned_token
 
+
 # jscpd:ignore-start
 class TestBigcommerceCustomerEtl:
     def test_etl_loop_no_matching_user(self, app: "Flask", mocker: "MockerFixture"):
@@ -477,4 +478,6 @@ class TestBigcommerceCustomerEtl:
         assert fake_duplicate_user.email != new_customer_email
         assert fake_duplicate_user.active is False
         assert not fake_duplicate_user.annual_memberships
+
+
 # jscpd:ignore-end

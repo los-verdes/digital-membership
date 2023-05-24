@@ -398,25 +398,75 @@ def generate_webhook_token(api: BigcommerceApi):
 def map_customer_to_user_by_store_id(bigcommerce_id, customer_email):
     extant_user_by_email = User.query.filter_by(email=customer_email).first()
     extant_user_by_id = User.query.filter_by(bigcommerce_id=bigcommerce_id).first()
-    # log_extra = dict(
-    #     bigcommerce_id=bigcommerce_id,
-    #     customer_email=customer_email,
-    #     extant_user_by_email=extant_user_by_email,
-    #     extant_user_by_id=extant_user_by_id,
-    # )
-    if extant_user_by_email := User.query.filter_by(email=customer_email).first():
+    log_extra = dict(
+        bigcommerce_id=bigcommerce_id,
+        customer_email=customer_email,
+        extant_user_by_email=extant_user_by_email,
+        extant_user_by_id=extant_user_by_id,
+    )
+    logger.debug(
+        msg=f"[{bigcommerce_id=}] => customer-to-user lookup results: {extant_user_by_id=} & {extant_user_by_email=}",
+        log_extra=log_extra,
+    )
+
+    # If we have more than one user matching the customer details, we need to merge them, and their associated
+    # memberships, into a single user entry.
+    if extant_user_by_id and extant_user_by_email:
+        logger.debug(
+            msg=f"[{bigcommerce_id=}] => >1 matching users:: {extant_user_by_id=} vs. {extant_user_by_email=}",
+            log_extra=log_extra,
+        )
+        for membership in extant_user_by_email.annual_memberships:
+            logger.debug(
+                msg=f"[{bigcommerce_id=}] => setting {membership=} user attribute to: {extant_user_by_id=}",
+                log_extra=log_extra,
+            )
+            # membership.user = extant_user_by_id
+
+            setattr(membership, "user_id", extant_user_by_id.id)
+            extant_user_by_id.annual_memberships.append(membership)
+            db.session.add(membership)
+
+        setattr(extant_user_by_email, "email", f"MERGED.{customer_email}")
+        setattr(extant_user_by_email, "active", False)
+        db.session.add(extant_user_by_email)
+        db.session.commit()
+        logger.debug(
+            msg=f"[{bigcommerce_id=}] => {extant_user_by_email=}:: email de-duplicated and active set to False",
+            log_extra=log_extra,
+        )
+
+        logger.debug(
+            msg=f"[{bigcommerce_id=}] => updating {extant_user_by_id=} email to {customer_email=}",
+            log_extra=log_extra,
+        )
+        setattr(extant_user_by_id, "email", customer_email)
+
+        return extant_user_by_id
+
+    if extant_user_by_email:
         if not extant_user_by_email.bigcommerce_id:
             logger.debug(
-                f"Update {extant_user_by_email=} bigcommerce_id to {bigcommerce_id=}"
+                msg=f"[{bigcommerce_id=}] => updating {extant_user_by_email=} bigcommerce_id to {bigcommerce_id=}",
+                log_extra=log_extra,
             )
             setattr(extant_user_by_email, "bigcommerce_id", bigcommerce_id)
             return extant_user_by_email
 
-    if extant_user_by_id := User.query.filter_by(bigcommerce_id=bigcommerce_id).first():
+    if extant_user_by_id:
         if customer_email != extant_user_by_id.email:
-            logger.debug(f"Update {extant_user_by_id=} email to {customer_email=}")
+            logger.debug(
+                msg=f"[{bigcommerce_id=}] => updating {extant_user_by_id=} email to {customer_email=}",
+                log_extra=log_extra,
+            )
             setattr(extant_user_by_id, "email", customer_email)
             return extant_user_by_id
+
+    logger.debug(
+        msg=f"[{bigcommerce_id=}] => customer-to-user parsing results: no modifications made to {extant_user_by_id=} !& {extant_user_by_email=}",
+        log_extra=log_extra,
+    )
+    return None
 
 
 def customer_etl(bigcommerce_client: BigcommerceApi):
