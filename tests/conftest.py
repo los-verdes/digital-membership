@@ -104,7 +104,7 @@ def user_datastore(app: "Flask") -> SQLAlchemySessionUserDatastore:
     return user_datastore
 
 
-def create_fake_user(app: "Flask", email):
+def create_fake_user(app: "Flask", email, bigcommerce_id=1):
     # user_id = 1
     with app.app_context():
         if extant_user := User.query.filter_by(email=email).first():
@@ -120,7 +120,7 @@ def create_fake_user(app: "Flask", email):
     # user.id = user_id
     user.password = "mypassword"
     user.active = True
-    user.bigcommerce_id = 1
+    user.bigcommerce_id = bigcommerce_id
     return user
 
 

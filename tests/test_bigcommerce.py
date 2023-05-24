@@ -1,14 +1,19 @@
-import pytest
 from typing import TYPE_CHECKING
-from member_card.models import AnnualMembership
+
+import pytest
+from conftest import create_fake_user
 from mock import sentinel
+
 from member_card import bigcommerce
+from member_card.db import db
+from member_card.models import AnnualMembership, User
 
 if TYPE_CHECKING:
     from flask import Flask
-    from member_card.models import MembershipCard
     from pytest_mock.plugin import MockerFixture
     from requests_mock.contrib.fixture import Fixture as RequestsMockFixture
+
+    from member_card.models import MembershipCard
 
 
 def test_get_app_client_for_store(
@@ -331,46 +336,148 @@ def test_generate_webhook_token(app: "Flask", mocker):
     assert returned_token
 
 
+# jscpd:ignore-start
 class TestBigcommerceCustomerEtl:
-    def test_no_matching_user(self, app: "Flask", mocker):
+    def test_etl_loop_no_matching_user(self, app: "Flask", mocker: "MockerFixture"):
+        mock_db = mocker.patch("member_card.bigcommerce.db")
+
+        mock_map_func = mocker.patch.object(
+            bigcommerce, "map_customer_to_user_by_store_id"
+        )
+        mock_map_func.return_value = None
+
+        mock_customer = dict(id=1000, email="los.verdes.tester.updated@gmail.com")
+
         mock_bigcomm_api_class = mocker.patch("member_card.bigcommerce.BigcommerceApi")
-        mock_bigcomm_api = mock_bigcomm_api_class()
-        mock_customers_iterall = mock_bigcomm_api.Customers.iterall
-        mock_customers_iterall.return_value = [
-            dict(id=1000, email="los.verdes.tester.updated@gmail.com")
-        ]
+        mock_bigcomm_api_client = mock_bigcomm_api_class()
+        mock_customers_iterall = mock_bigcomm_api_client.Customers.iterall
+        mock_customers_iterall.return_value = [mock_customer]
 
         with app.app_context():
             bigcommerce.customer_etl(
-                bigcommerce_client=mock_bigcomm_api,
+                bigcommerce_client=mock_bigcomm_api_client,
             )
-        mock_customers_iterall.assert_called_once()
+
+        mock_map_func.assert_called_once_with(
+            bigcommerce_id=mock_customer["id"],
+            customer_email=mock_customer["email"],
+        )
+        mock_db.session.add.assert_not_called()
+        mock_db.session.commit.assert_not_called()
+
+    def test_etl_loop_matching_user(
+        self, app: "Flask", mocker: "MockerFixture", fake_user: "User"
+    ):
+        mock_db = mocker.patch("member_card.bigcommerce.db")
+
+        mock_map_func = mocker.patch.object(
+            bigcommerce, "map_customer_to_user_by_store_id"
+        )
+        mock_map_func.return_value = fake_user
+
+        mock_customer = dict(id=2, email="los.verdes.tester@gmail.com")
+
+        mock_bigcomm_api_class = mocker.patch("member_card.bigcommerce.BigcommerceApi")
+        mock_bigcomm_api_client = mock_bigcomm_api_class()
+        mock_customers_iterall = mock_bigcomm_api_client.Customers.iterall
+        mock_customers_iterall.return_value = [mock_customer]
+
+        with app.app_context():
+            bigcommerce.customer_etl(
+                bigcommerce_client=mock_bigcomm_api_client,
+            )
+
+        mock_map_func.assert_called_once_with(
+            bigcommerce_id=mock_customer["id"],
+            customer_email=mock_customer["email"],
+        )
+        mock_db.session.add.assert_called_once_with(fake_user)
+        mock_db.session.commit.assert_called_once()
+
+    def test_no_matching_user(self, app: "Flask", mocker: "MockerFixture"):
+        with app.app_context():
+            returned_user = bigcommerce.map_customer_to_user_by_store_id(
+                bigcommerce_id=1000,
+                customer_email="los.verdes.tester.updated@gmail.com",
+            )
+            assert returned_user is None
 
     def test_extant_user_by_email(self, app: "Flask", mocker, fake_user):
-        mock_bigcomm_api_class = mocker.patch("member_card.bigcommerce.BigcommerceApi")
-        mock_bigcomm_api = mock_bigcomm_api_class()
-        mock_customers_iterall = mock_bigcomm_api.Customers.iterall
         fake_user.bigcommerce_id = 0
-        mock_customers_iterall.return_value = [
-            dict(id=2, email="los.verdes.tester@gmail.com")
-        ]
-
+        assert fake_user.email == "los.verdes.tester@gmail.com"
         with app.app_context():
-            bigcommerce.customer_etl(
-                bigcommerce_client=mock_bigcomm_api,
+            returned_user = bigcommerce.map_customer_to_user_by_store_id(
+                bigcommerce_id=2,
+                customer_email="los.verdes.tester@gmail.com",
             )
-        mock_customers_iterall.assert_called_once()
+
+        assert returned_user.id == fake_user.id
+        assert returned_user.bigcommerce_id == 2
+        assert returned_user.email == "los.verdes.tester@gmail.com"
 
     def test_extant_user_by_id(self, app: "Flask", mocker, fake_user):
-        mock_bigcomm_api_class = mocker.patch("member_card.bigcommerce.BigcommerceApi")
-        mock_bigcomm_api = mock_bigcomm_api_class()
-        mock_customers_iterall = mock_bigcomm_api.Customers.iterall
-        mock_customers_iterall.return_value = [
-            dict(id=1, email="los.verdes.tester.updated@gmail.com")
-        ]
+        assert fake_user.bigcommerce_id == 1
+        assert fake_user.email == "los.verdes.tester@gmail.com"
+        with app.app_context():
+            returned_user = bigcommerce.map_customer_to_user_by_store_id(
+                bigcommerce_id=1,
+                customer_email="los.verdes.tester.updated@gmail.com",
+            )
+
+        assert returned_user.id == fake_user.id
+        assert returned_user.bigcommerce_id == 1
+        assert returned_user.email == "los.verdes.tester.updated@gmail.com"
+
+    def test_multiple_extant_users(
+        self, app: "Flask", mocker, fake_user, fake_membership_order
+    ):
+        fake_user_id = fake_user.id
+        assert fake_user.bigcommerce_id == 1
+        assert fake_user.email == "los.verdes.tester@gmail.com"
+        db.session.add(fake_user)
+        db.session.commit()
+
+        new_customer_email = "los.verdes.tester.updated@gmail.com"
+
+        fake_duplicate_user = create_fake_user(
+            app=app,
+            email=new_customer_email,
+            bigcommerce_id=None,
+        )
+        db.session.add(fake_duplicate_user)
+        db.session.commit()
+
+        setattr(fake_membership_order, "user_id", fake_duplicate_user.id)
+        db.session.add(fake_membership_order)
+        db.session.commit()
+        db.session.add(fake_duplicate_user)
+        fake_duplicate_user_id = fake_duplicate_user.id
+        assert fake_duplicate_user.annual_memberships
 
         with app.app_context():
-            bigcommerce.customer_etl(
-                bigcommerce_client=mock_bigcomm_api,
+            returned_user = bigcommerce.map_customer_to_user_by_store_id(
+                bigcommerce_id=1,
+                customer_email=new_customer_email,
             )
-        mock_customers_iterall.assert_called_once()
+
+        db.session.add(returned_user)
+        db.session.add(fake_duplicate_user)
+        db.session.add(fake_membership_order)
+        db.session.commit()
+
+        assert returned_user.id == fake_user_id
+        assert returned_user.bigcommerce_id == 1
+        assert returned_user.active is True
+        assert returned_user.email == "los.verdes.tester.updated@gmail.com"
+        assert len(returned_user.annual_memberships) > 0
+        assert fake_membership_order.user_id == returned_user.id
+
+        fake_duplicate_user = User.query.get(fake_duplicate_user.id)
+        assert fake_duplicate_user.id == fake_duplicate_user_id
+        assert fake_duplicate_user.bigcommerce_id is None
+        assert fake_duplicate_user.email != new_customer_email
+        assert fake_duplicate_user.active is False
+        assert not fake_duplicate_user.annual_memberships
+
+
+# jscpd:ignore-end
