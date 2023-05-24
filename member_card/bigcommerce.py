@@ -8,16 +8,17 @@ import requests
 from bigcommerce.api import BigcommerceApi
 from dateutil.parser import parse
 from flask import current_app
-
+from member_card.utils import sign
 from member_card.db import db, get_or_update
-from member_card.models import table_metadata
+from member_card.models import table_metadata, User
 from member_card.models.user import ensure_user
 
 logger = logging.getLogger(__name__)
 
 
-def get_app_client_for_store(store_hash) -> BigcommerceApi:
+def get_app_client_for_store() -> BigcommerceApi:
     # store = Store.query.filter(Store.store_hash == store_hash).one()
+    store_hash = current_app.config["BIGCOMMERCE_STORE_HASH"]
     app_client = BigcommerceApi(
         client_id=current_app.config["BIGCOMMERCE_CLIENT_ID"],
         store_hash=store_hash,
@@ -27,7 +28,8 @@ def get_app_client_for_store(store_hash) -> BigcommerceApi:
     return app_client
 
 
-def get_bespoke_client_for_store(store_hash):
+def get_bespoke_client_for_store():
+    store_hash = current_app.config["BIGCOMMERCE_STORE_HASH"]
     app_client = BiggercommerceApi(
         client_id=current_app.config["BIGCOMMERCE_CLIENT_ID"],
         store_hash=store_hash,
@@ -212,7 +214,7 @@ def insert_order_as_membership(order, order_products, membership_skus):
     subscription_line_items = [i for i in line_items if i["sku"] in membership_skus]
     ignored_line_items = [i for i in line_items if i["sku"] not in membership_skus]
     logger.debug(f"{ignored_line_items=}")
-    # customer_id = order['customer_id']
+    customer_id = order["customer_id"]
     for subscription_line_item in subscription_line_items:
         fulfillment_status = order["status"]
         # breakpoint()
@@ -223,7 +225,7 @@ def insert_order_as_membership(order, order_products, membership_skus):
 
         # customer_email = order["customerEmail"]
         variant_id = None
-        if subscription_line_item["product_options"]:
+        if subscription_line_item.get("product_options"):
             variant_id = subscription_line_item["product_options"][0]["id"]
 
         customer_email = order["billing_address"]["email"].lower()
@@ -254,19 +256,19 @@ def insert_order_as_membership(order, order_products, membership_skus):
             filters=["order_id"],
             kwargs=membership_kwargs,
         )
-        membership_orders.append(membership)
+        db.session.add(membership)
 
         membership_user = ensure_user(
             email=membership.customer_email,
             first_name=membership.billing_address_first_name,
             last_name=membership.billing_address_last_name,
+            bigcommerce_id=customer_id,
         )
-        membership_user_id = membership_user.id
-        if not membership.user_id:
-            logger.debug(
-                f"No user_id set for {membership=}! Setting to: {membership_user_id=}"
-            )
-            setattr(membership, "user_id", membership_user_id)
+        db.session.add(membership_user)
+        setattr(membership, "user_id", membership_user.id)
+
+        membership_orders.append(membership)
+
     return membership_orders
 
 
@@ -292,8 +294,7 @@ def parse_subscription_orders(bigcommerce_client, membership_skus, subscription_
             order_products=bigcommerce_client.OrderProducts.all(order["id"]),
             membership_skus=membership_skus,
         )
-        for membership_order in membership_orders:
-            db.session.add(membership_order)
+
         db.session.commit()
         memberships += membership_orders
     return memberships
@@ -309,6 +310,20 @@ def load_all_bigcommerce_orders(
 
     memberships = parse_subscription_orders(bigcommerce_client, membership_skus, orders)
 
+    return memberships
+
+
+def load_single_order(
+    bigcommerce_client: BigcommerceApi, membership_skus: List[str], order_id: str
+):
+    subscription_order = bigcommerce_client.Orders.get(order_id)
+    logger.debug(f"API response for {order_id=}: {subscription_order=}")
+    memberships = parse_subscription_orders(
+        bigcommerce_client=bigcommerce_client,
+        membership_skus=membership_skus,
+        subscription_orders=[subscription_order],
+    )
+    logger.debug(f"After parsing subscription orders: {memberships=}")
     return memberships
 
 
@@ -343,7 +358,6 @@ def load_orders(
     membership_skus: List[str],
     min_date_created=None,
     max_date_created=None,
-    sort: str = "date_created:asc",
 ):
     # ) -> List[AnnualMembership]:
     # remove "None"s
@@ -371,3 +385,33 @@ def load_orders(
     orders = bigcommerce_client.Orders.iterall(**get_orders_query_params)
 
     return orders
+
+
+def generate_webhook_token(api: BigcommerceApi):
+    token_data = f"{api.connection.store_hash}.{api.connection.client_id}"
+    return sign(token_data)
+
+
+def customer_etl(bigcommerce_client: BigcommerceApi):
+    customers = bigcommerce_client.Customers.iterall()
+    for num, customer in enumerate(customers):
+        bigcommerce_id = customer["id"]
+        customer_email = customer["email"].lower()
+        print(f"{num}: {customer['email']=}")
+        if extant_user_by_email := User.query.filter_by(email=customer_email).first():
+            if extant_user_by_email.bigcommerce_id != bigcommerce_id:
+                logger.debug(
+                    f"Update {extant_user_by_email=} bigcommerce_id to {bigcommerce_id=}"
+                )
+                setattr(extant_user_by_email, "bigcommerce_id", bigcommerce_id)
+                db.session.add(extant_user_by_email)
+
+        if extant_user_by_id := User.query.filter_by(
+            bigcommerce_id=bigcommerce_id
+        ).first():
+            if customer_email != extant_user_by_id.email:
+                logger.debug(f"Update {extant_user_by_id=} email to {customer_email=}")
+                setattr(extant_user_by_id, "email", customer_email)
+                db.session.add(extant_user_by_id)
+
+    db.session.commit()

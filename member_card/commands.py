@@ -4,11 +4,13 @@ import logging
 import click
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.sql import func
-
+from flask import url_for
 from member_card import worker
+
+from member_card import bigcommerce
 from member_card.app import app
 from member_card.db import db
-from member_card.gcp import publish_message, get_bucket
+from member_card.gcp import get_bucket, publish_message
 from member_card.image import generate_card_image
 from member_card.minibc import Minibc, parse_subscriptions
 from member_card.models import AnnualMembership, User
@@ -324,11 +326,23 @@ def bigcomm():
     pass
 
 
-@bigcomm.command("ensure-scripts")
-@click.argument("store_hash")
-def bigcommerce_ensure_scripts(store_hash):
-    from member_card import bigcommerce
+@bigcomm.command("load-single-order")
+@click.argument("order_id")
+def bigcommerce_load_single_order(order_id):
+    logger.debug(f"bigcommerce_load_single_order() called with {order_id=}")
+    membership_skus = app.config["BIGCOMMERCE_MEMBERSHIP_SKUS"]
+    bigcommerce_client = bigcommerce.get_app_client_for_store()
+    memberships = bigcommerce.load_single_order(
+        bigcommerce_client=bigcommerce_client,
+        membership_skus=membership_skus,
+        order_id=order_id,
+    )
+    print(f"{memberships=}")
+    return memberships
 
+
+@bigcomm.command("ensure-scripts")
+def bigcommerce_ensure_scripts():
     requisite_scripts = {
         "bigcommerce_membership_card.min.js": dict(
             name="LV Membership Cards",
@@ -338,7 +352,7 @@ def bigcommerce_ensure_scripts(store_hash):
     missing_script_filenames = set(requisite_scripts.keys())
     # missing_scripts =
 
-    app_client = bigcommerce.get_bespoke_client_for_store(store_hash=store_hash)
+    app_client = bigcommerce.get_bespoke_client_for_store()
     get_all_scripts_resp = app_client.get_all_scripts()
     print(f"{get_all_scripts_resp=}")
 
@@ -362,29 +376,22 @@ def bigcommerce_ensure_scripts(store_hash):
             )
         except Exception as err:
             logger.error(f"{err=} => {err.response.text}")
-            breakpoint()
             logger.error(f"{err=}")
-        breakpoint()
         print(
             f"{missing_script_filename=}: {create_script_resp} => {create_script_resp.text=}"
         )
-        breakpoint()
 
 
 @bigcomm.command("ensure-widget-placement")
-@click.argument("store_hash")
 @click.argument("widget_name", default="membership_info")
 @click.argument("region_name", default="membership_info")
 def bigcommerce_ensure_widget_placement(
-    store_hash,
     # widget_uuid='6a7028ed-5d40-4630-b0c4-465e4ea73a65',
     widget_name,
     region_name,
 ):
-    from member_card import bigcommerce
-
-    print(f"bigcommerce_ensure_widget_placement(): {store_hash=} {widget_name=}")
-    app_client = bigcommerce.get_bespoke_client_for_store(store_hash=store_hash)
+    print(f"bigcommerce_ensure_widget_placement(): {widget_name=}")
+    app_client = bigcommerce.get_bespoke_client_for_store()
 
     get_all_widgets_resp = app_client.get_all_widgets()
     print(f"{get_all_widgets_resp=}")
@@ -442,3 +449,67 @@ def bigcommerce_ensure_widget_placement(
                 breakpoint()
                 print(f"{err=}")
     # breakpoint()
+
+
+@bigcomm.command("list-webhooks")
+def list_webhooks():
+    api = bigcommerce.get_app_client_for_store()
+    webhooks_list_resp = api.Webhooks.all()
+    print(f"list_webhooks(): {webhooks_list_resp=}")
+    return webhooks_list_resp
+
+
+@bigcomm.command("ensure-order-webhook")
+def ensure_order_webhook(
+    scope="store/order/*", destination_view="bigcommerce.order_webhook"
+):
+    api = bigcommerce.get_app_client_for_store()
+    destination_url = url_for(destination_view, _external=True, _scheme="https")
+    webhook_token = bigcommerce.generate_webhook_token(api=api)
+    webhook_params = dict(
+        scope=scope,
+        destination=destination_url,
+        is_active=True,
+        events_history_enabled=True,
+        headers=dict(
+            authorization=f"bearer {webhook_token}",
+        ),
+    )
+    logger.debug(
+        f"add_webhooks(): {api.connection.store_hash=} {webhook_token[0:2]=}...{webhook_token[-2:]=}"
+    )
+
+    extant_webhooks = api.Webhooks.all()
+    for extant_webhook in extant_webhooks:
+        # breakpoint()
+        # extant_webhook["headers"] = {
+        #     k: f"...{v[-2:]}" for k, v in extant_webhook["headers"].items()
+        # }
+        logger.debug(f"{extant_webhook['id']=}")
+        if (
+            extant_webhook["scope"] == scope
+            and extant_webhook["destination"] == destination_url
+        ):
+            print(
+                f"Webhook already present ({extant_webhook['id']=}) performing updates now..."
+            )
+            webhooks_update_resp = extant_webhook.update(**webhook_params)
+            webhooks_update_resp["headers"] = {
+                k: f"...{v[-2:]}" for k, v in webhooks_update_resp["headers"].items()
+            }
+            print(f"add_webhooks(): {webhooks_update_resp=}")
+            break
+    else:
+        webhooks_create_resp = api.Webhooks.create(**webhook_params)
+        webhooks_create_resp["headers"] = {
+            k: f"...{v[-2:]}" for k, v in webhooks_create_resp["headers"].items()
+        }
+        print(f"add_webhooks(): {webhooks_create_resp=}")
+
+
+@bigcomm.command("sync-customers")
+def bigcomm_sync_customers():
+    etl_results = worker.sync_customers_etl(
+        message=dict(type="cli-sync-customers"),
+    )
+    logger.info(f"bigcomm_sync_customers() => {etl_results=}")

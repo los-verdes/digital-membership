@@ -12,7 +12,7 @@ from member_card import create_worker_app
 from member_card.db import db
 from member_card.models.annual_membership import AnnualMembership
 from member_card.models.membership_card import MembershipCard
-from member_card.models import AppleDeviceRegistration
+from member_card.models import AppleDeviceRegistration, SlackUser, StoreUser
 from member_card.models.user import Role, User
 from mock import Mock, patch
 from PIL import Image
@@ -32,8 +32,26 @@ def app() -> "Flask":
 
     with app.app_context():
         flask_migrate.upgrade()
-
+    app.config["SERVER_NAME"] = "localhost"
     yield app
+
+    with app.app_context():
+        MembershipCard.query.delete()
+        AnnualMembership.query.delete()
+        SlackUser.query.delete()
+        StoreUser.query.delete()
+
+        user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
+        for user in User.query.all():
+            for role in user.roles:
+                user_datastore.remove_role_from_user(user, role)
+                role.users.remove(user)
+                # db.session.add(user)
+                # db.session.add(role)
+                # db.session.commit()
+        User.query.delete()
+        # Role.query.delete()
+        db.session.commit()
 
 
 @pytest.fixture()
@@ -102,6 +120,7 @@ def create_fake_user(app: "Flask", email):
     # user.id = user_id
     user.password = "mypassword"
     user.active = True
+    user.bigcommerce_id = 1
     return user
 
 

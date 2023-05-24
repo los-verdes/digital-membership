@@ -1,0 +1,53 @@
+$(document).ready(function () {
+  var contentDiv = $('#lv-membership-info-widget-content-{{ widget_id }}');
+
+  async function checkForCustomerToken() {
+    try {
+      const result = await $.ajax({
+        url: 'https://{{ store_domain }}/customer/current.jwt?app_client_id={{ app_client_id }}',
+        type: 'GET'
+      });
+      // console.log(result);
+      return result;
+    } catch (err) {
+      console.log(err);
+      contentDiv.html("⚠️ Unable to load identity token for current storefront user!");
+      return null;
+    }
+  }
+
+  async function loadCardHtml(jwt_token) {
+    try {
+      const result = await $.ajax({
+        url: `{{ member_info_url | safe }}`,
+        type: 'GET'
+      });
+      // console.log(result);
+      return result;
+    } catch (err) {
+      console.log(err);
+      contentDiv.html("⚠️ Unable to load membership information for current storefront user!");
+      return null;
+    }
+  }
+
+  function refreshData() {
+    // $('#lv-membership-info-widget-load-btn-{{ widget_id }}').click(function () {
+    contentDiv.html("Loading membership information...");
+    checkForCustomerToken().then((customerJWT) => {
+      if (customerJWT !== null) {
+        loadCardHtml(customerJWT).then((cardHtml) => {
+          contentDiv.html(cardHtml);
+          $("#lv-membership-info-refresh-data-btn").click(refreshData);
+
+          // $('#lv-membership-info-widget-load-btn-{{ widget_id }}').html("Refresh Information")
+          // document.querySelectorAll('details').forEach((el) => {
+          //   new Accordion(el);
+          // });
+        });
+      }
+    });
+  }
+
+  refreshData();
+})

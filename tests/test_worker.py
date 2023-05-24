@@ -5,6 +5,10 @@ import logging
 from bigcommerce import connection
 
 from member_card import worker
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from flask import Flask
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -131,13 +135,12 @@ class TestPubsubIngress:
         mock_orders_iterall.return_value = mock_orders
         mock_bigcomm_api.Orders.return_value = mock_orders_iterall
 
-        mock_get_app_client_for_store = mocker.patch(
-            "member_card.worker.get_app_client_for_store"
-        )
+        mock_bigcomm = mocker.patch("member_card.worker.bigcommerce")
+        mock_get_app_client_for_store = mock_bigcomm.get_app_client_for_store
+
         mock_get_app_client_for_store.return_value = mock_bigcomm_api
-        mock_bigcommerce_orders_etl = mocker.patch(
-            "member_card.worker.bigcommerce_orders_etl"
-        )
+        mock_bigcommerce = mocker.patch("member_card.worker.bigcommerce")
+        mock_bigcommerce_orders_etl = mock_bigcommerce.bigcommerce_orders_etl
         test_message = dict(
             type="sync_subscriptions_etl",
         )
@@ -295,3 +298,60 @@ class TestEnsureCardImage:
         logging.debug(f"{return_value=}")
 
         mock_ensure_uploaded_card_image.assert_called_once()
+
+
+def test_sync_bigcommerce_order(app: "Flask", mocker):
+    mock_bigcommerce = mocker.patch("member_card.worker.bigcommerce")
+    test_message = dict(
+        type="sync_bigcommerce_order",
+        store_hash=app.config["BIGCOMMERCE_STORE_HASH"],
+        data=dict(id="test_sync_bigcommerce_order_id"),
+    )
+
+    membership_skus = app.config["BIGCOMMERCE_MEMBERSHIP_SKUS"]
+
+    with app.app_context():
+        return_value = worker.sync_bigcommerce_order(
+            message=test_message,
+        )
+    logging.debug(f"{return_value=}")
+
+    assert return_value == "nah"
+
+    mock_bigcommerce.load_single_order.assert_called_once_with(
+        bigcommerce_client=mock_bigcommerce.get_app_client_for_store.return_value,
+        membership_skus=membership_skus,
+        order_id=test_message["data"]["id"],
+    )
+
+
+def test_worker_sync_customers_etl(mocker):
+    mock_bigcommerce = mocker.patch("member_card.worker.bigcommerce")
+    test_message = dict(
+        type="sync_customers_etl",
+    )
+
+    return_value = worker.sync_customers_etl(
+        message=test_message,
+    )
+    logging.debug(f"{return_value=}")
+
+    assert return_value is None
+
+    mock_bigcommerce.customer_etl.assert_called_once()
+
+
+def test_worker_run_slack_members_etl(mocker):
+    mock_slack = mocker.patch("member_card.worker.slack")
+    test_message = dict(
+        type="run_slack_members_etl",
+    )
+
+    return_value = worker.run_slack_members_etl(
+        message=test_message,
+    )
+    logging.debug(f"{return_value=}")
+
+    assert return_value
+
+    mock_slack.slack_members_etl.assert_called_once()

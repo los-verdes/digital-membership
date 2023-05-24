@@ -14,7 +14,7 @@ python_reqs_file := "requirements.txt"
 export GCLOUD_PROJECT := "lv-digital-membership"
 # TODO: dev as default after we get done setting this all up....
 export FLASK_APP := env_var_or_default("FLASK_APP", "wsgi:create_app()")
-export FLASK_ENV := env_var_or_default("FLASK_ENV", "developement")
+export FLASK_ENV := env_var_or_default("FLASK_ENV", "development")
 export FLASK_DEBUG := "true"
 export LOG_LEVEL := env_var_or_default("LOG_LEVEL", "debug")
 export DOCKER_BUILDKIT := "1"
@@ -125,8 +125,9 @@ serve: onepass_session
   #!/bin/zsh
   # source /Users/jeffwecan/.pyenv/versions/3.9.2/bin/virtualenvwrapper.sh
   # workon digital-membership
-  op run --env-file='./.env' -- \
-    just flask run --cert=tmp-certs/cert.pem --key=tmp-certs/key.pem --host=0.0.0.0 --port=8080
+  export DIGITAL_MEMBERSHIP_SECRETS_JSON="op://Los Verdes/digital-membership_local_dev_secrets/value"
+  op run -- \
+    just flask run --cert=tmp-certs/flask-cert.pem --key=tmp-certs/flask-key.pem --host=0.0.0.0 --port=8080
 
 build-website:
   docker build . --target website --tag '{{ website_image_name }}:{{ image_tag }}'
