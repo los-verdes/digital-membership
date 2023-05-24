@@ -225,8 +225,9 @@ def insert_order_as_membership(order, order_products, membership_skus):
 
         # customer_email = order["customerEmail"]
         variant_id = None
-        if subscription_line_item.get("product_options"):
-            variant_id = subscription_line_item["product_options"][0]["id"]
+        print(type(subscription_line_item))
+        if product_options := subscription_line_item.get("product_options"):
+            variant_id = product_options[0].get("id", "unknown")
 
         customer_email = order["billing_address"]["email"].lower()
 
@@ -289,9 +290,12 @@ def parse_subscription_orders(bigcommerce_client, membership_skus, subscription_
         #     f"#{order['orderNumber']} has no {membership_sku=} in {order_product_names=}"
         # )
         order = deepcopy(subscription_order)
+        order_products = [
+            dict(p) for p in bigcommerce_client.OrderProducts.all(order["id"])
+        ]
         membership_orders = insert_order_as_membership(
             order=order,
-            order_products=bigcommerce_client.OrderProducts.all(order["id"]),
+            order_products=order_products,
             membership_skus=membership_skus,
         )
 
@@ -398,13 +402,13 @@ def customer_etl(bigcommerce_client: BigcommerceApi):
         bigcommerce_id = customer["id"]
         customer_email = customer["email"].lower()
         print(f"{num}: {customer['email']=}")
-        if extant_user_by_email := User.query.filter_by(email=customer_email).first():
-            if extant_user_by_email.bigcommerce_id != bigcommerce_id:
-                logger.debug(
-                    f"Update {extant_user_by_email=} bigcommerce_id to {bigcommerce_id=}"
-                )
-                setattr(extant_user_by_email, "bigcommerce_id", bigcommerce_id)
-                db.session.add(extant_user_by_email)
+        # if extant_user_by_email := User.query.filter_by(email=customer_email).first():
+        #     if extant_user_by_email.bigcommerce_id != bigcommerce_id:
+        #         logger.debug(
+        #             f"Update {extant_user_by_email=} bigcommerce_id to {bigcommerce_id=}"
+        #         )
+        #         setattr(extant_user_by_email, "bigcommerce_id", bigcommerce_id)
+        #         db.session.add(extant_user_by_email)
 
         if extant_user_by_id := User.query.filter_by(
             bigcommerce_id=bigcommerce_id
