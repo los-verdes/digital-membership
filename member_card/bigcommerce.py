@@ -225,7 +225,6 @@ def insert_order_as_membership(order, order_products, membership_skus):
 
         # customer_email = order["customerEmail"]
         variant_id = None
-        print(type(subscription_line_item))
         if product_options := subscription_line_item.get("product_options"):
             variant_id = product_options[0].get("id", "unknown")
 
