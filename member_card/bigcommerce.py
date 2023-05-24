@@ -395,26 +395,56 @@ def generate_webhook_token(api: BigcommerceApi):
     return sign(token_data)
 
 
+def map_customer_to_user_by_store_id(bigcommerce_id, customer_email):
+    extant_user_by_email = User.query.filter_by(email=customer_email).first()
+    extant_user_by_id = User.query.filter_by(bigcommerce_id=bigcommerce_id).first()
+    # log_extra = dict(
+    #     bigcommerce_id=bigcommerce_id,
+    #     customer_email=customer_email,
+    #     extant_user_by_email=extant_user_by_email,
+    #     extant_user_by_id=extant_user_by_id,
+    # )
+    if extant_user_by_email := User.query.filter_by(email=customer_email).first():
+        if not extant_user_by_email.bigcommerce_id:
+            logger.debug(
+                f"Update {extant_user_by_email=} bigcommerce_id to {bigcommerce_id=}"
+            )
+            setattr(extant_user_by_email, "bigcommerce_id", bigcommerce_id)
+            return extant_user_by_email
+
+    if extant_user_by_id := User.query.filter_by(bigcommerce_id=bigcommerce_id).first():
+        if customer_email != extant_user_by_id.email:
+            logger.debug(f"Update {extant_user_by_id=} email to {customer_email=}")
+            setattr(extant_user_by_id, "email", customer_email)
+            return extant_user_by_id
+
+
 def customer_etl(bigcommerce_client: BigcommerceApi):
+    # First retrieve all the customer entries from the configured store (paginated here via the upstream bigcommerce client)
     customers = bigcommerce_client.Customers.iterall()
+
     for num, customer in enumerate(customers):
+        # Then we loop through our iterable of customers, parse out the relevant details, and then look for matching
+        # user entries from our app's database:
         bigcommerce_id = customer["id"]
         customer_email = customer["email"].lower()
-        print(f"{num}: {customer['email']=}")
-        if extant_user_by_email := User.query.filter_by(email=customer_email).first():
-            if not extant_user_by_email.bigcommerce_id:
-                logger.debug(
-                    f"Update {extant_user_by_email=} bigcommerce_id to {bigcommerce_id=}"
-                )
-                setattr(extant_user_by_email, "bigcommerce_id", bigcommerce_id)
-                db.session.add(extant_user_by_email)
-
-        if extant_user_by_id := User.query.filter_by(
-            bigcommerce_id=bigcommerce_id
-        ).first():
-            if customer_email != extant_user_by_id.email:
-                logger.debug(f"Update {extant_user_by_id=} email to {customer_email=}")
-                setattr(extant_user_by_id, "email", customer_email)
-                db.session.add(extant_user_by_id)
-
-    db.session.commit()
+        log_extra = dict(
+            bigcommerce_id=bigcommerce_id,
+            customer_email=customer_email,
+        )
+        logger.debug(
+            msg=f"[{num}]: {bigcommerce_id=} => next customer up: {bigcommerce_id=} & {customer_email=}",
+            log_extra=log_extra,
+        )
+        user = map_customer_to_user_by_store_id(
+            bigcommerce_id=bigcommerce_id,
+            customer_email=customer_email,
+        )
+        log_extra.update(dict(user=user))
+        if user is not None:
+            logger.debug(
+                msg=f"[{num}]: {bigcommerce_id=} => adding {user=} to database session and committing changes",
+                log_extra=log_extra,
+            )
+            db.session.add(user)
+            db.session.commit()
