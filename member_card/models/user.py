@@ -36,19 +36,33 @@ def ensure_user(
         email=email,
     )
 
+    log_extra = dict(
+        email=email,
+        first_name=first_name,
+        username=username,
+        password=password,
+        bigcommerce_id=bigcommerce_id,
+    )
+
     if not user.fullname and first_name is not None and last_name is not None:
         member_name = f"{first_name} {last_name}"
-        logger.debug(f"No name set yet on {user=}, updating to: {member_name}")
+        logger.debug(
+            f"No name set yet on {user=}, updating to: {member_name}", extra=log_extra
+        )
         user.fullname = member_name
         user.first_name = first_name
         user.last_name = last_name
 
     if user.first_name != first_name:
         logger.debug(
-            f"{user.first_name=} does not match {first_name} for some reason..."
+            f"{user.first_name=} does not match {first_name} for some reason...",
+            extra=log_extra,
         )
     if user.last_name != last_name:
-        logger.debug(f"{user.last_name=} does not match {last_name} for some reason...")
+        logger.debug(
+            f"{user.last_name=} does not match {last_name} for some reason...",
+            extra=log_extra,
+        )
 
     if username is not None:
         logger.debug(f"Setting new username for {user=}: {username}")
