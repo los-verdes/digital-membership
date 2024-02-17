@@ -1,12 +1,12 @@
 locals {
   scheduler_jobs = {
-    run_slack_members_etl = {
-      description = "Sync Slack member / user data into local digital membership database"
-      schedule    = "0 */6 * * *"
-      data = {
-        type = "run_slack_members_etl",
-      }
-    }
+    # run_slack_members_etl = {
+    #   description = "Sync Slack member / user data into local digital membership database"
+    #   schedule    = "0 */6 * * *"
+    #   data = {
+    #     type = "run_slack_members_etl",
+    #   }
+    # }
     sync_customers_etl = {
       description = "Sync E-commerce customer / user data into local digital membership database"
       schedule    = "30 * * * *"
