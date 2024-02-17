@@ -15,7 +15,7 @@ RUN mkdir -m 0755 -p /etc/apt/keyrings/ \
     && apt-get install --no-install-recommends -y \
         google-chrome-stable \
         build-essential=12.9 \
-        python3-dev=3.9.2-3 \
+        libpython3-dev \
         swig=4.0.2-1 \
         fonts-liberation=1:1.07.4-11 \
     && rm -rf /var/lib/apt/lists/*
