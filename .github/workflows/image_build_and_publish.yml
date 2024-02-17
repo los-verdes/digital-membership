@@ -1,6 +1,8 @@
 name: Build and Publish Images to GCR
 
 on:
+  pull_request:
+    branches: [main]
   workflow_call:
     outputs:
       image_name:
