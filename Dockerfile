@@ -6,7 +6,8 @@ ENV PYTHONUNBUFFERED True
 WORKDIR /app
 
 # Various pre-requisites for getting m2crypto install (which in turn is used by passkit)
-RUN mkdir -m 0755 -p /etc/apt/keyrings/ \
+RUN mkdir --parents /etc/apt/keyrings/ \
+  && chmod 0755 /etc/apt/keyrings/ \
   && bash -c 'set -o pipefail && wget -O- https://dl.google.com/linux/linux_signing_key.pub \
     | gpg --dearmor > /etc/apt/keyrings/google-chrome.gpg \
     && chmod 644 /etc/apt/keyrings/google-chrome.gpg' \
