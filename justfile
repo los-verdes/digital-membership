@@ -105,15 +105,16 @@ docker-flask +CMD: build onepass_session
     flask {{ CMD }}
 
 
-flask +CMD: onepass_session
-  #!/bin/zsh
+flask +CMD:
+  #!/bin/bash
   echo "FLASK_APP: ${FLASK_APP-None}"
   echo "FLASK_ENV: ${FLASK_ENV-None}"
   # op run --env-file='./.env' -- flask {{ CMD }}
-  export OP_ACCOUNT="my.1password.com"
+  # export OP_ACCOUNT="my.1password.com"
   # export DIGITAL_MEMBERSHIP_SECRETS_JSON="op://Los Verdes/digital-membership_local_dev_secrets/value"
-  export DIGITAL_MEMBERSHIP_SECRETS_JSON="op://Los Verdes/digital-membership_gcp-secrets-manager/value"
-  op run -- flask {{ CMD }}
+  # export DIGITAL_MEMBERSHIP_SECRETS_JSON="op://Los Verdes/digital-membership_gcp-secrets-manager/value"
+  # op run -- flask {{ CMD }}
+  flask {{ CMD }}
 
 ensure-db-schemas:
   just flask ensure-db-schemas
