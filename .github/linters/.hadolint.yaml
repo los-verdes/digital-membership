@@ -1,3 +1,4 @@
-# Don't know how to keep this rule enabled while staying sane re: chrome's apt pkg
+# Don't know how to keep this DL3008 rule enabled while staying sane re: chrome's apt pkg
 # probably need to get it installed through other means?
-ignored: [DL3008]
+# DL3029: also needed for builds to work with chrome apt for some reason?
+ignored: [DL3008, DL3029]
