@@ -16,7 +16,6 @@ RUN mkdir -m 0755 -p /etc/apt/keyrings/ \
         google-chrome-stable \
         build-essential=12.9 \
         libpython3-dev \
-        swig=4.0.2-1 \
         fonts-liberation=1:1.07.4-11 \
     && rm -rf /var/lib/apt/lists/*
 
@@ -29,6 +28,7 @@ RUN pip install \
         --no-cache-dir \
         --trusted-host pypi.python.org \
         --requirement requirements.txt \
+        swig \
         google-python-cloud-debugger==2.18
 
 COPY ./config/ ./config
