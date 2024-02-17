@@ -6,8 +6,11 @@ ENV PYTHONUNBUFFERED True
 WORKDIR /app
 
 # Various pre-requisites for getting m2crypto install (which in turn is used by passkit)
-RUN bash -c 'set -o pipefail && wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add -' \
-    && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
+RUN mkdir -m 0755 -p /etc/apt/keyrings/ \
+  && bash -c 'set -o pipefail && wget -O- https://dl.google.com/linux/linux_signing_key.pub \
+    | gpg --dearmor > /etc/apt/keyrings/google-chrome.gpg \
+    && chmod 644 /etc/apt/keyrings/google-chrome.gpg' \
+    && sh -c 'echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | tee /etc/apt/sources.list.d/google-chrome.list' \
     && apt-get update \
     && apt-get install --no-install-recommends -y \
         google-chrome-stable \
