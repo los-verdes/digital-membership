@@ -325,7 +325,7 @@ class TestSettings(Settings):
 
 
 class RemoteSqlProductionSettings(ProductionSettings):
-    SQLALCHEMY_DATABASE_URI: str = "postgresql://website%40lv-digital-membership.iam@127.0.0.1:5434/lv-digital-membership"
+    # SQLALCHEMY_DATABASE_URI: str = "postgresql://website%40lv-digital-membership.iam@127.0.0.1:5434/lv-digital-membership"
 
     def use_gcp_sql_connector(self):
         pass
