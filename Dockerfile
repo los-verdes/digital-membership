@@ -1,4 +1,4 @@
-FROM python:3.9 AS worker
+FROM --platform=linux/amd64 python:3.9 AS worker
 
 # Allow statements and log messages to immediately appear in the Cloud Run logs
 ENV PYTHONUNBUFFERED True
@@ -34,7 +34,7 @@ COPY ./*.py ./
 
 CMD ["gunicorn", "--bind=:8080", "--workers=1", "--threads=8", "--timeout=0", "--log-config=config/gunicron_logging.ini", "--log-file=-", "wsgi:create_worker_app()"]
 
-FROM python:3.9-slim AS website
+FROM --platform=linux/amd64 python:3.9 AS website
 
 # Allow statements and log messages to immediately appear in the Cloud Run logs
 ENV PYTHONUNBUFFERED True
