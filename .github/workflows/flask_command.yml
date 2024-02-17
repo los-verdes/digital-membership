@@ -36,10 +36,12 @@ jobs:
       image: ${{ steps.flask-command.outputs.image }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup just
-        uses: extractions/setup-just@v1
+        uses: taiki-e/install-action@v2
+        with:
+          tool: just
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -53,7 +55,7 @@ jobs:
           key: ${{ env.pythonLocation }}-pip-${{ hashFiles('requirements.txt') }}
 
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v0
+        uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: "projects/567739286055/locations/global/workloadIdentityPools/los-verdes-digital-membership/providers/los-verdes-digital-membership"
           service_account: "github-deployer@lv-digital-membership.iam.gserviceaccount.com"

@@ -30,10 +30,12 @@ jobs:
       id-token: "write"
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup just
-        uses: extractions/setup-just@v1
+        uses: taiki-e/install-action@v2
+        with:
+          tool: just
 
       - name: Utilize .terraform cache
         uses: actions/cache@v3
@@ -46,13 +48,13 @@ jobs:
         run: just set-tf-ver-output
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ steps.read_tf_version.outputs.terraform_version }}
           terraform_wrapper: false
 
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v0
+        uses: google-github-actions/auth@v2
         id: auth
         with:
           workload_identity_provider: "projects/567739286055/locations/global/workloadIdentityPools/los-verdes-digital-membership/providers/los-verdes-digital-membership"
@@ -100,10 +102,12 @@ jobs:
       management_sql_user_password: ${{ steps.just-configure-database.outputs.management_sql_user_password }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup just
-        uses: extractions/setup-just@v1
+        uses: taiki-e/install-action@v2
+        with:
+          tool: just
 
       - name: Utilize .terraform cache
         uses: actions/cache@v3
@@ -116,13 +120,13 @@ jobs:
         run: just set-tf-ver-output
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: ${{ steps.read_tf_version.outputs.terraform_version }}
           terraform_wrapper: false
 
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v0
+        uses: google-github-actions/auth@v2
         id: auth
         with:
           workload_identity_provider: "projects/567739286055/locations/global/workloadIdentityPools/los-verdes-digital-membership/providers/los-verdes-digital-membership"
