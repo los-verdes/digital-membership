@@ -44,13 +44,11 @@ def ensure_user(
         user.last_name = last_name
 
     if user.first_name != first_name:
-        logger.warning(
+        logger.debug(
             f"{user.first_name=} does not match {first_name} for some reason..."
         )
     if user.last_name != last_name:
-        logger.warning(
-            f"{user.last_name=} does not match {last_name} for some reason..."
-        )
+        logger.debug(f"{user.last_name=} does not match {last_name} for some reason...")
 
     if username is not None:
         logger.debug(f"Setting new username for {user=}: {username}")
