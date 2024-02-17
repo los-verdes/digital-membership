@@ -38,7 +38,7 @@ jobs:
           tool: just
 
       - name: Utilize .terraform cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: terraform/.terraform
           key: ${{ hashFiles('terraform/.terraform.lock.hcl') }}
@@ -110,7 +110,7 @@ jobs:
           tool: just
 
       - name: Utilize .terraform cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: terraform/.terraform
           key: ${{ hashFiles('terraform/.terraform.lock.hcl') }}
