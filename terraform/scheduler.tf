@@ -18,6 +18,7 @@ locals {
     sync_subscriptions_etl = {
       description = "Regularly recurring Squarespace order into membership database ETL task"
       schedule    = "0 * * * *"
+      paused      = true
       data = {
         type = "sync_subscriptions_etl",
       }
