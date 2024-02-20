@@ -15,6 +15,14 @@ locals {
         type = "sync_customers_etl",
       }
     }
+    sync_subscriptions_etl = {
+      description = "Regularly recurring Squarespace order into membership database ETL task"
+      schedule    = "0 * * * *"
+      data = {
+        type = "sync_subscriptions_etl",
+      }
+
+    }
   }
 }
 
@@ -28,18 +36,5 @@ resource "google_cloud_scheduler_job" "worker" {
   pubsub_target {
     topic_name = google_pubsub_topic.digital_membership.id
     data       = base64encode(jsonencode(each.value.data))
-  }
-}
-
-resource "google_cloud_scheduler_job" "sync_subscriptions_etl" {
-  name        = "sync-subscriptions-etl"
-  description = "Regularly recurring Squarespace order into membership database ETL task"
-  schedule    = "0 * * * *"
-
-  pubsub_target {
-    topic_name = google_pubsub_topic.digital_membership.id
-    data = base64encode(jsonencode({
-      type = "sync_subscriptions_etl",
-    }))
   }
 }
