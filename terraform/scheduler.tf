@@ -16,7 +16,7 @@ locals {
       }
     }
     sync_subscriptions_etl = {
-      description = "Regularly recurring Squarespace order into membership database ETL task"
+      description = "Regularly recurring storefront orders into membership database ETL task"
       schedule    = "0 * * * *"
       data = {
         type = "sync_subscriptions_etl",
