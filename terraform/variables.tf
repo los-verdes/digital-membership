@@ -1,6 +1,6 @@
 variable "app_log_level" {
   type    = string
-  default = "INFO"
+  default = "DEBUG"
 }
 
 variable "base_domain" {
