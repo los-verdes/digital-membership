@@ -267,6 +267,62 @@ def parse_subscriptions(skus, subscriptions):
     return memberships
 
 
+def find_missing_shipping(minibc_client: Minibc, skus):
+    start_page_num = 1
+    max_pages = 1000
+
+    missing_shipping_subs = list()
+    inactive_missing_shipping_subs = list()
+
+    last_page_num = start_page_num
+    end_page_num = start_page_num + max_pages + 1
+
+    logger.debug(
+        f"find_missing_shipping() => starting to paginate subscriptions and such: {start_page_num=} {end_page_num=}"
+    )
+    total_subs_num = 0
+    total_subs_missing_shipping = 0
+    total_inactive_subs_missing_shipping = 0
+    for page_num in range(start_page_num, end_page_num):
+        logger.info(f"Sync at {page_num=}")
+        subscriptions = minibc_client.search_subscriptions(
+            product_sku=skus[0],
+            page_num=page_num,
+        )
+        if subscriptions is None:
+            logger.debug(
+                f"find_missing_shipping() => {last_page_num=} returned no results!. Setting `last_page_num` back to 1"
+            )
+            last_page_num = 1
+            break
+
+        last_page_num = page_num
+        for subscription in subscriptions:
+            if subscription["shipping_address"]["street_1"] == "":
+                logger.debug(
+                    f"{subscription['customer']['email']} has no shipping address set!"
+                )
+                if subscription["status"] == "inactive":
+                    inactive_missing_shipping_subs.append(subscriptions)
+                missing_shipping_subs.append(subscription)
+
+        logger.debug(
+            f"find_missing_shipping() => after {page_num=} sleeping for 1 second..."
+        )
+        total_subs_num += len(subscriptions)
+        total_subs_missing_shipping = len(missing_shipping_subs)
+        total_inactive_subs_missing_shipping = len(inactive_missing_shipping_subs)
+        logger.debug(
+            f"{total_subs_num=}:: {total_subs_missing_shipping=} ({total_inactive_subs_missing_shipping=})"
+        )
+        sleep(1)
+
+    logger.debug(
+        f"{total_subs_num=}:: {total_subs_missing_shipping=} ({total_inactive_subs_missing_shipping=})"
+    )
+    return missing_shipping_subs
+
+
 def minibc_orders_etl(minibc_client: Minibc, skus, load_all):
     from member_card import models
 

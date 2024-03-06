@@ -12,7 +12,7 @@ from member_card.app import app
 from member_card.db import db
 from member_card.gcp import get_bucket, publish_message
 from member_card.image import generate_card_image
-from member_card.minibc import Minibc, parse_subscriptions
+from member_card.minibc import Minibc, parse_subscriptions, find_missing_shipping
 from member_card.models import AnnualMembership, User
 from member_card.models.membership_card import get_or_create_membership_card
 from member_card.models.user import add_role_to_user_by_email, edit_user_name
@@ -252,6 +252,21 @@ def run_slack_members_etl():
 @app.cli.group()
 def minibc():
     pass
+
+
+@minibc.command("find-missing-shipping")
+def minibc_cmd_find_missing_shipping():
+    minibc_client = Minibc(api_key=app.config["MINIBC_API_KEY"])
+    missing_shipping_subs = find_missing_shipping(
+        minibc_client=minibc_client,
+        skus=app.config["MINIBC_MEMBERSHIP_SKUS"],
+    )
+    print(f"{len(missing_shipping_subs)}=")
+    from pprint import pprint
+
+    breakpoint()
+    pprint({sub["id"]: sub["customer"] for sub in missing_shipping_subs})
+    breakpoint()
 
 
 @minibc.command("list-incoming-webhooks")
