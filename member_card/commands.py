@@ -257,7 +257,7 @@ def minibc():
 @minibc.command("sync-subscriptions")
 def minibc_sync_subscriptions():
     etl_results = worker.sync_minibc_subscriptions_etl(
-        message=dict(type="cli-sync-subscriptions"),
+        message=dict(type="cli-sync-minibc-subscriptions"),
     )
     logger.info(f"minibc_sync_subscriptions() => {etl_results=}")
 
@@ -272,9 +272,7 @@ def minibc_cmd_find_missing_shipping():
     print(f"{len(missing_shipping_subs)}=")
     from pprint import pprint
 
-    breakpoint()
     pprint({sub["id"]: sub["customer"] for sub in missing_shipping_subs})
-    breakpoint()
 
 
 @minibc.command("list-incoming-webhooks")

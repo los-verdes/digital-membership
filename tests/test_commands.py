@@ -3,7 +3,7 @@ from member_card.models import User, AnnualMembership
 from member_card.db import db
 
 from flask import url_for
-from member_card.commands import bigcomm
+from member_card.commands import bigcomm, minibc
 
 if TYPE_CHECKING:
     from flask import Flask
@@ -395,4 +395,38 @@ class TestBigcommCommands:
 
         mock_bigcomm_client.get_all_widgets.assert_called_once()
         mock_bigcomm_client.create_a_placement.assert_called()
+        assert result.exit_code == 0
+
+
+class TestMinibcCommands:
+    def test_sync_subscriptions(
+        self, runner: "FlaskCliRunner", mocker: "MockerFixture"
+    ):
+        mock_sync_subs = mocker.patch(
+            "member_card.commands.worker"
+        ).sync_minibc_subscriptions_etl
+
+        result = runner.invoke(
+            cli=minibc,
+            args=["sync-subscriptions"],
+        )
+
+        assert result.exit_code == 0
+
+        mock_sync_subs.assert_called_once_with(
+            message=dict(type="cli-sync-minibc-subscriptions"),
+        )
+
+    def test_minibc_cmd_find_missing_shipping(
+        self, app: "Flask", runner: "FlaskCliRunner", mocker: "MockerFixture"
+    ):
+        _ = app.config["BIGCOMMERCE_MEMBERSHIP_SKUS"]
+        _ = mocker.patch("member_card.commands.Minibc")
+        _ = mocker.patch(
+            "member_card.commands.find_missing_shipping"
+        )
+        result = runner.invoke(
+            cli=minibc,
+            args=["find-missing-shipping"],
+        )
         assert result.exit_code == 0
