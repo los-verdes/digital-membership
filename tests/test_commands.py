@@ -422,9 +422,7 @@ class TestMinibcCommands:
     ):
         _ = app.config["BIGCOMMERCE_MEMBERSHIP_SKUS"]
         _ = mocker.patch("member_card.commands.Minibc")
-        _ = mocker.patch(
-            "member_card.commands.find_missing_shipping"
-        )
+        _ = mocker.patch("member_card.commands.find_missing_shipping")
         result = runner.invoke(
             cli=minibc,
             args=["find-missing-shipping"],
