@@ -355,3 +355,17 @@ def test_worker_run_slack_members_etl(mocker):
     assert return_value
 
     mock_slack.slack_members_etl.assert_called_once()
+
+
+def test_sync_minibc_subscriptions_etl(app: "Flask", mocker):
+    mock_minibc = mocker.patch("member_card.worker.minibc")
+    test_message = dict(
+        type="sync_minibc_subscriptions_etl",
+    )
+
+    with app.app_context():
+        worker.sync_minibc_subscriptions_etl(
+            message=test_message,
+        )
+
+    mock_minibc.minibc_subscriptions_etl.assert_called_once()

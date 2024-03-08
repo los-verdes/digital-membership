@@ -4,6 +4,7 @@ import logging
 
 from flask import Blueprint, current_app, request
 
+from member_card import minibc
 from member_card import bigcommerce, slack
 from member_card.db import db
 from member_card.image import ensure_uploaded_card_image
@@ -224,6 +225,26 @@ def sync_customers_etl(message):
     )
 
 
+def sync_minibc_subscriptions_etl(message):
+    log_extra = dict(pubsub_message=message)
+    logger.debug(
+        f"sync_minibc_subscriptions_etl(): Processing message: {message}",
+        extra=log_extra,
+    )
+
+    minibc_client = minibc.Minibc(api_key=current_app.config["MINIBC_API_KEY"])
+    membership_skus = current_app.config["BIGCOMMERCE_MEMBERSHIP_SKUS"]
+
+    etl_result = minibc.minibc_subscriptions_etl(
+        minibc_client=minibc_client,
+        skus=membership_skus,
+    )
+    logger.debug(
+        f"sync_minibc_subscriptions_etl(): {len(etl_result)=}",
+        extra=log_extra,
+    )
+
+
 @worker_bp.route("/pubsub", methods=["POST"])
 def pubsub_ingress():
     try:
@@ -234,6 +255,7 @@ def pubsub_ingress():
     MESSAGE_TYPE_HANDLERS = {
         "email_distribution_request": process_email_distribution_request,
         "sync_subscriptions_etl": sync_subscriptions_etl,
+        "sync_minibc_subscriptions_etl": sync_minibc_subscriptions_etl,
         "sync_customers_etl": sync_customers_etl,
         "sync_squarespace_order": sync_squarespace_order,
         "sync_bigcommerce_order": sync_bigcommerce_order,

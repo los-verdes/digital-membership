@@ -1,14 +1,13 @@
 import logging
-from datetime import timedelta, timezone
+from datetime import timezone
 from time import sleep
 from typing import TYPE_CHECKING
 
 import requests
-from dateutil.parser import parse, ParserError
+from dateutil.parser import ParserError, parse
 
 from member_card.db import db, get_or_update
 from member_card.models import table_metadata
-from member_card.models.user import ensure_user
 
 # from member_card.models import MinibcWebhook, table_metadata
 
@@ -162,126 +161,133 @@ class Minibc(object):
         return self.get(path="profiles/", args=dict(filter=f"email,{email}"))
 
 
-def insert_order_as_membership(order, skus):
-    from member_card.models import AnnualMembership
-
-    membership_orders = []
-    products = order.get("products", [])
-    subscription_line_items = [p for p in products if p["sku"] in skus]
-    ignored_line_items = [p for p in products if p["sku"] not in skus]
-    logger.debug(f"{ignored_line_items=}")
-    for subscription_line_item in subscription_line_items:
-        fulfilled_on = None
-        if fulfilled_on := order.get("fulfilledOn"):
-            fulfilled_on = parse(fulfilled_on).replace(tzinfo=timezone.utc)
-
-        customer_email = order["customer"]["email"]
-        # logger.debug(f"{order=}")
-
-        weird_dates_keys = [
-            "created_time",
-            "last_modified",
-            "signup_date",
-            "next_payment_date",
-        ]
-        weird_dates = {}
-        for weird_dates_key in weird_dates_keys:
-            order[weird_dates_key] = order[weird_dates_key].strip("-")
-            if order[weird_dates_key] == "0":
-                weird_dates[weird_dates_key] = None
-            else:
-                try:
-                    weird_dates[weird_dates_key] = parse(
-                        order[weird_dates_key]
-                    ).replace(tzinfo=timezone.utc)
-                except ParserError as err:
-                    logger.warning(
-                        f"Unable to parse {weird_dates_key} for {customer_email}: {err=}"
-                    )
-                    weird_dates[weird_dates_key] = None
-
-        created_on = weird_dates["signup_date"]
-        if weird_dates["next_payment_date"] is not None:
-            created_on = weird_dates["next_payment_date"] - timedelta(days=365)
-
-        logger.debug(f"{weird_dates['next_payment_date']=} => {created_on=}")
-        membership_kwargs = dict(
-            order_id=f"minibc_{str(order['id'])}",
-            order_number=f"minibc_{order['order_id'] or order['id']}_{order['customer']['store_customer_id']}",
-            channel="minibc",
-            channel_name="minibc",
-            billing_address_first_name=order["customer"]["first_name"],
-            billing_address_last_name=order["customer"]["last_name"],
-            external_order_reference=order["customer"]["store_customer_id"],
-            created_on=created_on,
-            modified_on=weird_dates["last_modified"],
-            fulfilled_on=fulfilled_on,
-            customer_email=customer_email,
-            fulfillment_status=None,
-            test_mode=False,
-            line_item_id=subscription_line_item["order_product_id"],
-            sku=subscription_line_item["sku"],
-            variant_id=subscription_line_item["name"],
-            product_id=subscription_line_item["store_product_id"],
-            product_name=subscription_line_item["name"],
-        )
-        membership = get_or_update(
-            session=db.session,
-            model=AnnualMembership,
-            filters=["order_id"],
-            kwargs=membership_kwargs,
-        )
-        membership_orders.append(membership)
-
-        membership_user = ensure_user(
-            email=membership.customer_email,
-            first_name=membership.billing_address_first_name,
-            last_name=membership.billing_address_last_name,
-        )
-        membership_user_id = membership_user.id
-        if not membership.user_id:
-            logger.debug(
-                f"No user_id set for {membership=}! Setting to: {membership_user_id=}"
-            )
-            setattr(membership, "user_id", membership_user_id)
-    return membership_orders
-
-
-def parse_subscriptions(skus, subscriptions):
+def parse_subscriptions(subscriptions):
     logger.info(f"{len(subscriptions)=} retrieved from Minibc...")
 
     # Insert oldest orders first (so our internal membership ID generally aligns with order IDs...)
     subscriptions.reverse()
 
     # Loop over all the raw order data and do the ETL bits
-    memberships = []
+    subscription_objs = []
+    from member_card.models import Subscription
+
     for subscription in subscriptions:
-        membership_orders = insert_order_as_membership(
-            order=subscription,
-            skus=skus,
+        product_name = ",".join([p["name"] for p in subscription["products"]])
+        shipping_address = " ".join(subscription["shipping_address"].values())
+        subscription_kwargs = dict(
+            subscription_id=subscription["id"],
+            order_id=subscription["order_id"],
+            customer_id=subscription["customer"]["id"],
+            customer_first_name=subscription["customer"]["first_name"],
+            customer_last_name=subscription["customer"]["last_name"],
+            customer_email=subscription["customer"]["email"],
+            product_name=product_name,
+            status=subscription["status"],
+            shipping_address=shipping_address,
+            signup_date=parse_weird_dates(subscription["signup_date"]),
+            pause_date=parse_weird_dates(subscription["pause_date"]),
+            cancellation_date=parse_weird_dates(subscription["cancellation_date"]),
+            next_payment_date=parse_weird_dates(subscription["next_payment_date"]),
+            created_time=parse_weird_dates(subscription["created_time"]),
+            last_modified=parse_weird_dates(subscription["last_modified"]),
         )
-        for membership_order in membership_orders:
-            db.session.add(membership_order)
-        db.session.commit()
-        memberships += membership_orders
-    return memberships
+        subscription_obj = get_or_update(
+            session=db.session,
+            model=Subscription,
+            filters=["subscription_id"],
+            kwargs=subscription_kwargs,
+        )
+        subscription_objs.append(subscription_obj)
+
+    for subscription_obj in subscription_objs:
+        db.session.add(subscription_obj)
+    db.session.commit()
+    return subscription_objs
 
 
-def minibc_orders_etl(minibc_client: Minibc, skus, load_all):
+def find_missing_shipping(minibc_client: Minibc, skus):
+    start_page_num = 1
+    max_pages = 1000
+
+    missing_shipping_subs = list()
+    inactive_missing_shipping_subs = list()
+
+    last_page_num = start_page_num
+    end_page_num = start_page_num + max_pages + 1
+
+    logger.debug(
+        f"find_missing_shipping() => starting to paginate subscriptions and such: {start_page_num=} {end_page_num=}"
+    )
+    total_subs_num = 0
+    total_subs_missing_shipping = 0
+    total_inactive_subs_missing_shipping = 0
+    for page_num in range(start_page_num, end_page_num):
+        logger.info(f"Sync at {page_num=}")
+        subscriptions = minibc_client.search_subscriptions(
+            product_sku=skus[0],
+            page_num=page_num,
+        )
+        if subscriptions is None:
+            logger.debug(
+                f"find_missing_shipping() => {last_page_num=} returned no results!. Setting `last_page_num` back to 1"
+            )
+            last_page_num = 1
+            break
+
+        last_page_num = page_num
+        for subscription in subscriptions:
+            if subscription["shipping_address"]["street_1"] == "":
+                logger.debug(
+                    f"{subscription['customer']['email']} has no shipping address set!"
+                )
+                if subscription["status"] == "inactive":
+                    inactive_missing_shipping_subs.append(subscriptions)
+                missing_shipping_subs.append(subscription)
+
+        logger.debug(
+            f"find_missing_shipping() => after {page_num=} sleeping for 1 second..."
+        )
+        total_subs_num += len(subscriptions)
+        total_subs_missing_shipping = len(missing_shipping_subs)
+        total_inactive_subs_missing_shipping = len(inactive_missing_shipping_subs)
+        logger.debug(
+            f"{total_subs_num=}:: {total_subs_missing_shipping=} ({total_inactive_subs_missing_shipping=})"
+        )
+        sleep(1)
+
+    logger.debug(
+        f"{total_subs_num=}:: {total_subs_missing_shipping=} ({total_inactive_subs_missing_shipping=})"
+    )
+    return missing_shipping_subs
+
+
+def parse_weird_dates(date_str):
+    date_str = date_str.strip("-")
+    if date_str == "0":
+        return None
+
+    try:
+        return parse(date_str).replace(tzinfo=timezone.utc)
+    except ParserError as err:
+        logger.warning(f"Unable to parse {date_str}: {err=}")
+        return None
+
+
+def minibc_subscriptions_etl(minibc_client: Minibc, skus, load_all=False):
     from member_card import models
 
-    # etl_start_time = datetime.now(tz=ZoneInfo("UTC"))
-
-    membership_table_name = models.AnnualMembership.__tablename__
+    subscriptions_table_name = models.Subscription.__tablename__
 
     if load_all:
         start_page_num = 1
         max_pages = 1000
     else:
-        start_page_num = table_metadata.get_last_run_start_page(membership_table_name)
+        start_page_num = table_metadata.get_last_run_start_page(
+            subscriptions_table_name
+        )
         max_pages = 20
 
-    memberships = list()
+    subscription_objs = list()
 
     last_page_num = start_page_num
     end_page_num = start_page_num + max_pages + 1
@@ -304,19 +310,19 @@ def minibc_orders_etl(minibc_client: Minibc, skus, load_all):
             break
 
         last_page_num = page_num
-        memberships += parse_subscriptions(skus, subscriptions)
+        subscription_objs += parse_subscriptions(subscriptions)
         logger.debug(f"after {page_num=} sleeping for 1 second...")
         sleep(1)
 
     if not load_all:
         logger.debug(
-            f"Setting start_page_num metadata on {membership_table_name=} to {last_page_num=}"
+            f"Setting start_page_num metadata on {subscriptions_table_name=} to {last_page_num=}"
         )
         table_metadata.set_last_run_start_page(
-            membership_table_name, max(1, last_page_num - 1)
+            subscriptions_table_name, max(1, last_page_num - 1)
         )
 
-    return memberships
+    return subscription_objs
 
 
 def load_single_subscription(minibc_client: Minibc, skus, order_id):
