@@ -21,7 +21,14 @@ locals {
       data = {
         type = "sync_subscriptions_etl",
       }
-
+    }
+    sync_minibc_subscriptions_etl = {
+      description = "Regularly recurring MiniBC subscriptions into membership database ETL task"
+      schedule    = "30 */12 * * *"
+      paused      = true
+      data = {
+        type = "sync_minibc_subscriptions_etl",
+      }
     }
   }
 }
