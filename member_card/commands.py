@@ -254,6 +254,14 @@ def minibc():
     pass
 
 
+@minibc.command("sync-subscriptions")
+def minibc_sync_subscriptions():
+    etl_results = worker.sync_minibc_subscriptions_etl(
+        message=dict(type="cli-sync-subscriptions"),
+    )
+    logger.info(f"minibc_sync_subscriptions() => {etl_results=}")
+
+
 @minibc.command("find-missing-shipping")
 def minibc_cmd_find_missing_shipping():
     minibc_client = Minibc(api_key=app.config["MINIBC_API_KEY"])
