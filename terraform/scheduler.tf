@@ -17,7 +17,7 @@ locals {
     }
     sync_subscriptions_etl = {
       description = "Regularly recurring storefront orders into membership database ETL task"
-      schedule    = "0 * * * *"
+      schedule    = "15 */6 * * *"
       data = {
         type = "sync_subscriptions_etl",
       }
