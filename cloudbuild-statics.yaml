@@ -3,13 +3,13 @@ substitutions:
   _BUCKET_ID: "statics-gcs-bucket"
 
 steps:
-  - name: "pkg.dev/$PROJECT_ID/website:${_IMAGE_TAG}"
+  - name: "gcr.io/$PROJECT_ID/website:${_IMAGE_TAG}"
     entrypoint: "flask"
     args:
       - assets
       - build
 
-  - name: "pkg.dev/cloud-builders/gsutil"
+  - name: "gcr.io/cloud-builders/gsutil"
     args:
       - "-m"
       - "cp"

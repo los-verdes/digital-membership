@@ -42,10 +42,10 @@ variable "management_sql_user_password" {
 
 variable "website_image" {
   type    = string
-  default = "pkg.dev/lv-digital-membership/website:latest"
+  default = "gcr.io/lv-digital-membership/website:latest"
 }
 
 variable "worker_image" {
   type    = string
-  default = "pkg.dev/lv-digital-membership/worker:latest"
+  default = "gcr.io/lv-digital-membership/worker:latest"
 }
