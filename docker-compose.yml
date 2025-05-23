@@ -6,7 +6,7 @@ services:
 
   member_card:
     build: .
-    # image: "pkg.dev/lv-digital-membership/member-card:latest"
+    # image: "gcr.io/lv-digital-membership/member-card:latest"
     restart: always
     command: flask run
     links:

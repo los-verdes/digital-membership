@@ -10,5 +10,5 @@ gcp_region = "us-central1"
 github_repo = "los-verdes/digital-membership"
 
 membership_squarespace_sku = "SQ3671268"
-# cloud_run_container_image = "pkg.dev/lv-digital-membership/member-card"
+# cloud_run_container_image = "gcr.io/lv-digital-membership/member-card"
 app_log_level = "DEBUG"

@@ -68,15 +68,15 @@ jobs:
           just tf init
           just tf plan
         env:
-          TF_VAR_website_image: "pkg.dev/lv-digital-membership/website:sha-${{ needs.build_images.outputs.short_sha_tag }}"
-          TF_VAR_worker_image: "pkg.dev/lv-digital-membership/worker:sha-${{ needs.build_images.outputs.short_sha_tag }}"
+          TF_VAR_website_image: "gcr.io/lv-digital-membership/website:sha-${{ needs.build_images.outputs.short_sha_tag }}"
+          TF_VAR_worker_image: "gcr.io/lv-digital-membership/worker:sha-${{ needs.build_images.outputs.short_sha_tag }}"
           TF_VAR_management_sql_user_password: ${{ secrets.management_sql_user_password }}
 
       - name: Apply
         run: just tf apply -auto-approve
         env:
-          TF_VAR_website_image: "pkg.dev/lv-digital-membership/website:sha-${{ needs.build_images.outputs.short_sha_tag }}"
-          TF_VAR_worker_image: "pkg.dev/lv-digital-membership/worker:sha-${{ needs.build_images.outputs.short_sha_tag }}"
+          TF_VAR_website_image: "gcr.io/lv-digital-membership/website:sha-${{ needs.build_images.outputs.short_sha_tag }}"
+          TF_VAR_worker_image: "gcr.io/lv-digital-membership/worker:sha-${{ needs.build_images.outputs.short_sha_tag }}"
           TF_VAR_management_sql_user_password: ${{ secrets.management_sql_user_password }}
 
   upload-statics-to-gcs:
