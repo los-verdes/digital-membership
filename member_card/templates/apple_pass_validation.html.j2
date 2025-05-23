@@ -10,7 +10,7 @@
   macros.membership_card(
     title="Los Verdes Membership Card",
     primary_info_text=verified_card.user.fullname,
-    secondary_info_text="Member Since " ~ verified_card.member_since.strftime('%b %Y'),
+    secondary_info_text="",
     aux_info_text="Good through " ~ verified_card.member_until.strftime('%b %d, %Y'),
     serial_number=verified_card.serial_number,
     validation_msg=validation_msg,

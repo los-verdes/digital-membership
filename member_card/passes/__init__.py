@@ -247,11 +247,11 @@ class GooglePayPassObject(object):
                     "id": "memberName",
                     "body": self.account_name,
                 },
-                {
-                    "header": "Member Since",
-                    "id": "memberSince",
-                    "body": self.member_since,
-                },
+                # {
+                #     "header": "Member Since",
+                #     "id": "memberSince",
+                #     "body": self.member_since,
+                # },
                 {
                     "header": "Good Until",
                     "id": "goodUntil",
@@ -271,11 +271,11 @@ class GooglePayPassObject(object):
 def create_passfile(membership_card):
     pass_info = Generic()
     pass_info.addPrimaryField("name", membership_card.user.fullname, "Member Name")
-    pass_info.addSecondaryField(
-        "member_since",
-        membership_card.user.member_since.strftime("%b %Y"),
-        "Member Since",
-    )
+    # pass_info.addSecondaryField(
+    #     "member_since",
+    #     membership_card.user.member_since.strftime("%b %Y"),
+    #     "Member Since",
+    # )
     pass_info.addSecondaryField(
         "member_expiry_back",
         membership_card.user.membership_expiry.strftime("%b %d, %Y"),
