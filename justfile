@@ -3,7 +3,7 @@ db_tf_subdir   := "./terraform/database"
 bootstrap_tf_subdir   := "./terraform/bootstrap"
 tfvars_file    := "lv-digital-membership.tfvars"
 
-gcr_repo := "gcr.io/lv-digital-membership"
+gcr_repo := "pkg.dev/lv-digital-membership"
 image_tag := `git describe --tags --dirty --long --always`
 website_image_name := "website"
 website_gcr_image_name := gcr_repo + "/" + website_image_name

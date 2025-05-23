@@ -4,27 +4,27 @@ substitutions:
 
 steps:
   # Download image to cache from
-  - name: "gcr.io/cloud-builders/docker"
+  - name: "pkg.dev/cloud-builders/docker"
     entrypoint: "bash"
     args:
       - "-c"
-      - "docker pull gcr.io/$PROJECT_ID/worker:latest || exit 0"
+      - "docker pull pkg.dev/$PROJECT_ID/worker:latest || exit 0"
 
   # Docker Build
-  - name: "gcr.io/cloud-builders/docker"
+  - name: "pkg.dev/cloud-builders/docker"
     args:
       - "build"
-      - "--cache-from=gcr.io/$PROJECT_ID/${_BUILD_TARGET}:latest"
+      - "--cache-from=pkg.dev/$PROJECT_ID/${_BUILD_TARGET}:latest"
       - "--target=${_BUILD_TARGET}"
-      - "--tag=gcr.io/$PROJECT_ID/${_BUILD_TARGET}:${_IMAGE_TAG}"
+      - "--tag=pkg.dev/$PROJECT_ID/${_BUILD_TARGET}:${_IMAGE_TAG}"
       - "."
 
-  - name: "gcr.io/cloud-builders/docker"
+  - name: "pkg.dev/cloud-builders/docker"
     args:
       - "tag"
-      - "gcr.io/$PROJECT_ID/${_BUILD_TARGET}:${_IMAGE_TAG}"
-      - "gcr.io/$PROJECT_ID/${_BUILD_TARGET}:latest"
+      - "pkg.dev/$PROJECT_ID/${_BUILD_TARGET}:${_IMAGE_TAG}"
+      - "pkg.dev/$PROJECT_ID/${_BUILD_TARGET}:latest"
 
 images:
-  - "gcr.io/$PROJECT_ID/${_BUILD_TARGET}:${_IMAGE_TAG}"
-  - "gcr.io/$PROJECT_ID/${_BUILD_TARGET}:latest"
+  - "pkg.dev/$PROJECT_ID/${_BUILD_TARGET}:${_IMAGE_TAG}"
+  - "pkg.dev/$PROJECT_ID/${_BUILD_TARGET}:latest"
