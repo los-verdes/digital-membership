@@ -38,7 +38,7 @@ def generate_email_message(
         "card": dict(
             title="Los Verdes Membership Card",
             primary_info_text=membership_card.user.fullname,
-            secondary_info_text=f"Member Since {membership_card.member_since.strftime('%b %Y')}",
+            secondary_info_text="",
             serial_number=membership_card.serial_number.hex,
             aux_info_text=f"Good through {membership_card.member_until.strftime('%b %d, %Y')}",
             qr_code_ascii=membership_card.qr_code_ascii,
