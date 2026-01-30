@@ -15,9 +15,12 @@ RUN mkdir --parents /etc/apt/keyrings/ \
     && apt-get update \
     && apt-get install --no-install-recommends -y \
         google-chrome-stable \
-        build-essential=12.9 \
+        build-essential \
         libpython3-dev \
-        fonts-liberation=1:1.07.4-11 \
+        python3-dev \
+        libssl-dev \
+        fonts-liberation-sans-narrow \
+        swig \
     && rm -rf /var/lib/apt/lists/*
 
 ENV VIRTUAL_ENV=/opt/venv
@@ -28,9 +31,7 @@ COPY requirements.txt .
 RUN pip install \
         --no-cache-dir \
         --trusted-host pypi.python.org \
-        --requirement requirements.txt \
-        swig \
-        google-python-cloud-debugger==2.18
+        --requirement requirements.txt
 
 COPY ./config/ ./config
 COPY ./member_card/ ./member_card
