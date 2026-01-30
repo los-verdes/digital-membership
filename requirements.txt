@@ -203,8 +203,6 @@ libcst==0.4.0
     #   google-cloud-secret-manager
 libsass==0.21.0
     # via -r requirements.in
-m2crypto==0.38.0
-    # via -r requirements.in
 mako==1.1.6
     # via alembic
 markupsafe==2.0.1

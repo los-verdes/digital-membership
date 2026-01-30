@@ -285,8 +285,6 @@ libcst==0.4.0
     #   google-cloud-secret-manager
 libsass==0.21.0
     # via -r requirements.txt
-m2crypto==0.38.0
-    # via -r requirements.txt
 mako==1.1.6
     # via
     #   -r requirements.txt

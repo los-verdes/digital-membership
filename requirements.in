@@ -21,7 +21,6 @@ google-cloud-storage
 gunicorn
 html2image
 libsass
-M2Crypto
 opentelemetry-exporter-gcp-trace
 opentelemetry-instrumentation-flask
 opentelemetry-instrumentation-requests
