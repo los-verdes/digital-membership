@@ -55,6 +55,7 @@ werkzeug = "2.0.2"
 flask-recaptcha = "0.4.2"
 markupsafe = "2.0.1"
 jinja2 = "3.0.3"
+pytz = "^2025.2"
 
 
 [tool.poetry.group.test.dependencies]
