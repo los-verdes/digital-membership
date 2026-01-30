@@ -316,7 +316,7 @@ class TestAuthenticatedRequests:
         form_error_message_element = soup.find("div", {"class": "flash-box"})
         assert form_error_message_element
         expected_msg = (
-            "The email address is not valid. It must have exactly one @-sign."
+            "An email address must have an @-sign."
         )
         assert_form_error_message(response, expected_msg)
         assert form_error_message_element.text.strip() == expected_msg
