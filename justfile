@@ -366,3 +366,7 @@ check-bigcomm-channels:
         --header "X-Auth-Token:$BIGCOMM_ACCESS_TOKEN" \
         "https://api.bigcommerce.com/stores/hgp7pebwfj/v3/channels" \
     '
+
+write-req-files:
+  poetry export --without-hashes --with=test --format=requirements.txt > requirements-test.txt
+  poetry export --without-hashes --format=requirements.txt > requirements.txt
