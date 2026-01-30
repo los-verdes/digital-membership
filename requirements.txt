@@ -63,7 +63,6 @@ flask==2.0.2
     #   flask-assets
     #   flask-babelex
     #   flask-cdn
-    #   flask-cors
     #   flask-gravatar
     #   flask-login
     #   flask-mail
@@ -78,8 +77,6 @@ flask-assets==2.0
 flask-babelex==0.9.4
     # via flask-security
 flask-cdn==1.5.3
-    # via -r requirements.in
-flask-cors==3.0.10
     # via -r requirements.in
 flask-gravatar==0.5.0
     # via -r requirements.in
@@ -164,8 +161,6 @@ googleapis-common-protos[grpc]==1.54.0
     #   google-cloud-audit-log
     #   grpc-google-iam-v1
     #   grpcio-status
-greenlet==1.1.2
-    # via sqlalchemy
 grpc-google-iam-v1==0.12.3
     # via
     #   google-cloud-logging
@@ -352,7 +347,6 @@ sendgrid==6.9.5
 six==1.16.0
     # via
     #   ecdsa
-    #   flask-cors
     #   google-auth
     #   google-auth-httplib2
     #   grpcio
@@ -363,8 +357,12 @@ six==1.16.0
     #   social-auth-app-flask-sqlalchemy
     #   social-auth-storage-sqlalchemy
     #   wallet-py3k
-slack-sdk==3.20.0
+slack-bolt==1.16.3
     # via -r requirements.in
+slack-sdk==3.20.0
+    # via
+    #   -r requirements.in
+    #   slack-bolt
 social-auth-app-flask==1.0.0
     # via
     #   -r requirements.in
