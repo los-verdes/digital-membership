@@ -87,10 +87,41 @@ ci-install-python-reqs:
   fi
 
 
+docker-wsgi: build onepass_session
+  #!/bin/bash
+  set -exou pipefail
+  export DIGITAL_MEMBERSHIP_SECRETS_JSON="op://Los Verdes/digital-membership_local_dev_secrets/value"
+  echo "FLASK_APP: ${FLASK_APP-None}"
+  echo "FLASK_ENV: ${FLASK_ENV-None}"
+  op run -- \
+    docker run \
+    --interactive \
+    --tty \
+    --rm \
+    --env=DIGITAL_MEMBERSHIP_SECRETS_JSON \
+    --env=FLASK_APP \
+    --env=FLASK_ENV \
+    --env=LOG_LEVEL \
+    --entrypoint='' \
+    --publish='8080:8080' \
+    -v=$HOME/.config/gcloud:/root/.config/gcloud \
+    '{{ website_image_name }}:{{ image_tag }}' \
+    gunicorn \
+      --bind=:8080 \
+      --workers=1 \
+      --threads=8 \
+      --timeout=0 \
+      --log-config=config/gunicron_logging.ini \
+      --log-file=- \
+      'wsgi:create_app()'
+
 docker-flask +CMD: build onepass_session
-  @echo "FLASK_APP: ${FLASK_APP-None}"
-  @echo "FLASK_ENV: ${FLASK_ENV-None}"
-  op run --env-file='./.env' -- \
+  #!/bin/bash
+  set -exou pipefail
+  export DIGITAL_MEMBERSHIP_SECRETS_JSON="op://Los Verdes/digital-membership_local_dev_secrets/value"
+  echo "FLASK_APP: ${FLASK_APP-None}"
+  echo "FLASK_ENV: ${FLASK_ENV-None}"
+  op run -- \
     docker run \
     --interactive \
     --tty \
@@ -101,7 +132,7 @@ docker-flask +CMD: build onepass_session
     --env=LOG_LEVEL \
     --entrypoint='' \
     -v=$HOME/.config/gcloud:/root/.config/gcloud \
-    '{{ website_image_name }}' \
+    '{{ website_image_name }}:{{ image_tag }}' \
     flask {{ CMD }}
 
 
