@@ -66,7 +66,7 @@ ci-install-test-python-reqs:
   then
     pip3 install \
       --quiet \
-      --requirement='requirements-test.in'
+      --requirement='requirements-test.txt'
   else
     echo "skipping pip install outside of GitHub Actions..."
   fi
