@@ -5,14 +5,9 @@ set -eoxu pipefail
 POSTGRES_DB="${POSTGRES_DB-lv-digital-membership-tests}"
 POSTGRES_USER="${POSTGRES_USER-postgres}"
 
-PGHOST="${PGHOST-127.0.0.1}"
-PGPORT="${PGPORT-5433}"
-
 PGUSER="${POSTGRES_USER-postgres}"
 PGPASSWORD="${PGPASSWORD-postgres}"
 
-export PGHOST
-export PGPORT
 export PGUSER
 export PGPASSWORD
 

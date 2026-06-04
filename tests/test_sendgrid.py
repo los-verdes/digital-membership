@@ -11,16 +11,17 @@ if TYPE_CHECKING:
     from pytest_mock.plugin import MockerFixture
 
 
-def test_generate_email_message(fake_card: "MembershipCard"):
+def test_generate_email_message(app: "Flask", fake_card: "MembershipCard"):
     card_image_url = "test-card_image_url"
     apple_pass_url = "test-apple_pass_url"
     fake_card._google_pay_jwt = "test_google_pay_jwt"
 
-    message = sendgrid.generate_email_message(
-        membership_card=fake_card,
-        card_image_url=card_image_url,
-        apple_pass_url=apple_pass_url,
-    )
+    with app.app_context():
+        message = sendgrid.generate_email_message(
+            membership_card=fake_card,
+            card_image_url=card_image_url,
+            apple_pass_url=apple_pass_url,
+        )
 
     assert isinstance(message, Mail)
 

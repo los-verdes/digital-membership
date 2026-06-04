@@ -31,15 +31,18 @@ class InvalidSquarespaceWebhookSignature(Exception):
 
 
 def process_order_webhook_payload():
-    webhook_payload = request.get_json()
+    webhook_payload = request.get_json(silent=True)
     if webhook_payload is None:
-        # can't very well verify the signature with no signature...
         raise InvalidSquarespaceWebhookSignature(
             "unable to verify notification signature!"
         )
     incoming_signature = request.headers.get("Squarespace-Signature")
-    webhook_id = webhook_payload["subscriptionId"]
-    website_id = webhook_payload["websiteId"]
+    webhook_id = webhook_payload.get("subscriptionId")
+    website_id = webhook_payload.get("websiteId")
+    if not webhook_id or not website_id:
+        raise InvalidSquarespaceWebhookSignature(
+            "unable to verify notification signature: missing required fields"
+        )
     allowed_website_ids = current_app.config["SQUARESPACE_ALLOWED_WEBSITE_IDS"]
 
     log_extra = dict(

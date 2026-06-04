@@ -44,3 +44,8 @@ postgres-data/
 tmp-certs/
 docker-compose.yml
 docs/
+
+# Docker
+Dockerfile
+.dockerignore
+.gcloudignore

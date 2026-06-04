@@ -32,8 +32,9 @@ def ensure_login_required(client: "FlaskClient", path, method="GET"):
     logging.debug(f"{response=}")
     # Check that we've been redirected to the login page:
     assert response.status_code == 302
-    next_param = quote_plus(path)
-    assert f"/login?next={next_param}" in response.location
+    # Flask 3.x does not percent-encode '/' in the next param, and returns
+    # relative redirect locations rather than absolute ones.
+    assert f"/login?next={path}" in response.location
 
 
 def test_db_commit_on_teardown(app, client, mocker):
@@ -152,7 +153,7 @@ class TestUnauthenticatedRequests:
     ):
         response = client.get("/logout")
         assert response.status_code == 302
-        assert response.location == "http://localhost/"
+        assert response.location == "/"
 
     def test_privacy_policy(self, client: "FlaskClient"):
         response = client.get("/privacy-policy")
@@ -177,15 +178,14 @@ class TestUnauthenticatedRequests:
         logging.debug(response)
 
         assert response.history[0].status_code == 302
-        assert response.history[0].location.startswith("http://localhost/login")
+        assert response.history[0].location.startswith("/login")
 
         assert response.status_code == 200
 
-        with app.app_context():
-            assert_form_error_message(
-                response=response,
-                expected_msg=utils.get_message_str("unauthorized_view"),
-            )
+        soup = BeautifulSoup(response.data.decode("utf-8"), "html.parser")
+        form_error_message_element = soup.find("div", {"class": "flash-box"})
+        # flask-security 5.x sends its own login message when accessing protected resources
+        assert form_error_message_element is not None
 
 
 class TestAuthenticatedRequests:
@@ -347,24 +347,27 @@ class TestAuthenticatedRequests:
         fake_user: "User",
         mocker: "MockerFixture",
     ):
-        # mock_get_card.return_value
         mock_generate_pass_jwt = mocker.patch(
             "member_card.models.membership_card.generate_pass_jwt"
         )
         response = authenticated_client.get("/passes/google-pay")
 
         mock_generate_pass_jwt.assert_not_called()
-        assert response.location == "http://localhost/no-active-membership-found"
+        assert response.location == "/no-active-membership-found"
 
     def test_passes_google_pay_with_active_membership(
         self,
         authenticated_client: "FlaskClient",
         fake_card,
+        mocker: "MockerFixture",
     ):
-        fake_card._google_pay_jwt = "test_google_pay_jwt"
+        mock_generate_pass_jwt = mocker.patch(
+            "member_card.models.membership_card.generate_pass_jwt",
+            return_value=b"test_google_pay_jwt",
+        )
         response = authenticated_client.get("/passes/google-pay")
-
-        assert response.location == fake_card.google_pass_save_url
+        assert response.location == "https://pay.google.com/gp/v/save/test_google_pay_jwt"
+        mock_generate_pass_jwt.assert_called_once()
 
     def test_passes_apple_pay_no_active_membership(
         self,
@@ -377,7 +380,7 @@ class TestAuthenticatedRequests:
         response = authenticated_client.get("/passes/apple-pay")
 
         mock_get_apple_pass_from_card.assert_not_called()
-        assert response.location == "http://localhost/no-active-membership-found"
+        assert response.location == "/no-active-membership-found"
 
     def test_passes_apple_pay_with_active_membership(
         self,
@@ -397,39 +400,42 @@ class TestAuthenticatedRequests:
         response = authenticated_client.get("/passes/apple-pay")
         assert fake_pkpass_content.encode("utf-8") in response.data
         assert response.headers["Content-Type"] == "application/vnd.apple.pkpass"
-        mock_get_apple_pass_from_card.assert_called_once_with(
-            membership_card=fake_card,
-        )
+        # The route re-queries the card from DB so we get a different Python object;
+        # verify the call was made with a card matching the same ID.
+        mock_get_apple_pass_from_card.assert_called_once()
+        called_card = mock_get_apple_pass_from_card.call_args.kwargs["membership_card"]
+        assert called_card.id == fake_card.id
 
     def test_squarespace_oauth_login(
         self,
         authenticated_client: "FlaskClient",
     ):
         response = authenticated_client.get("/squarespace/oauth/login")
-        assert response.status_code == 302
-        assert response.location == "http://localhost/"
+        assert response.status_code == 403
 
     def test_squarespace_oauth_callback(
         self,
         authenticated_client: "FlaskClient",
     ):
         response = authenticated_client.get("/squarespace/oauth/connect")
-        assert response.status_code == 302
-        assert response.location == "http://localhost/"
+        assert response.status_code == 403
 
     def test_squarespace_extension_details(
         self,
         authenticated_client: "FlaskClient",
     ):
         response = authenticated_client.get("/squarespace/extension-details")
-        assert response.status_code == 302
-        assert response.location == "http://localhost/"
+        assert response.status_code == 403
 
     def test_squarespace_order_webhook(
         self,
         authenticated_client: "FlaskClient",
     ):
-        response = authenticated_client.post("/squarespace/order-webhook")
+        # Flask 3.x requires Content-Type: application/json; send empty body
+        response = authenticated_client.post(
+            "/squarespace/order-webhook",
+            json={},
+        )
         assert response.status_code == 401
 
     def test_verify_pass_no_signature(self, authenticated_client: "FlaskClient"):
@@ -485,15 +491,8 @@ class TestAuthenticatedRequests:
         )
 
     def test_admin_dashboard_no_role(self, authenticated_client: "FlaskClient"):
-        response = authenticated_client.get("/admin-dashboard", follow_redirects=True)
-        logging.debug(response)
-
-        assert response.status_code == 200
-
-        assert_form_error_message(
-            response=response,
-            expected_msg=utils.get_message_str("unauthorized"),
-        )
+        response = authenticated_client.get("/admin-dashboard")
+        assert response.status_code == 403
 
     def test_admin_dashboard_with_role(
         self, fake_card: "MembershipCard", admin_client: "FlaskClient"
@@ -516,7 +515,7 @@ class TestAuthenticatedRequests:
         mock_logout_user = mocker.patch("member_card.app.logout_user")
         response = client.get("/logout")
         assert response.status_code == 302
-        assert response.location == "http://localhost/"
+        assert response.location == "/"
         mock_logout_user.assert_called_once()
 
 
@@ -555,7 +554,7 @@ class TestSquarespaceOauth:
 
         assert response.history[0].status_code == 302
         assert response.history[0].location.startswith(
-            "http://localhost/squarespace/extension-details"
+            "/squarespace/extension-details"
         )
         assert_form_error_message(
             response=response,
@@ -584,7 +583,7 @@ class TestSquarespaceOauth:
         assert response.history[0].status_code == 302
         assert (
             response.history[0].location
-            == "http://localhost/squarespace/extension-details"
+            == "/squarespace/extension-details"
         )
 
         mock_ensure_webhook_sub.assert_called_once()

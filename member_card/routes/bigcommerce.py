@@ -55,25 +55,31 @@ def jwt_error(e):
 
 @bigcommerce_bp.route("/bigcommerce/order-webhook", methods=["POST"])
 def order_webhook():
-    webhook_payload = request.get_json()
+    webhook_payload = request.get_json(silent=True)
     if webhook_payload is None:
         # can't very well verify the signature with no signature...
         raise InvalidBigCommerceWebhookSignature(
             "unable to verify notification signature!"
         )
     incoming_signature = (
-        request.headers.get("authorization").lower().replace("bearer", "").strip()
+        (request.headers.get("authorization") or "").lower().replace("bearer", "").strip()
     )
     logger.debug(
         f"bigcommerce_order_webhook(): INCOMING WEBHOOK YO {webhook_payload=}",
     )
 
-    data = webhook_payload["data"]
-    data_type = webhook_payload["data"]["type"]
-    hash = webhook_payload["hash"]
-    producer = webhook_payload["producer"]
-    scope = webhook_payload["scope"]
-    store_id = webhook_payload["store_id"]
+    data = webhook_payload.get("data")
+    data_type = (webhook_payload.get("data") or {}).get("type")
+    hash = webhook_payload.get("hash")
+    producer = webhook_payload.get("producer")
+    scope = webhook_payload.get("scope")
+    store_id = webhook_payload.get("store_id")
+
+    if not all([data, hash, producer, scope, store_id]):
+        raise InvalidBigCommerceWebhookSignature(
+            "unable to verify notification signature: missing required fields"
+        )
+
     store_hash = producer.split("/", 1)[1]
 
     log_extra = dict(

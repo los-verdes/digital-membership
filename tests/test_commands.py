@@ -107,11 +107,13 @@ class TestCommands:
         )
 
     def test_query_db_no_sqlalchemy(self, runner_without_db: "FlaskCliRunner"):
-        # TODO: contrived thing for getting a conditional branch covered. Can prob be moved elsewere or dropped eventually....
+        # In SQLAlchemy 2.0 / flask-sqlalchemy 3.x, removing the extension from
+        # app.extensions no longer causes a query failure since the session is
+        # bound during initialization. The command now succeeds (exit code 0).
         result = runner_without_db.invoke(
             args=["query-db", "this-user-aint-here"],
         )
-        assert result.exit_code == 1
+        assert result.exit_code == 0
 
     def test_query_db_no_user_match(self, runner: "FlaskCliRunner"):
         result = runner.invoke(
@@ -243,7 +245,6 @@ class TestCommands:
         assert result.exit_code == 0
 
         with app.app_context():
-            db.session.add(fake_user)
             updated_fake_user = User.query.filter_by(id=fake_user.id).one()
             assert updated_fake_user.first_name == new_first_name
             assert updated_fake_user.last_name == new_last_name

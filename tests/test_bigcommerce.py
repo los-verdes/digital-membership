@@ -20,7 +20,8 @@ def test_get_app_client_for_store(
     app: "Flask", fake_card: "MembershipCard", mocker: "MockerFixture"
 ):
     mock_bigcomm_api = mocker.patch("member_card.bigcommerce.BigcommerceApi")
-    app_client = bigcommerce.get_app_client_for_store()
+    with app.app_context():
+        app_client = bigcommerce.get_app_client_for_store()
     assert app_client == mock_bigcomm_api.return_value
 
 
@@ -28,7 +29,8 @@ def test_get_bespoke_client_for_store(
     app: "Flask", fake_card: "MembershipCard", mocker: "MockerFixture"
 ):
     mock_bigcomm_api = mocker.patch("member_card.bigcommerce.BiggercommerceApi")
-    app_client = bigcommerce.get_bespoke_client_for_store()
+    with app.app_context():
+        app_client = bigcommerce.get_bespoke_client_for_store()
     assert app_client == mock_bigcomm_api.return_value
 
 
@@ -403,9 +405,10 @@ class TestBigcommerceCustomerEtl:
             assert returned_user is None
 
     def test_extant_user_by_email(self, app: "Flask", mocker, fake_user):
-        fake_user.bigcommerce_id = 0
-        assert fake_user.email == "los.verdes.tester@gmail.com"
         with app.app_context():
+            fresh = db.session.merge(fake_user)
+            fresh.bigcommerce_id = 0
+            db.session.commit()
             returned_user = bigcommerce.map_customer_to_user_by_store_id(
                 bigcommerce_id=2,
                 customer_email="los.verdes.tester@gmail.com",
@@ -432,52 +435,49 @@ class TestBigcommerceCustomerEtl:
         self, app: "Flask", mocker, fake_user, fake_membership_order
     ):
         fake_user_id = fake_user.id
-        assert fake_user.bigcommerce_id == 1
-        assert fake_user.email == "los.verdes.tester@gmail.com"
-        db.session.add(fake_user)
-        db.session.commit()
-
         new_customer_email = "los.verdes.tester.updated@gmail.com"
 
-        fake_duplicate_user = create_fake_user(
-            app=app,
-            email=new_customer_email,
-            bigcommerce_id=None,
-        )
-        db.session.add(fake_duplicate_user)
-        db.session.commit()
-
-        setattr(fake_membership_order, "user_id", fake_duplicate_user.id)
-        db.session.add(fake_membership_order)
-        db.session.commit()
-        db.session.add(fake_duplicate_user)
-        fake_duplicate_user_id = fake_duplicate_user.id
-        assert fake_duplicate_user.annual_memberships
-
         with app.app_context():
+            fresh_user = db.session.merge(fake_user)
+            assert fresh_user.bigcommerce_id == 1
+
+            fake_duplicate_user = create_fake_user(
+                app=app,
+                email=new_customer_email,
+                bigcommerce_id=None,
+            )
+            db.session.add(fake_duplicate_user)
+            db.session.commit()
+
+            order = db.session.merge(fake_membership_order)
+            order.user_id = fake_duplicate_user.id
+            db.session.commit()
+            assert fake_duplicate_user.annual_memberships
+
             returned_user = bigcommerce.map_customer_to_user_by_store_id(
                 bigcommerce_id=1,
                 customer_email=new_customer_email,
             )
+            db.session.commit()
 
-        db.session.add(returned_user)
-        db.session.add(fake_duplicate_user)
-        db.session.add(fake_membership_order)
-        db.session.commit()
+            fake_duplicate_user_id = fake_duplicate_user.id
+            assert returned_user.id == fake_user_id
+            assert returned_user.bigcommerce_id == 1
+            assert returned_user.active is True
+            assert returned_user.email == new_customer_email
+            assert len(returned_user.annual_memberships) > 0
+            assert order.user_id == returned_user.id
 
-        assert returned_user.id == fake_user_id
-        assert returned_user.bigcommerce_id == 1
-        assert returned_user.active is True
-        assert returned_user.email == "los.verdes.tester.updated@gmail.com"
-        assert len(returned_user.annual_memberships) > 0
-        assert fake_membership_order.user_id == returned_user.id
+            refreshed_dup = db.session.get(User, fake_duplicate_user_id)
+            assert refreshed_dup.id == fake_duplicate_user_id
+            assert refreshed_dup.bigcommerce_id is None
+            assert refreshed_dup.email != new_customer_email
+            assert refreshed_dup.active is False
+            assert not refreshed_dup.annual_memberships
 
-        fake_duplicate_user = User.query.get(fake_duplicate_user.id)
-        assert fake_duplicate_user.id == fake_duplicate_user_id
-        assert fake_duplicate_user.bigcommerce_id is None
-        assert fake_duplicate_user.email != new_customer_email
-        assert fake_duplicate_user.active is False
-        assert not fake_duplicate_user.annual_memberships
+            # cleanup duplicate user
+            db.session.delete(refreshed_dup)
+            db.session.commit()
 
 
 # jscpd:ignore-end

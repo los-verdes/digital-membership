@@ -387,7 +387,7 @@ def passes_apple_pay(membership_card):
     )
     return send_file(
         pkpass_out_path,
-        attachment_filename=attachment_filename,
+        download_name=attachment_filename,
         mimetype="application/vnd.apple.pkpass",
         as_attachment=True,
     )

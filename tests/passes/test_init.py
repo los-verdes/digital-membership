@@ -29,16 +29,23 @@ class TestGooglePayPassClass:
 
 class TestGooglePayPassObject:
     def test_to_dict(self, app: "Flask", fake_card: "MembershipCard"):
-        p = passes.GooglePayPassObject(
-            class_id="test-class-id", membership_card=fake_card
-        )
         with app.app_context():
+            from member_card.db import db
+
+            merged_card = db.session.merge(fake_card)
+            p = passes.GooglePayPassObject(
+                class_id="test-class-id", membership_card=merged_card
+            )
             assert isinstance(p.to_dict(), dict)
 
 
 class TestPkPass:
     def test_create_passfile(self, app: "Flask", fake_card: "MembershipCard"):
-        passfile = passes.create_passfile(membership_card=fake_card)
+        with app.app_context():
+            from member_card.db import db
+
+            merged_card = db.session.merge(fake_card)
+            passfile = passes.create_passfile(membership_card=merged_card)
         assert passfile
 
     def test_create_pkpass(
@@ -47,11 +54,12 @@ class TestPkPass:
         mock_create_passfile = mocker.patch("member_card.passes.create_passfile")
         key_filepath = "test-key_filepath"
         key_password = "test-key_password"
-        pkpass_buffer = passes.create_pkpass(
-            membership_card=fake_card,
-            key_filepath=key_filepath,
-            key_password=key_password,
-        )
+        with app.app_context():
+            pkpass_buffer = passes.create_pkpass(
+                membership_card=fake_card,
+                key_filepath=key_filepath,
+                key_password=key_password,
+            )
         assert pkpass_buffer
         mock_create_passfile().create.assert_called_once()
 
@@ -59,7 +67,8 @@ class TestPkPass:
         self, app: "Flask", fake_card: "MembershipCard", mocker: "MockerFixture"
     ):
         mock_create_pkpass = mocker.patch("member_card.passes.create_pkpass")
-        passes.get_apple_pass_from_card(membership_card=fake_card)
+        with app.app_context():
+            passes.get_apple_pass_from_card(membership_card=fake_card)
         mock_create_pkpass.assert_called_once()
 
     def test_generate_and_upload_apple_pass(

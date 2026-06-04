@@ -123,6 +123,13 @@ class User(db.Model, UserMixin):
     first_name = db.Column(db.String(100))
     last_name = db.Column(db.String(100))
     active = db.Column(db.Boolean, default=True)
+    # Required by flask-security-too >= 4.0 for session token uniqueness
+    fs_uniquifier = db.Column(
+        db.String(64),
+        unique=True,
+        nullable=False,
+        default=lambda: str(__import__("uuid").uuid4()),
+    )
     annual_memberships = relationship("AnnualMembership", back_populates="user")
     membership_cards = relationship("MembershipCard", back_populates="user")
     slack_user = relationship("SlackUser", back_populates="user", uselist=False)
@@ -197,7 +204,7 @@ def add_role_to_user_by_email(user_email, role_name):
     logger.debug(f"{user_email=} => {role_name=}")
     user_datastore = SQLAlchemySessionUserDatastore(db.session, User, Role)
 
-    user = user_datastore.get_user(user_email)
+    user = user_datastore.find_user(email=user_email)
     return add_role_to_user(user=user, role_name=role_name)
 
 
