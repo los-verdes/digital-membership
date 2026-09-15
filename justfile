@@ -11,6 +11,10 @@ worker_image_name := "worker"
 worker_gcr_image_name := gcr_repo + "/" + worker_image_name
 
 python_reqs_file := "requirements.txt"
+# CI sets up its own interpreter via actions/setup-python + pip and has no poetry
+# installed, so only wrap with `poetry run` for local dev (where it's needed to pick
+# up the pinned Python 3.9 + locked dependency versions).
+python_cmd := if env_var_or_default("CI", "") != "" { "python" } else { "poetry run python" }
 export GCLOUD_PROJECT := "lv-digital-membership"
 # TODO: dev as default after we get done setting this all up....
 export FLASK_APP := env_var_or_default("FLASK_APP", "wsgi:create_app()")
@@ -343,7 +347,7 @@ local-bootstrap-test-db:
     ./tests/config/sql/bootstrap.sh
 
 test *FLAGS:
-  poetry run python -m pytest \
+  {{ python_cmd }} -m pytest \
     --durations=10 \
     --log-level=DEBUG \
     --cov=member_card \

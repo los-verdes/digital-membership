@@ -53,9 +53,12 @@ class MemberCardFormatter(GoogleCloudFormatter):
     def make_entry(self, record):
         # google-cloud-logging>=3.x returns a 4-tuple (adds trace_sampled);
         # we don't currently surface trace_sampled in log entries.
-        inferred_http, inferred_trace, inferred_span, _inferred_trace_sampled = (
-            get_request_data()
-        )
+        (
+            inferred_http,
+            inferred_trace,
+            inferred_span,
+            _inferred_trace_sampled,
+        ) = get_request_data()
         if inferred_http is not None:
             # filter inferred_http to include only well-supported fields
             inferred_http = {
