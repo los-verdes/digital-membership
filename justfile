@@ -336,6 +336,10 @@ ci-bootstrap-test-db:
     ./tests/config/sql/bootstrap.sh
   fi
 
+local-bootstrap-test-db:
+    POSTGRES_USER=postgres \
+    ./tests/config/sql/bootstrap.sh
+
 test *FLAGS:
   python -m pytest \
     --durations=10 \
