@@ -47,9 +47,11 @@ tf-db +CMD:
     {{ CMD }}
 
 tf +CMD:
-  terraform -chdir="{{ justfile_directory() + "/" + tf_subdir }}" \
-    {{ CMD }} \
-    {{ if CMD =~ "(plan|apply)" { "-var-file=../" + tfvars_file } else { "" }  }}
+  TF_VAR_management_sql_user_password='op://Los Verdes/management_sql_user_password/password' \
+  op run -- \
+    terraform -chdir="{{ justfile_directory() + "/" + tf_subdir }}" \
+      {{ CMD }} \
+      {{ if CMD =~ "(plan|apply)" { "-var-file=../" + tfvars_file } else { "" }  }}
 
 tf-init:
   just tf init
