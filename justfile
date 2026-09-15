@@ -15,6 +15,7 @@ python_reqs_file := "requirements.txt"
 # installed, so only wrap with `poetry run` for local dev (where it's needed to pick
 # up the pinned Python 3.9 + locked dependency versions).
 python_cmd := if env_var_or_default("CI", "") != "" { "python" } else { "poetry run python" }
+tf_cmd := if env_var_or_default("CI", "") != "" { "terraform" } else { "TF_VAR_management_sql_user_password='op://Los Verdes/management_sql_user_password/password' op run -- terraform" }
 export GCLOUD_PROJECT := "lv-digital-membership"
 # TODO: dev as default after we get done setting this all up....
 export FLASK_APP := env_var_or_default("FLASK_APP", "wsgi:create_app()")
@@ -41,19 +42,17 @@ set-tf-ver-output:
   echo "terraform_version=$(cat {{ tf_subdir }}/.terraform-version)" | tee --append "$GITHUB_OUTPUT"
 
 tf-bootstrap +CMD:
-  terraform -chdir="{{ justfile_directory() + "/" + bootstrap_tf_subdir }}" \
+  {{ tf_cmd }} -chdir="{{ justfile_directory() + "/" + bootstrap_tf_subdir }}" \
     {{ CMD }} \
     {{ if CMD =~ "(plan|apply)" { "-var-file=../../" + tfvars_file } else { "" }  }}
 
 
 tf-db +CMD:
-  terraform -chdir="{{ justfile_directory() + "/" + db_tf_subdir }}" \
+  {{ tf_cmd }} -chdir="{{ justfile_directory() + "/" + db_tf_subdir }}" \
     {{ CMD }}
 
 tf +CMD:
-  TF_VAR_management_sql_user_password='op://Los Verdes/management_sql_user_password/password' \
-  op run -- \
-    terraform -chdir="{{ justfile_directory() + "/" + tf_subdir }}" \
+   {{ tf_cmd }} -chdir="{{ justfile_directory() + "/" + tf_subdir }}" \
       {{ CMD }} \
       {{ if CMD =~ "(plan|apply)" { "-var-file=../" + tfvars_file } else { "" }  }}
 
