@@ -272,7 +272,7 @@ class Settings(object):
 class DockerComposeSettings(Settings):
     pass
     # SQLALCHEMY_DATABASE_URI: str = "postgresql://member-card-user:member-card-password@db:5432/digital-membership"
-    SQLALCHEMY_DATABASE_URI: str = "postgresql://member-card-user:member-card-password@127.0.0.1:5432/digital-membership"
+    SQLALCHEMY_DATABASE_URI: str = "postgresql://member-card-user:member-card-password@localhost:5432/digital-membership"
 
 
 class ProductionSettings(Settings):
@@ -317,7 +317,7 @@ class DevelopmentSettings(Settings):
 
 class TestSettings(Settings):
     SQLALCHEMY_ECHO: bool = False
-    SQLALCHEMY_DATABASE_URI: str = "postgresql://test-runner:hi-im-testing@127.0.0.1:5433/lv-digital-membership-tests"
+    SQLALCHEMY_DATABASE_URI: str = "postgresql://test-runner:hi-im-testing@127.0.0.1:5432/lv-digital-membership-tests"
 
     # Enabling tracing during tests to ensure we hit various tracing-specific conditional branches;
     # however external clients / calls will (ideally!) be mocked out in such scenarios

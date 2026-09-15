@@ -1,9 +1,9 @@
 #!/bin/bash
 SERIAL_NUM="204155103484615837705374825908876627803"
-AUTH_TOKEN="Fg3O4R091QTtfJQMQcGKNg-LGFgfCj8vPeD_ikc8g0c="
+AUTH_TOKEN="Fg3O4R091QTtfJQMQcGKNg-LGFgfCj8vPeD_ikc8g0c=" # gitleaks:allow -- local-only passkit device auth token for a specific local test card, not a live credential
 TEST_CARD_JSON="$(\
   echo "SELECT json_agg(m) FROM membership_cards as m;" \
-    | psql "postgresql://member-card-user:member-card-password@127.0.0.1:5433/digital-membership" \
+    | psql "postgresql://member-card-user:member-card-password@127.0.0.1:5432/digital-membership" \
     | tail -n +3 \
     | perl -pe 'chomp if eof' \
     | sed '$ d' \

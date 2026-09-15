@@ -11,6 +11,10 @@ worker_image_name := "worker"
 worker_gcr_image_name := gcr_repo + "/" + worker_image_name
 
 python_reqs_file := "requirements.txt"
+# CI sets up its own interpreter via actions/setup-python + pip and has no poetry
+# installed, so only wrap with `poetry run` for local dev (where it's needed to pick
+# up the pinned Python 3.9 + locked dependency versions).
+python_cmd := if env_var_or_default("CI", "") != "" { "python" } else { "poetry run python" }
 export GCLOUD_PROJECT := "lv-digital-membership"
 # TODO: dev as default after we get done setting this all up....
 export FLASK_APP := env_var_or_default("FLASK_APP", "wsgi:create_app()")
@@ -47,9 +51,11 @@ tf-db +CMD:
     {{ CMD }}
 
 tf +CMD:
-  terraform -chdir="{{ justfile_directory() + "/" + tf_subdir }}" \
-    {{ CMD }} \
-    {{ if CMD =~ "(plan|apply)" { "-var-file=../" + tfvars_file } else { "" }  }}
+  TF_VAR_management_sql_user_password='op://Los Verdes/management_sql_user_password/password' \
+  op run -- \
+    terraform -chdir="{{ justfile_directory() + "/" + tf_subdir }}" \
+      {{ CMD }} \
+      {{ if CMD =~ "(plan|apply)" { "-var-file=../" + tfvars_file } else { "" }  }}
 
 tf-init:
   just tf init
@@ -336,8 +342,12 @@ ci-bootstrap-test-db:
     ./tests/config/sql/bootstrap.sh
   fi
 
+local-bootstrap-test-db:
+    POSTGRES_USER=postgres \
+    ./tests/config/sql/bootstrap.sh
+
 test *FLAGS:
-  python -m pytest \
+  {{ python_cmd }} -m pytest \
     --durations=10 \
     --log-level=DEBUG \
     --cov=member_card \

@@ -27,7 +27,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
         ports:
-          - 5433:5432
+          - 5432:5432
 
     steps:
       - name: Checkout
@@ -62,7 +62,7 @@ jobs:
           pytest_verbosity: 1
           GITHUB_PAT: ${{ secrets.GH_PAT }}
           PGHOST: "127.0.0.1"
-          PGPORT: "5433"
+          PGPORT: "5432"
           PGPASSWORD: "postgres"
           POSTGRES_USER: "postgres"
           POSTGRES_DB: lv-digital-membership-tests
