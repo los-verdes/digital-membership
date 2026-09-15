@@ -341,7 +341,7 @@ local-bootstrap-test-db:
     ./tests/config/sql/bootstrap.sh
 
 test *FLAGS:
-  python -m pytest \
+  poetry run python -m pytest \
     --durations=10 \
     --log-level=DEBUG \
     --cov=member_card \
