@@ -103,7 +103,7 @@ def passkit_register_device_for_pass_push_notifications(
         device_library_identifier=device_library_identifier,
         membership_card_pass=str(membership_card_pass),
         serial_number=str(membership_card_pass.serial_number),
-        request_json=request.json,
+        request_json=request.get_json(silent=True),
         user_email=membership_card_pass.user.email,
     )
     logger.info(
@@ -111,13 +111,13 @@ def passkit_register_device_for_pass_push_notifications(
         extra=log_extra,
     )
 
-    if request.json is None or request.json.get("pushToken") is None:
+    if request.get_json(silent=True) is None or request.get_json(silent=True).get("pushToken") is None:
         logger.warning(
             f"unable to register device for {membership_card_pass=}, no push token provided!"
         )
         return "pushToken required!", 422
 
-    push_token = request.json["pushToken"]
+    push_token = request.get_json(silent=True)["pushToken"]
 
     # Next, see if we _already_ have a registration for this device
     logger.debug(
@@ -286,7 +286,7 @@ def passkit_get_latest_version_of_pass(membership_card_pass, device_library_iden
     from member_card.passes import get_apple_pass_from_card
 
     attachment_filename = (
-        f"lv_apple_pass-{membership_card_pass.user.last_name.lower()}.pkpass"
+        f"lv_apple_pass-{(membership_card_pass.user.last_name or 'member').lower()}.pkpass"
     )
     logger.info(
         f"generating updated pass for {membership_card_pass.user=}",
@@ -302,7 +302,7 @@ def passkit_get_latest_version_of_pass(membership_card_pass, device_library_iden
     )
     return send_file(
         pkpass_out_path,
-        attachment_filename=attachment_filename,
+        download_name=attachment_filename,
         mimetype="application/vnd.apple.pkpass",
         as_attachment=True,
     )
@@ -371,7 +371,7 @@ PASSKIT_LOG_REGEXPS = [
 @app.route("/passkit/v1/log", methods=["POST"])
 def passkit_error_log():
     parsed_log_entries = []
-    raw_log_entries = request.get_json().get("logs", [])
+    raw_log_entries = (request.get_json(silent=True) or {}).get("logs", [])
     for raw_log_entry in raw_log_entries:
         for regexp in PASSKIT_LOG_REGEXPS:
             if matches := regexp.match(raw_log_entry):
@@ -381,7 +381,7 @@ def passkit_error_log():
             parsed_log_entries.append(raw_log_entry)
 
     logger.warning(
-        f"passkit_log() => {request.get_json()=}",
+        f"passkit_log() => {request.get_json(silent=True)=}",
         extra=dict(
             parsed_log_entries=parsed_log_entries, raw_log_entries=raw_log_entries
         ),

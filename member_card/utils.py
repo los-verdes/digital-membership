@@ -215,3 +215,14 @@ def get_jinja_template(template_path):
 def get_message_str(message_key):
     message_str = flask.current_app.config["MESSAGES"][message_key]
     return message_str
+
+
+def gravatar_url(email: str, size: int = 100, default: str = "retro", rating: str = "g") -> str:
+    """Generate a Gravatar URL for the given email address.
+
+    Replaces the unmaintained flask-gravatar package (last released 2018,
+    incompatible with Flask 3.x) with a simple inline implementation.
+    """
+    import hashlib
+    email_hash = hashlib.md5(email.strip().lower().encode()).hexdigest()  # noqa: S324 — Gravatar requires MD5
+    return f"https://www.gravatar.com/avatar/{email_hash}?s={size}&d={default}&r={rating}"

@@ -20,7 +20,7 @@ worker_bp = Blueprint("worker", __name__)
 
 
 def parse_message():
-    envelope = request.get_json()
+    envelope = request.get_json(silent=True)
     logger.debug(f"parsing message within {envelope=}")
     if not envelope:
         msg = "no Pub/Sub message received"

@@ -1,9 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+.venv/
+venv/
+
+# Testing / Coverage
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+trimmed.png
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Project-specific
 .webassets-cache/
 *.sqlite3
 **/static/style.css
+member_card/static/style.css
 postgres-data/
 .srl
 tmp-certs/
-member_card/static/style.css
+
+# Infrastructure
 .terraform/
-coverage.xml
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl

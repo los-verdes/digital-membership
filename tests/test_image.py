@@ -7,6 +7,7 @@ from google.cloud.storage.blob import Blob
 from member_card import image
 
 if TYPE_CHECKING:
+    from flask import Flask
     from PIL import Image
     from pytest_mock.plugin import MockerFixture
 
@@ -96,14 +97,15 @@ def mock_image(
 
 
 def test_generate_and_upload_card_image(
-    fake_card: "MembershipCard", mocker: "MockerFixture", mock_uploaded_blob, mock_image
+    app: "Flask", fake_card: "MembershipCard", mocker: "MockerFixture", mock_uploaded_blob, mock_image
 ):
     mock_html2image = mocker.patch("member_card.image.Html2Image")
     mock_hti = mock_html2image.return_value
-    return_value = image.generate_and_upload_card_image(
-        image_bucket=mock_uploaded_blob.bucket,
-        membership_card=fake_card,
-    )
+    with app.app_context():
+        return_value = image.generate_and_upload_card_image(
+            image_bucket=mock_uploaded_blob.bucket,
+            membership_card=fake_card,
+        )
 
     assert return_value == mock_uploaded_blob
     mock_hti.screenshot.assert_called_once()

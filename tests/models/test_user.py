@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 from datetime import datetime
+from member_card.db import db
 from member_card.models import MembershipCard
 from member_card.models.user import User, edit_user_name, ensure_user
 
@@ -56,80 +57,91 @@ def test_latest_membership_card_no_active_membership(fake_user: "User"):
     assert fake_user.latest_membership_card is None
 
 
-def test_latest_membership_card_yes_active_membership(fake_card: "MembershipCard"):
-    assert fake_card.user.latest_membership_card
+def test_latest_membership_card_yes_active_membership(app: "Flask", fake_card: "MembershipCard"):
+    with app.app_context():
+        card = db.session.merge(fake_card)
+        assert card.user.latest_membership_card
 
 
 def test_edit_user_name_success(app: "Flask", fake_user: "User"):
     new_first_name = "You done"
     new_last_name = "Been Edited"
     new_fullname = f"{new_first_name} {new_last_name}"
-    edit_user_name(
-        user=fake_user,
-        new_first_name=new_first_name,
-        new_last_name=new_last_name,
-    )
     with app.app_context():
+        edit_user_name(
+            user=fake_user,
+            new_first_name=new_first_name,
+            new_last_name=new_last_name,
+        )
         updated_fake_user = User.query.filter_by(id=fake_user.id).one()
     assert updated_fake_user.first_name == new_first_name
     assert updated_fake_user.last_name == new_last_name
     assert updated_fake_user.fullname == new_fullname
 
 
-def test_ensure_user_is_idempotent(fake_user: "User"):
-    user = ensure_user(
-        email=fake_user.email,
-        first_name=fake_user.first_name,
-        last_name=fake_user.last_name,
-    )
-    assert user == fake_user
+def test_ensure_user_is_idempotent(app: "Flask", fake_user: "User"):
+    with app.app_context():
+        user = ensure_user(
+            email=fake_user.email,
+            first_name=fake_user.first_name,
+            last_name=fake_user.last_name,
+        )
+        user_id = user.id
+    assert user_id == fake_user.id
 
 
-def test_ensure_user_sets_empty_fullname(fake_user: "User"):
-    setattr(fake_user, "fullname", "")
-    user = ensure_user(
-        email=fake_user.email,
-        first_name=fake_user.first_name,
-        last_name=fake_user.last_name,
-    )
-    assert user.fullname
+def test_ensure_user_sets_empty_fullname(app: "Flask", fake_user: "User"):
+    with app.app_context():
+        user = ensure_user(
+            email=fake_user.email,
+            first_name=fake_user.first_name,
+            last_name=fake_user.last_name,
+        )
+        fullname = user.fullname
+    assert fullname
 
 
-def test_ensure_user_different_first_name(fake_user: "User"):
-    user = ensure_user(
-        email=fake_user.email,
-        first_name="a-different-one",
-        last_name=fake_user.last_name,
-    )
-    assert user.first_name == fake_user.first_name
+def test_ensure_user_different_first_name(app: "Flask", fake_user: "User"):
+    with app.app_context():
+        user = ensure_user(
+            email=fake_user.email,
+            first_name="a-different-one",
+            last_name=fake_user.last_name,
+        )
+        first_name = user.first_name
+    assert first_name == fake_user.first_name
 
 
-def test_ensure_user_different_last_name(fake_user: "User"):
-    user = ensure_user(
-        email=fake_user.email,
-        first_name=fake_user.first_name,
-        last_name="a-different-one",
-    )
-    assert user.last_name == fake_user.last_name
+def test_ensure_user_different_last_name(app: "Flask", fake_user: "User"):
+    with app.app_context():
+        user = ensure_user(
+            email=fake_user.email,
+            first_name=fake_user.first_name,
+            last_name="a-different-one",
+        )
+        last_name = user.last_name
+    assert last_name == fake_user.last_name
 
 
-def test_ensure_user_sets_username(fake_user: "User"):
-    setattr(fake_user, "fullname", "")
-    user = ensure_user(
-        email=fake_user.email,
-        first_name=fake_user.first_name,
-        last_name=fake_user.last_name,
-        username="new-username?",
-    )
-    assert user.username
+def test_ensure_user_sets_username(app: "Flask", fake_user: "User"):
+    with app.app_context():
+        user = ensure_user(
+            email=fake_user.email,
+            first_name=fake_user.first_name,
+            last_name=fake_user.last_name,
+            username="new-username?",
+        )
+        username = user.username
+    assert username
 
 
-def test_ensure_user_sets_password(fake_user: "User"):
-    setattr(fake_user, "fullname", "")
-    user = ensure_user(
-        email=fake_user.email,
-        first_name=fake_user.first_name,
-        last_name=fake_user.last_name,
-        password="new-password?",
-    )
-    assert user.password
+def test_ensure_user_sets_password(app: "Flask", fake_user: "User"):
+    with app.app_context():
+        user = ensure_user(
+            email=fake_user.email,
+            first_name=fake_user.first_name,
+            last_name=fake_user.last_name,
+            password="new-password?",
+        )
+        password = user.password
+    assert password

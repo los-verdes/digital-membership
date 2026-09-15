@@ -2,7 +2,6 @@
 import logging
 from member_card.worker import worker_bp
 from flask.logging import default_handler
-from flask_gravatar import Gravatar
 from typing import TYPE_CHECKING
 
 from member_card.models.user import User, Role
@@ -90,17 +89,9 @@ def create_app(env=None) -> "Flask":
 
     assert passkit
 
-    gravatar = Gravatar(
-        app,
-        size=100,
-        rating="g",
-        default="retro",
-        force_default=False,
-        force_lower=False,
-        use_ssl=True,
-        base_url=None,
-    )
-    assert gravatar
+    # Register gravatar Jinja2 filter (replaces unmaintained flask-gravatar package)
+    from member_card.utils import gravatar_url
+    app.jinja_env.filters["gravatar"] = gravatar_url
 
     recaptcha.init_app(app)
 

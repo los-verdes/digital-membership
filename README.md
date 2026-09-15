@@ -9,11 +9,24 @@ Digital membership card site with Squarespace-sourced membership database.
 
 A live production version of this site (directed at members of the [Los Verdes supporters group](https://www.losverdesatx.org/)) may be viewed at: [card.losverd.es](https://card.losverd.es/).
 
+## Key Dependencies
+
+| Package | Version |
+|---------|---------|
+| Python | 3.12 |
+| Flask | 3.1.3 |
+| SQLAlchemy | 2.0.50 |
+| flask-sqlalchemy | 3.1.1 |
+| flask-security | 5.8.1 |
+| flask-cors | 5.0.1 |
+| gunicorn | 25.3.0 |
+| cryptography | 48.0.0 |
+
 ## Application Architecture
 
 The core components of the application are:
 
-- **[flask](https://flask.palletsprojects.com/en/2.0.x/)** - Used to construct both the frontend ("site") app that serves requests to [card.losverd.es](https://card.losverd.es/) and a background tasks ("worker") app responsible for generating Google Pay / Apple Wallet passes, sending out emails, etc.
+- **[Flask](https://flask.palletsprojects.com/en/stable/)** - Used to construct both the frontend ("site") app that serves requests to [card.losverd.es](https://card.losverd.es/) and a background tasks ("worker") app responsible for generating Google Pay / Apple Wallet passes, sending out emails, etc.
 - **[Squarespace's Commerce APIs](https://developers.squarespace.com/commerce-apis/overview)** - Source of truth for membership orders. Which are then loaded into to...:
 - **[GCP Cloud SQL for PostgreSQL](https://cloud.google.com/sql)** - User and membership database.
 
@@ -52,6 +65,9 @@ TODO: `<fill this bit in>`
 
 For development against the [card.losverd.es production site](https://card.losverd.es), you will need:
 
+- Python 3.12 (managed via [pyenv](https://github.com/pyenv/pyenv))
+- [Poetry](https://python-poetry.org/) for dependency management
+- Docker (for the local PostgreSQL database)
 - Access to the associated GCP project. This is done by inserting whatever username is associated with your [gcloud application-default credentials](https://cloud.google.com/sdk/gcloud/reference/auth/application-default/login) in the `gcp_project_editors`lists defined in [terraform/variables.tf](terraform/variables.tf)
 - Afterwards, be sure to set up `gcloud` and configure it for this project:
 
@@ -64,5 +80,27 @@ For development against the [card.losverd.es production site](https://card.losve
     ```
 
 - [Optional] Install [just](https://github.com/casey/just)
+
+#### Local Setup
+
+```shellsession
+# Start the PostgreSQL 16 test database
+$ docker compose up -d postgres
+
+# Install dependencies (Poetry should already be installed)
+$ poetry install
+
+# Run the test suite
+$ .venv/bin/python -m pytest tests/ --tb=short -q
+```
+
+#### Running Tests
+
+The test suite requires a PostgreSQL 16 database running on port 5433 (provided by the Docker Compose config):
+
+```shellsession
+$ docker compose up -d postgres
+$ .venv/bin/python -m pytest tests/
+```
 
 TODO: `<fill this bit in>`

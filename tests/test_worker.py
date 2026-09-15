@@ -217,7 +217,7 @@ class TestEmailDistribution:
         mock_generate_email.assert_not_called()
         mock_send_email.assert_not_called()
 
-    def test_with_matching_user_with_memberships(self, mocker, fake_member):
+    def test_with_matching_user_with_memberships(self, app, mocker, fake_member):
         mock_upload_image = mocker.patch(
             "member_card.worker.ensure_uploaded_card_image"
         )
@@ -231,9 +231,10 @@ class TestEmailDistribution:
             email_distribution_recipient=fake_member.email,
         )
 
-        return_value = worker.process_email_distribution_request(
-            message=test_message,
-        )
+        with app.app_context():
+            return_value = worker.process_email_distribution_request(
+                message=test_message,
+            )
         logging.debug(f"{return_value=}")
 
         assert return_value is mock_send_email.return_value
@@ -265,7 +266,7 @@ class TestEnsureCardImage:
 
         mock_ensure_uploaded_card_image.assert_not_called()
 
-    def test_with_matching_user_no_memberships(self, mocker, fake_user):
+    def test_with_matching_user_no_memberships(self, app, mocker, fake_user):
         mock_ensure_uploaded_card_image = mocker.patch(
             "member_card.worker.ensure_uploaded_card_image"
         )
@@ -274,16 +275,17 @@ class TestEnsureCardImage:
             member_email_address=fake_user.email,
         )
 
-        return_value = worker.process_ensure_uploaded_card_image_request(
-            message=test_message,
-        )
+        with app.app_context():
+            return_value = worker.process_ensure_uploaded_card_image_request(
+                message=test_message,
+            )
         logging.debug(f"{return_value=}")
 
         assert return_value is mock_ensure_uploaded_card_image.return_value
 
         mock_ensure_uploaded_card_image.assert_called_once()
 
-    def test_with_matching_user_with_memberships(self, mocker, fake_member):
+    def test_with_matching_user_with_memberships(self, app, mocker, fake_member):
         mock_ensure_uploaded_card_image = mocker.patch(
             "member_card.worker.ensure_uploaded_card_image"
         )
@@ -292,9 +294,10 @@ class TestEnsureCardImage:
             member_email_address=fake_member.email,
         )
 
-        return_value = worker.process_ensure_uploaded_card_image_request(
-            message=test_message,
-        )
+        with app.app_context():
+            return_value = worker.process_ensure_uploaded_card_image_request(
+                message=test_message,
+            )
         logging.debug(f"{return_value=}")
 
         mock_ensure_uploaded_card_image.assert_called_once()

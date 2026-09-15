@@ -147,7 +147,10 @@ class TestGeneratePassJwt:
         mock_gpay_client = mock_new_client.return_value
 
         with app.app_context():
-            result = gpay.generate_pass_jwt(membership_card=fake_card)
+            from member_card.db import db
+
+            merged_card = db.session.merge(fake_card)
+            result = gpay.generate_pass_jwt(membership_card=merged_card)
 
         assert result
 

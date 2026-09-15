@@ -13,17 +13,19 @@ if TYPE_CHECKING:
 
 
 def test_datastore_find_user_by_id(
-    user_datastore: "SQLAlchemySessionUserDatastore", fake_user: "User"
+    app: "Flask", user_datastore: "SQLAlchemySessionUserDatastore", fake_user: "User"
 ):
-    found_user = user_datastore.find_user(id=fake_user.id)
-    assert fake_user == found_user
+    with app.app_context():
+        found_user = user_datastore.find_user(id=fake_user.id)
+    assert found_user.id == fake_user.id
 
 
 def test_datastore_find_user_by_str_id(
-    user_datastore: "SQLAlchemySessionUserDatastore", fake_user: "User"
+    app: "Flask", user_datastore: "SQLAlchemySessionUserDatastore", fake_user: "User"
 ):
-    found_user = user_datastore.find_user(id=str(fake_user.id))
-    assert fake_user == found_user
+    with app.app_context():
+        found_user = user_datastore.find_user(id=str(fake_user.id))
+    assert found_user.id == fake_user.id
 
 
 def test_get_gcp_sql_engine_creator(app: "Flask", mocker: "MockerFixture"):
@@ -98,12 +100,13 @@ def test_get_or_update_for_updates(
     del membership_kwargs["is_active"]
     test_channel_name_update_str = "test-get-or-update"
     membership_kwargs["channel_name"] = test_channel_name_update_str
-    updated_membership = db.get_or_update(
-        session=db.db.session,
-        model=AnnualMembership,
-        filters=["order_id", "order_number"],
-        kwargs=membership_kwargs,
-    )
+    with app.app_context():
+        updated_membership = db.get_or_update(
+            session=db.db.session,
+            model=AnnualMembership,
+            filters=["order_id", "order_number"],
+            kwargs=membership_kwargs,
+        )
     assert updated_membership.channel_name == test_channel_name_update_str
 
 

@@ -22,6 +22,8 @@ class Settings(object):
         verify_pass_invalid_signature="Unable to verify signature!",
     )
     SECURITY_MSG_UNAUTHORIZED = (MESSAGES["unauthorized"], "error")
+    # flask-security 5.x uses SECURITY_MSG_LOGIN for the "please log in" flash message
+    SECURITY_MSG_LOGIN = (MESSAGES["unauthorized_view"], "error")
 
     APPLE_DEVELOPER_ORG_NAME: str = "Jeffrey Hogan"  # TODO: if LV is a legit 501c this can maybe become a less personal org...
     APPLE_DEVELOPER_PASS_TYPE_ID: str = "pass.es.losverd.card"

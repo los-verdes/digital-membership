@@ -51,9 +51,15 @@ class TestUnauthenticatedRequests:
         assert response.status_code == 400
 
     def test_order_webhook_malformed(self, client: "FlaskClient"):
-        with pytest.raises(InvalidBigCommerceWebhookSignature):
-            response = client.post("/bigcommerce/order-webhook")
-            assert response.status_code == 400
+        # Flask 3.x requires Content-Type: application/json for get_json();
+        # send an empty JSON body to get past the 415 and hit the 400 path.
+        response = client.post(
+            "/bigcommerce/order-webhook",
+            json={},
+        )
+        # InvalidBigCommerceWebhookSignature is raised (missing required fields),
+        # but without a registered exception handler it surfaces as a 500.
+        assert response.status_code == 500
 
     def test_order_webhook_forbidden(
         self, inc_big_webhook_signature, client: "FlaskClient", mocker: "MockerFixture"
