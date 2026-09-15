@@ -11,4 +11,4 @@ github_repo = "los-verdes/digital-membership"
 
 membership_squarespace_sku = "SQ3671268"
 # cloud_run_container_image = "gcr.io/lv-digital-membership/member-card"
-app_log_level = "DEBUG"
+app_log_level = "WARNING"
