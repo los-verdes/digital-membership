@@ -41,8 +41,21 @@ class MemberCardFormatter(GoogleCloudFormatter):
         self.gcp_project = kwargs.pop("gcp_project", {})
         super(MemberCardFormatter, self).__init__(*args, **kwargs)
 
+    def _get_extra_fields(self, record):
+        # google-cloud-logger==0.2.1 (our base class) assumes self.reserved_attrs
+        # is a dict and calls .keys() on it, but python-json-logger==4.0.0 made it
+        # a set, so this raised on every single log record. set() works for both.
+        if hasattr(record, "extra"):
+            return record.extra
+        fields = set(record.__dict__.keys()).difference(set(self.reserved_attrs))
+        return {key: getattr(record, key) for key in fields if key}
+
     def make_entry(self, record):
-        inferred_http, inferred_trace, inferred_span = get_request_data()
+        # google-cloud-logging>=3.x returns a 4-tuple (adds trace_sampled);
+        # we don't currently surface trace_sampled in log entries.
+        inferred_http, inferred_trace, inferred_span, _inferred_trace_sampled = (
+            get_request_data()
+        )
         if inferred_http is not None:
             # filter inferred_http to include only well-supported fields
             inferred_http = {
