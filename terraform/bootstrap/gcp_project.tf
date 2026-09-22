@@ -38,7 +38,6 @@ resource "google_project_service" "digital_membership" {
 
     # Building thangs:
     "sourcerepo.googleapis.com",
-    "cloudbuild.googleapis.com",
 
     # For our sync subscriptions cloud function:
     # "cloudfunctions.googleapis.com",
