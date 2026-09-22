@@ -39,22 +39,22 @@ resource "google_service_account_key" "digital_membership" {
   }
 }
 
-resource "google_cloud_run_service_iam_policy" "digital_membership" {
-  for_each = google_cloud_run_service.digital_membership
-  location = each.value.location
-  project  = each.value.project
-  service  = each.value.name
+# resource "google_cloud_run_service_iam_policy" "digital_membership" {
+#   for_each = google_cloud_run_service.digital_membership
+#   location = each.value.location
+#   project  = each.value.project
+#   service  = each.value.name
 
-  policy_data = data.google_iam_policy.digital_membership[each.key].policy_data
-}
+#   policy_data = data.google_iam_policy.digital_membership[each.key].policy_data
+# }
 
-data "google_iam_policy" "digital_membership" {
-  for_each = local.cloud_run_services
-  binding {
-    role    = "roles/run.invoker"
-    members = each.value.invokers
-  }
-}
+# data "google_iam_policy" "digital_membership" {
+#   for_each = local.cloud_run_services
+#   binding {
+#     role    = "roles/run.invoker"
+#     members = each.value.invokers
+#   }
+# }
 
 resource "google_secret_manager_secret_iam_policy" "digital_membership" {
   project     = data.google_secret_manager_secret.digital_membership.project
