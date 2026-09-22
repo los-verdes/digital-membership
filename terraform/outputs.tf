@@ -43,9 +43,9 @@ output "sql_usernames" {
   value = [for u in concat(values(google_sql_user.service_accounts), values(google_sql_user.users)) : u.name]
 }
 
-output "pubsub_topic_id" {
-  value = google_pubsub_topic.digital_membership.id
-}
+# output "pubsub_topic_id" {
+#   value = google_pubsub_topic.digital_membership.id
+# }
 
 output "read_only_sql_usernames" {
   value = [for u in values(google_sql_user.read_only) : u.name]
@@ -64,17 +64,17 @@ output "statics_bucket_id" {
   value = google_storage_bucket.statics.id
 }
 
-output "website_domain_name" {
-  value = local.cloud_run_domain_name
-}
+# output "website_domain_name" {
+#   value = local.cloud_run_domain_name
+# }
 
 output "website_service_account_email" {
   value = google_service_account.digital_membership["website"].email
 }
 
-output "worker_pubsub_ingress_url" {
-  value = local.worker_pubsub_ingress_url
-}
+# output "worker_pubsub_ingress_url" {
+#   value = local.worker_pubsub_ingress_url
+# }
 
 output "worker_service_account_email" {
   value = google_service_account.digital_membership["worker"].email
