@@ -1,5 +1,18 @@
 # digital-membership
 
+> [!IMPORTANT]
+> **This repository is archived.** Since 2026-09-21, [card.losverd.es](https://card.losverd.es/) has been
+> served by [los-verdes/card-losverd-es](https://github.com/los-verdes/card-losverd-es), and this code is kept
+> for reference only. Pull requests and issues belong there.
+>
+> **Its Terraform still describes live Google Cloud resources** that the new site depends on: the
+> `lv-digital-membership` project and the APIs enabled on it (`terraform/bootstrap/`), the Google OAuth client
+> behind Google sign-in, and possibly the Google Wallet service account. The Cloud SQL instance is also still
+> here, waiting for its final destroy. State is kept in the `lv-digital-membership-tfstate` bucket, so this
+> configuration can still be planned and applied from a clone. Read
+> [card-losverd-es's cutover runbook, section 5](https://github.com/los-verdes/card-losverd-es/blob/main/docs/cutover.md#5-decommission-gcp)
+> before changing anything: targeted destroys only, never the whole configuration or the project.
+
 [![Main Deployment Workflow](https://github.com/los-verdes/digital-membership/actions/workflows/main.yml/badge.svg)](https://github.com/los-verdes/digital-membership/actions/workflows/main.yml)
 [![Lint](https://github.com/los-verdes/digital-membership/actions/workflows/lint.yml/badge.svg)](https://github.com/los-verdes/digital-membership/actions/workflows/lint.yml)
 [![Run Tests](https://github.com/los-verdes/digital-membership/actions/workflows/run_tests.yml/badge.svg)](https://github.com/los-verdes/digital-membership/actions/workflows/run_tests.yml)
